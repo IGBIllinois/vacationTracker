@@ -1,0 +1,65 @@
+table.month
+{
+	border-bottom:1px solid #bbccff;
+
+}
+td.calendar_day_title {
+	background-color: #E3E9FF;
+	border: 1px solid #bbccff;
+	color: blue;
+	font-size: 11px;
+	text-align: center;
+}
+
+td.calendar_day {
+	padding: 3px;
+	border: 1px solid #bbccff;
+	vertical-align: top;
+	color: #808080;
+	font-size: 12px;
+	background-color: #ffffff;
+
+	font-weight: bold;
+	height: 125px;
+	-moz-user-select: none;
+}
+
+td.calendar_day_locked {
+	padding: 3px;
+	border: 1px solid #bbccff;
+	vertical-align: top;
+	color: #808080;
+	font-size: 12px;
+	background-color: #ffffff;
+	background-image: url('images/bg_lock.jpg');
+	background-repeat: no-repeat;
+	background-position: center center;
+
+	font-weight: bold;
+	height: 125px;
+	-moz-user-select: none;
+}
+
+td.calendar_day_selected {
+	padding: 3px;
+	border: 1px solid #bbccff;
+	vertical-align: top;
+	color: #808080;
+	background-color: #ebf5ff;
+	font-size: 12px;
+	font-weight: bold;
+	height: 125px;
+	-moz-user-select: none;
+}
+
+td.calendar_day_today {
+	padding: 3px;
+	border: 1px solid #bbccff;
+	vertical-align: top;
+	color: #808080;
+	background-color: #FEFEE2;
+	font-size: 12px;
+	font-weight: bold;
+	height: 125px;
+	-moz-user-select: none;
+}
