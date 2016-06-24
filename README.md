@@ -1,4 +1,5 @@
-#VacationTracker - written by Nevo Band
+#VacationTracker
+Written by Nevo Band
 
 ##Installation
 1.  Clone the entire folder to your apache document root.
@@ -8,6 +9,5 @@
 5.   Log into the vacation calendar using a web browser
 
 ##Using Vacation Tracker
-* Vacation tracker was written to duplicate the HR leave policies of the University of Illinois
-* 
+Vacation tracker was written to duplicate the HR leave policies of the University of Illinois
 
