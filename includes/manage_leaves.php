@@ -9,7 +9,9 @@
  * 5) Allow for common leave actions Request Approval/Delete
  * 
  * @author Nevo Band
+ * 
  */
+
 $years = new Years($sqlDataBase);
 $helperClass = new Helper($sqlDataBase);
 $rules = new Rules($sqlDataBase);
@@ -122,6 +124,20 @@ else
 	$description ="";
 }
 
+if(isset($_GET['email'])) {
+    //$user_id, $status_id, $appointment_year_id, $fiscal_year_id, $db, $to, $from) 
+    $user_id = $_GET['user_id'];
+    $status_id = $_GET['status_id'];
+    $app_year = $_GET['app_year_id'];
+    $fisc_year = $_GET['fisc_year_id'];
+    $to = $_GET['to'];
+    //$from = $_GET['from'];
+    $pay_period = $_GET['pay_period'];
+    //echo("TO: $to<BR>");
+    //echo("FROM: $from<BR>");
+    //echo("EMAIL = ");
+    sendEmail($user_id, $status_id, $app_year, $fisc_year, $to, $pay_period);
+}
 if($loggedUser->GetUserPermId()==ADMIN)
 {
 	$employees = $loggedUser->GetAllEnabledUsers();
@@ -181,11 +197,18 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				{
 					echo "<li><a onclick=\"uncheckAll(document.year_type_".$yearType['year_type_id'].".elements['leavesCheckBox[]'],0)\" href=\"#yeartabs-".$yearType['year_type_id']."\" style=\"font-size:12px\">".$yearType['name']."</a></li>";
 				}
+                                
+                                if($loggedUser->getUserPermId() == ADMIN) {
+                                    echo "<li><a href=\"#yeartabs-"."report"."\" style=\"font-size:12px\">"."Reports"."</a></li>";
+                                }
+
 				?>
 				</ul>
+                            
 				<?php
 				foreach($yearTypes as $id=>$yearType)
 				{
+                                   
 					echo "<form name=\"year_type_".$yearType['year_type_id']."\" action=\"index.php?view=create#yeartabs-".$yearType['year_type_id']."\" method=\"post\">";
 					echo "<input type=\"hidden\" name=\"displayUserLeaves\" value=\"".$leavesShowUser."\">";
 					echo "<div id=\"yeartabs-".$yearType['year_type_id']."\">";
@@ -200,28 +223,33 @@ if($loggedUser->GetUserPermId()==ADMIN)
 						if(isset($_POST["year-".$yearType['year_type_id']]))
 						{
 							$yearSelected= $_POST["year-".$yearType['year_type_id']];
-
+                                                        
 							if(isset($_POST["decYear-".$yearType['year_type_id']]))
 							{
 								$prevYearSelected = $years->PrevYearId($_POST["year-".$yearType['year_type_id']]);
 								if($prevYearSelected)
 								{
+                                                                    
 									$yearSelected = $prevYearSelected;
 								}
+                                                                
 							}
 							elseif(isset($_POST["incYear-".$yearType['year_type_id']]))
 							{
 								$nextYearSelected = $years->NextYearId($_POST["year-".$yearType['year_type_id']]);
 								if($nextYearSelected)
 								{
+                                                                    
 									$yearSelected = $nextYearSelected;
 								}
 							}
 						}
 						else
 						{
+                                                    //echo("C");
 							$yearSelected = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
 						}
+                                                
 						$yearInfo = $years->GetYearDates($yearSelected);
 						echo "<b>".Date("F Y",strtotime($yearInfo[0]['start_date']))." - ".Date("F Y",strtotime($yearInfo[0]['end_date']))."<b>";
 						echo "<input type=hidden value=".$yearSelected." name=\"year-".$yearType['year_type_id']."\">";
@@ -242,6 +270,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				<b>Leaves Available:<b>
 				<table class="tabular">
 				<?php
+                                
 				echo $helperClass->DrawLeaveHoursAvailable($yearSelected,$leavesShowUser,false);
 				?>
 				</table>
@@ -264,6 +293,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 					foreach($statusList as $id=>$leaveTabType)
 					{
 						echo "<div id=\"leavetabs-".$yearType['year_type_id']."-".$leaveTabType['status_id']."\">";
+                                               
 
 						if($leavesShowUser != $loggedUser->getUserId())
 						{
@@ -283,15 +313,254 @@ if($loggedUser->GetUserPermId()==ADMIN)
 
 						echo "<table class=\"hover_table\" id=\"".$leaveTabType['status_id']."_".$yearType['year_type_id']."_leaves_table\">";
 						echo $helperClass->DrawLeavesTableRows($leavesShowUser,$leaveTabType['status_id'],$yearSelected);
-						echo "</table></div>";
+                                                
+						echo "</table>";
+                                                
+                                                
+                                                echo "</div>";
 					}
+                                        
+                                        
 					echo "</div>";
+                                        
+
 					echo "</div>";
+                                        
 					echo "</form>";
 				}
+                                
+                                // Report panel
+                                echo "<form name=\"year_type_"."report"."\" action=\"index.php?view=create#yeartabs-"."report"."\" method=\"post\">";
+					echo "<input type=\"hidden\" name=\"displayUserLeaves\" value=\"".$leavesShowUser."\">";
+					echo "<div id=\"yeartabs-"."report"."\">";
+                                        /*
+                                        echo "<table class=\"hover_table\" id=\""."0"."_"."1"."_leaves_table\">";
+                                        echo $helperClass->DrawLeavesTableRows($leavesShowUser,1,$yearSelected);
+                                        echnao("</table>");
+                                        echo "<table class=\"hover_table\" id=\""."0"."_"."25"."_leaves_table\">";
+                                        echo $helperClass->DrawLeavesTableRows($leavesShowUser,25,$yearSelected);
+                                        echo("</table");
+                                        echo("TEST");*/
+                                        $appointment_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[0]['year_type_id']);
+                                        $fiscal_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[1]['year_type_id']);
+                                        $dates = $years->GetYearDates($appointment_year_id);
+
+                                        $start_date = $dates[0]['start_date'];
+                                        $end_date = $dates[0]['end_date'];
+
+                                        $mid_year = substr($end_date, 0, 4);
+
+                                        $mid_date = $mid_year."-5-15";
+                                        echo("<B><U>Pay Period 1 ($start_date - $mid_date)</U></B><BR><BR>");
+                                        echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,1);
+                                       
+                                        $to = $loggedUser->getUserEmail(); 
+
+                                        $from = $loggedUser->getUserEmail();
+                                        $supervisor = $loggedUser->GetSupervisor();
+                                        $supervisor_email = $supervisor->getUserEmail();
+                                        
+                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
+                                       //echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&from=". $from . "&to=". $to ."&supervisorEmail=".$supervisor_email."&pay_period=1' >Email Period 1 Notice</A></U>");
+
+                                       
+                                        
+                                        echo("<BR><BR><HR><BR><BR>");
+                                        echo("<B><U>Pay Period 2 ($mid_date - $end_date)</U></B><BR><BR>");
+                                        echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,2);
+                                        //echo("</table>");
+                                        
+                                       echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=2' target='_blank'>Download Excel file (Pay Period 2)</A></U>");
+                                       echo("</div></form>");
+                                // end Report panel
+                                
+                                    //echo("<form action='index.php?view=create&excel=1' method='POST'>");
+                                //echo("<form action='index.php?view=create&excel=1' method='POST'>");
+                                    //echo "<BR><input class=\"ui-state-default ui-corner-all\" type=\"submit\" name=\"excel\" value=\"Export to Excel\">";
+                                    //echo("</form>");
+                                //echo("<a href='excel/vacation.xls' target=_blank>Download Excel file</A>");
+
 				?>
 				</div>
-		
+                                
 		</td>
 	</tr>
 </table>
+<?php
+
+/*
+if(isset($_GET['excel'])) {
+    $user_id = $_GET['user_id'];
+    $status_id = $_GET['status_id'];
+    $app_year_id = $_GET['app_year_id'];
+    $fisc_year_id = $_GET['fisc_year_id'];
+    $pay_period = $_GET['pay_period'];
+    writeExcel($user_id, $status_id, $app_year_id, $fisc_year_id, $sqlDataBase, $pay_period);
+}
+*/
+function sendEmail($user_id, $status_id, $appointment_year_id, $fiscal_year_id, $to, $pay_period) {
+    
+    
+    global $sqlDataBase;
+    global $loggedUser;
+    
+    $from = $loggedUser->GetUserEmail();
+
+           $years = new Years($sqlDataBase);
+           $appYearInfo = $years->GetYearDates($appointment_year_id);
+           $fiscYearInfo = $years->GetYearDates($fiscal_year_id);
+           
+           $start_year = Date("Y",strtotime($appYearInfo[0]['start_date']));
+           $end_year = Date("Y",strtotime($appYearInfo[0]['end_date']));
+                   
+           $start_date = $start_year . "-08-15";
+           $end_date = $end_year. "-05-15";
+           //echo("curr Pay period = $curr_pay_period<BR>");
+           if($pay_period == 2) {
+               $start_date = $end_year . "-05-15";
+               $end_date = $end_year . "-08-15";
+               
+           }
+    
+     $vacationLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$appointment_year_id."
+                                AND lt.name != 'Sick'
+                                and date between '$start_date' and '$end_date' 
+				ORDER BY li.date DESC";
+    
+    $sickLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$appointment_year_id."
+                                AND lt.name = 'Sick'
+                                and date between '$start_date' and '$end_date' 
+				ORDER BY li.date DESC";
+    
+    $floatingLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$fiscal_year_id."
+                                ORDER BY li.date DESC";
+    $vacation_results = $sqlDataBase->query($vacationLeaves);
+    $sick_results = $sqlDataBase->query($sickLeaves);
+    $floating_results = $sqlDataBase->query($floatingLeaves);
+    $user = new User($sqlDataBase);
+    $user->LoadUser($user_id);
+    $supervisor = new User($sqlDataBase);
+    $supervisor->LoadUser($user->getSupervisorId());
+    $supervisorEmail = $supervisor->GetUserEmail();
+    $message = "TESTING: Would normally go to: ".$user->GetUserEmail() . "," .$supervisorEmail."\n";
+    $message .= "Instead, going to: ".$to."\n";
+    $message .= "". $user->getFirstName()." ".$user->getLastName().",\n
+       
+Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
+
+If you & your supervisor can forward me your confirmation no later than, Monday, August 21, 2017, that would be great.
+If you have any questions, just let me know.\n
+
+Thanks for your assistance in this process,\n"
+            . $loggedUser->getFirstName() . " " . $loggedUser->getLastName();
+    
+    $emailText = $message . "\n\n";
+    $emailText .= "---------------\n";
+    //$myArr=array("Date","Type","Special","Charge Time","Actual Time","Description","Status");
+    $titles = "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
+    $emailText .= "Vacation Time\n";
+    $emailText .= $titles;
+    
+    	for ($i = 0; $i < count($vacation_results); $i++) {
+		//$thisuser = new user($dbase, $search_results[$i]['user_id']);
+            /*
+		$line = array($search_results[$i]['first_name'] . " " . $search_results[$i]['last_name'],
+					  $search_results[$i]['email'],
+					  $search_results[$i]['theme_name'],
+					  $search_results[$i]['type_name'],
+					  $search_results[$i]['igb_room'],
+					  get_address($db, $search_results[$i]['user_id'], "HOME")
+
+					  );
+             * 
+             */
+            $emailText .= $vacation_results[$i]['date'] . "\t" .
+                            $vacation_results[$i]['name'] . "\t" .
+                            $vacation_results[$i]['special_name'] . "\t" .
+                            $vacation_results[$i]['leave_hours'] . "\t" .
+                            $vacation_results[$i]['time'] . "\t" .
+                            $vacation_results[$i]['description'] . "\t" .
+                            $vacation_results[$i]['statusName'] . "\n\n";
+                    
+                  
+		
+	}
+        
+                $emailText .= "Sick Leave\n\n";
+        
+	$emailText .=  "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
+	
+        
+	for ($i = 0; $i < count($sick_results); $i++) {
+		//$thisuser = new user($dbase, $search_results[$i]['user_id']);
+            /*
+		$line = array($search_results[$i]['first_name'] . " " . $search_results[$i]['last_name'],
+					  $search_results[$i]['email'],
+					  $search_results[$i]['theme_name'],
+					  $search_results[$i]['type_name'],
+					  $search_results[$i]['igb_room'],
+					  get_address($db, $search_results[$i]['user_id'], "HOME")
+
+					  );
+             * 
+             */
+            $emailText .= $sick_results[$i]['date'] . "\t" .
+                            $sick_results[$i]['name'] . "\t" .
+                            $sick_results[$i]['special_name'] . "\t" .
+                            $sick_results[$i]['leave_hours'] . "\t" .
+                            $sick_results[$i]['time'] . "\t" .
+                            $sick_results[$i]['description'] . "\t" .
+                            $sick_results[$i]['statusName'] . "\n\n";
+                    
+	}
+        
+        $emailText .= "Floating Holidays\n\n";
+        
+	$emailText .= $titles;
+        
+        //$excel->writeLine($queryLeaves);
+	for ($i = 0; $i < count($floating_results); $i++) {
+		//$thisuser = new user($dbase, $search_results[$i]['user_id']);
+            /*
+		$line = array($search_results[$i]['first_name'] . " " . $search_results[$i]['last_name'],
+					  $search_results[$i]['email'],
+					  $search_results[$i]['theme_name'],
+					  $search_results[$i]['type_name'],
+					  $search_results[$i]['igb_room'],
+					  get_address($db, $search_results[$i]['user_id'], "HOME")
+
+					  );
+             * 
+             */
+            $emailText .= $floating_results[$i]['date']. "\t" .
+                            $floating_results[$i]['name']. "\t" .
+                            $floating_results[$i]['special_name']. "\t" .
+                            $floating_results[$i]['leave_hours']. "\t" .
+                            $floating_results[$i]['time']. "\t" .
+                            $floating_results[$i]['description']. "\t" .
+                            $floating_results[$i]['statusName']. "\n\n";
+                    
+	}
+        
+        echo($emailText);
+        //mail($recipient, $subject, $mail_body,$header);
+        $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date ) TEST";
+        mail($to, $subject, $emailText, "From:$from");
+}
+
+?>

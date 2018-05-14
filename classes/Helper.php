@@ -53,7 +53,7 @@ class Helper
 		{
 			$queryLeaves = $queryLeaves." LIMIT ".$limit;
 		}
-
+//echo("drawLeavesQuery = $queryLeaves<BR>");
 		$leaves = $this->sqlDataBase->query($queryLeaves);
 		$tableString.= "<thead><tr>";
 		$tableString.= "<td>Select</td>";
@@ -80,6 +80,173 @@ class Helper
 		$tableString.="</tbody>";
 		return $tableString;
 	}
+        
+        	/**
+	 * Draws a table with all leaves created for a particular user
+	 * on a given year with a certain status.
+	 *
+	 * @param unknown_type $userId
+	 * @param unknown_type $statusId
+	 * @param unknown_type $appointmentYear
+	 * @param unknown_type $limit
+	 */
+	public function DrawLeavesTableRowsForReport($userId, $statusId,$appointment_year_id, $fiscal_year_id, $pay_period=1, $limit=0)
+	{
+            
+            //$queryYearTypes = "SELECT year_type_id,name,description FROM year_type DESC";
+	    //$yearTypes = $this->sqlDataBase->query($queryYearTypes);
+            
+            // Regular leave
+            
+           $years = new Years($this->sqlDataBase);
+           $appYearInfo = $years->GetYearDates($appointment_year_id);
+           $fiscYearInfo = $years->GetYearDates($fiscal_year_id);
+           
+           $start_year = Date("Y",strtotime($appYearInfo[0]['start_date']));
+           $end_year = Date("Y",strtotime($appYearInfo[0]['end_date']));
+           
+           $start_date = $start_year . "-08-15";
+           $end_date = $end_year. "-05-15";
+           //echo("curr Pay period = $curr_pay_period<BR>");
+           if($pay_period == 2) {
+               $start_date = $end_year . "-05-15";
+               $end_date = $end_year . "-08-15";
+               
+           }
+           
+	   $appYear = "<b>".Date("F Y",strtotime($appYearInfo[0]['start_date']))." - ".Date("F Y",strtotime($appYearInfo[0]['end_date']))."<b>";
+           $fiscYear = "<b>".Date("F Y",strtotime($fiscYearInfo[0]['start_date']))." - ".Date("F Y",strtotime($fiscYearInfo[0]['end_date']))."<b>";
+           
+            //$yearId = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
+		$tableString = "Vacation: ( $start_date - $end_date ) <BR>";
+		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$appointment_year_id."
+                                AND lt.name != 'Sick'
+                                and date between '$start_date' and '$end_date' 
+				ORDER BY li.date DESC";
+                //echo("Vacation leave query = $queryLeaves <BR>");
+		if($limit>0)
+		{
+			$queryLeaves = $queryLeaves." LIMIT ".$limit;
+		}
+                $tableString.= "<table class=\"hover_table\" id=\""."report_table\">";
+		$leaves = $this->sqlDataBase->query($queryLeaves);
+		$tableString.= "<thead><tr>";
+		$tableString.= "<td>Select</td>";
+		$tableString.= "<th>Date</th>";
+		$tableString.= "<th>Type</th>";
+		$tableString.= "<th>Special</th>";
+		$tableString.= "<th>Charge Time</th>";
+		$tableString.= "<th>Actual Time</th>";
+		$tableString.= "<th>Description</th>";
+		$tableString.= "<th>Status</th>";
+		$tableString.= "</tr></thead><tbody>";
+
+		if(isset($leaves))
+		{
+			foreach($leaves as $id => $leave)
+			{
+				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".$leave['leave_id']."\"></td><td>".$leave['date']."</td><td>".$leave['name']."</td><td>".$leave['special_name']."</td><td>".$leave['leave_hours']."</td><td>".$leave['time']."</td><td>".$leave['description']."</td><td>".$leave['statusName']."</td></tr>";
+			}
+		}
+		else
+		{
+			$tableString .= "<tr><td colspan=8><center>No Leaves</center></td></tr>";
+		}
+		$tableString.="</tbody></table>";
+		
+                // Sick Leave
+                $tableString .= "Sick Leave: ( $start_date - $end_date  )<BR>";
+                $queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$appointment_year_id."
+                                AND lt.name = 'Sick'
+                                and date between '$start_date' and '$end_date' 
+				ORDER BY li.date DESC";
+                
+                
+                if($limit>0)
+		{
+			$queryLeaves = $queryLeaves." LIMIT ".$limit;
+		}
+                $tableString .= "<table class=\"hover_table\" id=\""."report_table\">";
+		$leaves = $this->sqlDataBase->query($queryLeaves);
+		$tableString.= "<thead><tr>";
+		$tableString.= "<td>Select</td>";
+		$tableString.= "<th>Date</th>";
+		$tableString.= "<th>Type</th>";
+		$tableString.= "<th>Special</th>";
+		$tableString.= "<th>Charge Time</th>";
+		$tableString.= "<th>Actual Time</th>";
+		$tableString.= "<th>Description</th>";
+		$tableString.= "<th>Status</th>";
+		$tableString.= "</tr></thead><tbody>";
+
+		if(isset($leaves))
+		{
+			foreach($leaves as $id => $leave)
+			{
+				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".$leave['leave_id']."\"></td><td>".$leave['date']."</td><td>".$leave['name']."</td><td>".$leave['special_name']."</td><td>".$leave['leave_hours']."</td><td>".$leave['time']."</td><td>".$leave['description']."</td><td>".$leave['statusName']."</td></tr>";
+			}
+		}
+		else
+		{
+			$tableString .= "<tr><td colspan=8><center>No Leaves</center></td></tr>";
+		}
+		$tableString.="</tbody></table>";
+                
+                // Floating holidays
+                //$yearType = $yearTypes[1]; // 1
+            //$yearId = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
+		$tableString .= "Floating Holidays: ( $fiscYear ) <BR>";
+		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$fiscal_year_id."
+                                
+				ORDER BY li.date DESC";
+                if($limit>0)
+		{
+			$queryLeaves = $queryLeaves." LIMIT ".$limit;
+		}
+
+		$leaves = $this->sqlDataBase->query($queryLeaves);
+                $tableString .= "<table class=\"hover_table\" id=\""."report_table\">";
+		$tableString.= "<thead><tr>";
+		$tableString.= "<td>Select</td>";
+		$tableString.= "<th>Date</th>";
+		$tableString.= "<th>Type</th>";
+		$tableString.= "<th>Special</th>";
+		$tableString.= "<th>Charge Time</th>";
+		$tableString.= "<th>Actual Time</th>";
+		$tableString.= "<th>Description</th>";
+		$tableString.= "<th>Status</th>";
+		$tableString.= "</tr></thead><tbody>";
+
+		if(isset($leaves))
+		{
+			foreach($leaves as $id => $leave)
+			{
+				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".$leave['leave_id']."\"></td><td>".$leave['date']."</td><td>".$leave['name']."</td><td>".$leave['special_name']."</td><td>".$leave['leave_hours']."</td><td>".$leave['time']."</td><td>".$leave['description']."</td><td>".$leave['statusName']."</td></tr>";
+			}
+		}
+		else
+		{
+			$tableString .= "<tr><td colspan=8><center>No Leaves</center></td></tr>";
+		}
+		$tableString.="</tbody></table>";
+                
+                return $tableString;
+	}
 
 	/**
 	 *
@@ -98,6 +265,8 @@ class Helper
 		$years = new Years($this->sqlDataBase);
 		$thisPayPeriodId = $years->GetPayPeriodId(Date("d"),Date("m"),Date("Y"),$yearId);
 		$userLeavesHoursAvailable = new Rules($this->sqlDataBase);
+                //echo("LoadUserYearUsage test...<BR>");
+                //echo("pay period 1 = $thisPayPeriodId<BR>");
 		$leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userId,$yearId,$thisPayPeriodId);
 		$tableString.= "<tr>";
 		$tableString.= "<td class=\"col_title\">Name</td>";
@@ -112,6 +281,13 @@ class Helper
 		{
 			foreach($leavesAvailable as $id=>$leaveAvailable)
 			{
+                            //echo("leaveAvailable = ");
+                            //print_r($leaveAvailable);
+                            //echo("<BR><BR>");
+                            
+                         // Leave Type 10 = Non-cumulative sick leave, and shouldn't be shown until after the current pay period has passed
+                        if($thisPayPeriodId != 0 && $leaveAvailable['leave_type_id'] == 10) {
+                        } else {
 				$totalHours = round(($leaveAvailable['initial_hours']+$leaveAvailable['added_hours']-$leaveAvailable['calc_used_hours']),2);
 				$estimatedHours = round(($leaveAvailable['initial_hours']+$leaveAvailable['est_added_hours']-$leaveAvailable['calc_used_hours']),2);
 
@@ -134,6 +310,8 @@ class Helper
 							<td class=\"".$formFieldClass."\" style=\"font-weight:bolder;\">".round($estimatedHours,2)."</td></tr>";
 				}
 			}
+                        }
+                        
 		}
 
 		return $tableString;
@@ -174,6 +352,7 @@ class Helper
 	 */
 	public function CreateLeave($userId, $days,$month,$year, $hours, $minutes, $leaveTypeId, $specialLeaveId, $description, User $loggedUser)
 	{
+
 		$errors = 0;
 		$success= 0;
 
@@ -189,7 +368,7 @@ class Helper
 
 		$message = "";
 
-			
+
 		foreach($days as $day)
 		{
 			$date = $year."-".$month."-".$day;
@@ -204,6 +383,7 @@ class Helper
 				//Check to make sure logged user has permission to create leave for the selected user
 				if($loggedUser->getUserId()==$userId || $loggedUser->isEmployee($userId) || ($loggedUser->getUserPermId()==ADMIN))
 				{
+
 					$timeSec = ($hours * 60 * 60) + ($minutes * 60);
 					//if leave hours are less than 97.5% of a leave block then 0 hours charged
 					//if leave hours are less than 98.75% of 2 leave blocks then 4 hours are charged
@@ -437,11 +617,16 @@ class Helper
 			$payPeriodTimeSec = $payPeriodEndDateEpoch - $payPeriodStartDateEpoch;
 			foreach($users as $id=>$userInfo)
 			{
+                            //print_r($userInfo);
 				$startDateCalculation="";
 
-				$hoursToAddUser = $hoursToAdd*($userInfo['percent']/100);
+                                if($yearType=='fiscal') {
+                                    $hoursToAddUser = $hoursToAdd;
+                                } else {
+                                    $hoursToAddUser = $hoursToAdd*($userInfo['percent']/100);
+                                }
 				$userStartDateEpoch = strtotime($userInfo['start_date']);
-				if($userStartDateEpoch >= $payPeriodStartDateEpoch && $userStartDateEpoch <= $payPeriodEndDateEpoch)
+				if($userStartDateEpoch >= $payPeriodStartDateEpoch && $userStartDateEpoch <= $payPeriodEndDateEpoch && ($leaveType->getYearTypeId() != FISCAL_YEAR) )
 				{
 					$holidays=array();
 					$workDaysInPayPeriod = $this->getWorkingDays($payPeriodRange[0]['start_date'],$payPeriodRange[0]['end_date'],$holidays);
@@ -454,21 +639,33 @@ class Helper
 						."<br>Percent worked this month: ".($payPeriodWorkPercent*100)."%"
 						."<br>Percent employment: ".$userInfo['percent']."%"
 						."<br>".$payPeriodWorkPercent."*".$hoursToAdd."*".($userInfo['percent']/100)."=".$hoursToAddUser;
-					
-					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period)
+					//echo($showCalculation);
+//					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,user_type_id,description, year_info_id,begining_of_pay_period,date)
+//						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",".$userInfo['user_type_id'].",\"".$description."\",".$yearId.",$hoursAddBegin, NOW())";\
+                                        $queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period)
 						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin)";
-					$this->sqlDataBase->insertQuery($queryAddUserHours);
+					//$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period,date)
+					//	VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin, NOW())";
+
+					//echo($queryAddUserHours);
+                                        $this->sqlDataBase->insertQuery($queryAddUserHours);
 				}
 				elseif($userStartDateEpoch >= $payPeriodEndDateEpoch)
 				{
 					//Do nothing the user doesn't recieve vacation days if he wasn't working at the time
+                                    //echo("NOPE");
 				}
-				elseif($userStartDateEpoch <= $payPeriodStartDateEpoch)
+				elseif($userStartDateEpoch <= $payPeriodStartDateEpoch || ($leaveType->getYearTypeId() == FISCAL_YEAR) )
 				{
+                                    //echo("NOPE2");
 					//Give full leave time since user worked prior to start to pay period
 					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period)
 						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin)";
-					$this->sqlDataBase->insertQuery($queryAddUserHours);
+					
+                                        //$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,user_type_id,description, year_info_id,begining_of_pay_period,date)
+					//	VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",".$userInfo['user_type_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,NOW())";
+					//echo("queryAddUserHours 2 = $queryAddUserHours<BR>");
+                                        $this->sqlDataBase->insertQuery($queryAddUserHours);
 					if($userInfo['user_id'])
 					{
 						$this->RunRules($userInfo['user_id'],$yearId,true);
@@ -482,7 +679,7 @@ class Helper
 				$showCalculation="";
 			}
 			{
-				$showCalculation="<br><br>Hours addd may vary based on employment percent.";
+				$showCalculation="<br><br>Hours added may vary based on employment percent.";
 			}
 			return $this->MessageBox("Hours Added","<br>".$hoursToAddUser." Hours added to ".$leaveType->getName().".".$showCalculation,"info");
 		}
@@ -493,7 +690,7 @@ class Helper
 				return $this->MessageBox("Hours field","<br>Hours value is not a number.","error");
 			}
 			if($yearType <=0)
-			{
+			{   
 				return $this->MessageBox("Year Type field","<br>Year type not selected.","error");
 			}
 			if($yearId <=0)
@@ -506,7 +703,8 @@ class Helper
 			}
 			if($leaveTypeId <=0)
 			{
-				return $this->MessageBox("Leave Type field","<br>Year type not selected.","error");
+                            
+				return $this->MessageBox("Leave Type field","<br>Leave type not selected.","error");
 			}
 
 		}
@@ -578,7 +776,8 @@ class Helper
 		$years = new Years($this->sqlDataBase);
 		$rules = new Rules($this->sqlDataBase);
 		$queryAddedHours = "SELECT ah.user_id, pp.year_info_id FROM added_hours ah, pay_period pp WHERE pp.pay_period_id=ah.pay_period_id AND added_hours_id=".$addedHoursId;
-		$addedHours = $this->sqlDataBase->query($queryAddedHours);
+		//$echo("addedhours query = $queryAddedHours<BR>");
+                $addedHours = $this->sqlDataBase->query($queryAddedHours);
 
 		if($loggedUser->getUserPermId()==ADMIN && isset($addedHours))
 		{

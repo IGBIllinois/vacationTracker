@@ -98,15 +98,25 @@ class AppointmentYearRules extends Rules
 	{
 		//Sick Days Rules
 		//Check if we have a spill over to noncomltv hours
+                // Update 07/16: only do this for current year, not future years.
+                //echo("User Year Usage = ");
+                //print_r($userYearUsage);
+            //rpint_r($userYearUsage[self::SICK_LEAVE]);
+                //echo("added hours = ". $userYearUsage[self::SICK_LEAVE]['added_hours'] . "<BR>");
+                //echo("Used hours = " . $userYearUsage[self::SICK_LEAVE]['used_hours'] . "<BR><BR>");
+            //echo("Non-cumulative hours = ");
+           // print_r($userYearUsage[self::NONCMLTV_SICK_LEAVE]);
+           // echo("<BR>");
 		if($userYearUsage[self::SICK_LEAVE]['added_hours'] - $userYearUsage[self::SICK_LEAVE]['used_hours'] < 0)
 		{	
 			//Check if we have a spill over to initial comltv hours
 			if($userYearUsage[self::SICK_LEAVE]['added_hours'] + $userYearUsage[self::NONCMLTV_SICK_LEAVE]['added_hours'] - $userYearUsage[self::SICK_LEAVE]['used_hours'] < 0)
 			{
+                            //echo("SPILL OVER<BR><BR>");
 				//Spill over to initial comltv hours detected
 				//Add all used horus to regular sick leave minus noncomltv added hours as we used all of them.
 				$userYearUsage[self::SICK_LEAVE]['used_hours'] = $userYearUsage[self::SICK_LEAVE]['used_hours']-$userYearUsage[self::NONCMLTV_SICK_LEAVE]['added_hours'];
-				echo "Sick leave used hours: ".$userYearUsage[self::SICK_LEAVE]['used_hours'];
+				//echo "Sick leave used hours: ".$userYearUsage[self::SICK_LEAVE]['used_hours'];
 				$userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours'] = $userYearUsage[self::NONCMLTV_SICK_LEAVE]['added_hours'];
 				
 			}
@@ -114,8 +124,12 @@ class AppointmentYearRules extends Rules
 			{
 				//No spill to initial comltv sick leave detected
 				//Add all added hours to used_hours of sick leave and the rest to noncomltv
+                            
+                            //echo("NO SPILL OVER: ADD TO NONCUMULATIVE<BR><BR>");
 				$userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours'] = $userYearUsage[self::SICK_LEAVE]['used_hours'] - $userYearUsage[self::SICK_LEAVE]['added_hours'];
 				$userYearUsage[self::SICK_LEAVE]['used_hours'] =  $userYearUsage[self::SICK_LEAVE]['added_hours'];
+                                
+                                echo("New non-cumulative sick used hours= ". $userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours']. "<BR>");
 				
 			}
 		}

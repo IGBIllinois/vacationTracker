@@ -27,6 +27,8 @@ class User
 	private $autoApprove;
 	private $startDate;
 	private $enabled;
+        private $banner_include; 
+        
     private $authKey;
 
 	public function __construct(SQLDataBase $sqlDataBase)
@@ -37,6 +39,7 @@ class User
 		$this->autoApprove = 0;
 		$this->startDate = Date('Y-m-d');
 		$this->userId = 0;
+                
 	}
 
 	public function __destruct()
@@ -52,7 +55,7 @@ class User
 	public function LoadUser($userId)
 	{
 		$this->userId = $userId;
-		$queryUserInfo = "SELECT netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, auth_key FROM users WHERE user_id=".$userId;
+		$queryUserInfo = "SELECT netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, auth_key FROM users WHERE user_id=".$userId;
 		$userInfo = $this->sqlDataBase->query($queryUserInfo);
 		if(!isset($userInfo))
 		{
@@ -70,7 +73,8 @@ class User
 		$this->autoApprove = $userInfo[0]['auto_approve'];
 		$this->startDate = $userInfo[0]['start_date'];
 		$this->enabled = $userInfo[0]['enabled'];
-        $this->authKey = $userInfo[0]['auth_key'];
+                $this->banner_include = $userInfo[0]['banner_include'];
+                $this->authKey = $userInfo[0]['auth_key'];
 	}
 
 	/**
@@ -87,7 +91,7 @@ class User
 	 * @param unknown_type $autoApprove
 	 * @param unknown_type $percent
 	 */
-	public function CreateUser($firstName, $lastName, $userPermId, $userEmail, $userTypeId, $netid, $supervisorId,$startDate, $autoApprove,$percent,$enabled)
+	public function CreateUser($firstName, $lastName, $userPermId, $userEmail, $userTypeId, $netid, $supervisorId,$startDate, $autoApprove,$percent,$enabled, $banner_include=1)
 	{
 		$this->firstName = $firstName;
 		$this->lastName = $lastName;
@@ -100,8 +104,10 @@ class User
 		$this->autoApprove = $autoApprove;
 		$this->percent = $percent;
 		$this->enabled = $enabled;
-		$queryInsertUser = "INSERT INTO users (netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled)VALUES(\"".$this->netid."\",\"".$this->firstName."\",\"".$this->lastName."\",\"".$this->userTypeId."\",\"".$this->userPermId."\",\"".$this->userEmail."\",\"".$this->supervisorId."\",".$this->percent.",".$this->calendarFormat.", ".$this->autoApprove.",\"".$this->startDate."\",".$this->enabled.")";
-		$this->userId = $this->sqlDataBase->insertQuery($queryInsertUser);
+                $this->banner_include = $banner_include;
+		$queryInsertUser = "INSERT INTO users (netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, group_id,block_days, auth_key)VALUES(\"".$this->netid."\",\"".$this->firstName."\",\"".$this->lastName."\",\"".$this->userTypeId."\",\"".$this->userPermId."\",\"".$this->userEmail."\",\"".$this->supervisorId."\",".$this->percent.",".$this->calendarFormat.", ".$this->autoApprove.",\"".$this->startDate."\",".$this->enabled.",".$this->banner_include.",0,0,0)";
+		echo("queryInsertUser = $queryInsertUser<BR>");
+                $this->userId = $this->sqlDataBase->insertQuery($queryInsertUser);
 
 		$queryLeaveTypeIds = "SELECT leave_type_id, hidden,year_type_id FROM leave_type";
 		$leaveTypeIds = $this->sqlDataBase->query($queryLeaveTypeIds);
@@ -112,8 +118,9 @@ class User
 		{
 			foreach($years->getYearsIds($leaveTypeId['year_type_id']) as $id=>$yearInfo)
 			{
-				$queryInsertUserLeaveType = "INSERT INTO leave_user_info (user_id,leave_type_id,used_hours,hidden, year_info_id)VALUES(".$this->userId.",".$leaveTypeId['leave_type_id'].",0, ".$leaveTypeId['hidden'].",".$yearInfo['year_info_id'].")";
-				$this->sqlDataBase->insertQuery($queryInsertUserLeaveType);
+				$queryInsertUserLeaveType = "INSERT INTO leave_user_info (user_id,leave_type_id,used_hours,hidden, year_info_id, initial_hours, added_hours)VALUES(".$this->userId.",".$leaveTypeId['leave_type_id'].",0, ".$leaveTypeId['hidden'].",".$yearInfo['year_info_id'].", 0.0, 0.0)";
+				echo("queryInsertUserLeaveType = $queryInsertUserLeaveType<BR>");
+                                $this->sqlDataBase->insertQuery($queryInsertUserLeaveType);
 			}
 		}
 
@@ -125,7 +132,7 @@ class User
 	 */
 	public function UpdateDb()
 	{
-		$queryUpdateUserDb = "UPDATE users SET first_name = \"".$this->firstName."\", last_name = \"".$this->lastName."\", user_perm_id = \"".$this->userPermId."\", email = \"".$this->userEmail."\", user_type_id = \"".$this->userTypeId."\", netid = \"".$this->netid."\", supervisor_id = \"".$this->supervisorId."\", percent=".$this->percent.", calendar_format=".$this->calendarFormat.", auto_approve=".$this->autoApprove.", start_date=\"".$this->startDate."\",enabled=".$this->enabled." WHERE user_id=".$this->userId;
+		$queryUpdateUserDb = "UPDATE users SET first_name = \"".$this->firstName."\", last_name = \"".$this->lastName."\", user_perm_id = \"".$this->userPermId."\", email = \"".$this->userEmail."\", user_type_id = \"".$this->userTypeId."\", netid = \"".$this->netid."\", supervisor_id = \"".$this->supervisorId."\", percent=".$this->percent.", calendar_format=".$this->calendarFormat.", auto_approve=".$this->autoApprove.", start_date=\"".$this->startDate."\",enabled=".$this->enabled.",banner_include=".$this->banner_include." WHERE user_id=".$this->userId;
 		$this->sqlDataBase->nonSelectQuery($queryUpdateUserDb);
 
 	}
@@ -140,7 +147,7 @@ class User
 
     public function GetAuthKeyByUserId($userId)
     {
-        $userId = mysql_real_escape_string($userId);
+        $userId = mysqli_real_escape_string($this->sqlDataBase->getLink(), $userId);
         $queryAuthKey = "SELECT auth_key FROM users WHERE user_id=".$userId;
         $authKey = $this->sqlDataBase->singleQuery($queryAuthKey);
         return $authKey;
@@ -201,17 +208,23 @@ class User
 
 	public function GetAllEnabledUsers()
 	{
-		$queryAllEnabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled=".ENABLED." ORDER BY first_name";
+		$queryAllEnabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled=".ENABLED." ORDER BY last_name";
                 $allEnabledUsers = $this->sqlDataBase->query($queryAllEnabledUsers);
                 return $allEnabledUsers;
 	}
 
 	public function GetAllDisabledUsers()
 	{
-		$queryAllDisabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled!=".ENABLED." ORDER BY first_name";
+		$queryAllDisabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled!=".ENABLED." ORDER BY last_name";
         $allDisabledUsers = $this->sqlDataBase->query($queryAllDisabledUsers);
         return $allDisabledUsers;
 	}
+        
+        public function GetAllBannerUsers() {
+            $queryAllBannerUsers = "SELECT user_id, first_name, last_name, email, netid enabled FROM users WHERE enabled=".ENABLED." and banner_include=1 ORDER BY last_name";
+            $allBannerUsers = $this->sqlDataBase->query($queryAllBannerUsers);
+            return $allBannerUsers;
+        }
 	//Getters and setters -------------------------------------------------------------------------------------------
 	
 	public function getSupervisorId() { return $this->supervisorId; }
@@ -227,7 +240,8 @@ class User
 	public function getAutoApprove() { return $this->autoApprove; }
 	public function getStartDate() { return $this->startDate; }
 	public function getEnabled() { return $this->enabled; }
-    public function getAuthKey() { return $this->authKey; }
+        public function getAuthKey() { return $this->authKey; }
+        public function getBannerInclude() { return $this->banner_include; }
 
 	public function setSupervisorId($x) { $this->supervisorId = $x; }
 	public function setFirstName($x) { $this->firstName = $x; }
@@ -241,6 +255,7 @@ class User
 	public function setAutoApprove($x) { $this->autoApprove = $x; }
 	public function setStartDate($x) { $this->startDate = $x; }
 	public function setEnabled($x) { $this->enabled = $x; }
+        public function setBannerInclude($x) { $this->banner_include = $x; }
 
 }
 ?>

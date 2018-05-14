@@ -24,7 +24,7 @@ if(isset($_POST['applyEditLeave']))
 	if($editLeaveType->getTypeId())
 	{
 		$editLeaveType->setName($_POST['leaveName']);
-		$editLeaveType->setDescription(mysql_real_escape_string($_POST['leaveDescription']));
+		$editLeaveType->setDescription(mysqli_real_escape_string($_POST['leaveDescription']));
 		$editLeaveType->setColor($_POST['leaveColor']);
 		$editLeaveType->setSpecial((isset($_POST['special']))?1:0);
 		$editLeaveType->setHidden((isset($_POST['hidden']))?1:0);

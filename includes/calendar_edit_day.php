@@ -15,9 +15,9 @@ if(isset($_POST['applyEditDay']))
 {
 	if($editSpecialDay->getDayId())
 	{
-		$editSpecialDay->setName(mysql_real_escape_string($_POST['dayName']));
-		$editSpecialDay->setDescription(mysql_real_escape_string($_POST['dayDescription']));
-		$editSpecialDay->setColor(mysql_real_escape_string($_POST['dayColor']));
+		$editSpecialDay->setName(mysqli_real_escape_string($_POST['dayName']));
+		$editSpecialDay->setDescription(mysqli_real_escape_string($_POST['dayDescription']));
+		$editSpecialDay->setColor(mysqli_real_escape_string($_POST['dayColor']));
 		$editSpecialDay->setBlocked((isset($_POST['blocked']))?1:0);
 		$editSpecialDay->setMonth($_POST['month']);
 		$editSpecialDay->setDay($_POST['day']);

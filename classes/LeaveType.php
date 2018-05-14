@@ -70,8 +70,8 @@ class LeaveType
 	 */
 	public function CreateLeaveType($name, $description, $color, $special, $hidden, $rollOver, $max, $defaultValue,$yearType)
 	{
-		$this->name = mysql_real_escape_string($name);
-		$this->description = mysql_real_escape_string($description);
+		$this->name = mysqli_real_escape_string($name);
+		$this->description = mysqli_real_escape_string($description);
 		$this->color = $color;
 		$this->special = $special;
 		$this->hidden = $hidden;

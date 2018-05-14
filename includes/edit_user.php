@@ -80,6 +80,14 @@
                 <input type="checkbox" name="enabled" <?php echo (($editUser->getEnabled())?"checked":"unchecked"); ?>>
                 </td>
         </tr>
+        <tr>
+                <td class="form_field">
+                Include in Banner:
+                </td>
+                <td class="form_field">
+                <input type="checkbox" name="banner_include" <?php echo (($editUser->getBannerInclude())?"checked":"unchecked"); ?>>
+                </td>
+        </tr>
 	<tr>
 	        <td class="form_field">
 	        Supervisor:

@@ -16,7 +16,7 @@ $helper = new Helper($sqlDataBase);
 
 $messageBox = "";
 
-$confirmKey = mysql_real_escape_string($_GET['confirmtoken']);
+$confirmKey = mysqli_real_escape_string($_GET['confirmtoken']);
 $queryAuthenCodeInfo = "SELECT ak.status_id,ak.leave_id,ak.date_created,li.user_id,u.supervisor_id,u.netid, MONTH(li.date) as month, YEAR(li.date) as year FROM authen_key ak, leave_info li, users u WHERE ak.confirm_key=\"".$confirmKey."\" AND u.user_id=li.user_id AND li.leave_id=ak.leave_id";
 $authenCodeInfo = $sqlDataBase->query($queryAuthenCodeInfo);
 if(isset($authenCodeInfo))
@@ -40,13 +40,13 @@ if($authenticated)
 	if(isset($_POST['DeleteLeavePopup']))
 	{
 		$helper = new Helper($sqlDataBase);
-		$messageBox = $helper->DeleteLeave(mysql_real_escape_string($_POST['editLeaveId']),$loggedUser);
+		$messageBox = $helper->DeleteLeave(mysqli_real_escape_string($_POST['editLeaveId']),$loggedUser);
 	}
 
 	if(isset($_POST['ModifyLeavePopup']))
 	{
 		$helper = new Helper($sqlDataBase);
-		$messageBox = $helper->ModifyLeave(mysql_real_escape_string($_POST['editLeaveId']),mysql_real_escape_string($_POST['editUserId']), mysql_real_escape_string($_POST['editHours']),mysql_real_escape_string($_POST['editMinutes']),mysql_real_escape_string($_POST['editLeaveType']),mysql_real_escape_string($_POST['editLeaveTypeSpecial']),mysql_real_escape_string($_POST['editDescription']),$loggedUser);
+		$messageBox = $helper->ModifyLeave(mysqli_real_escape_string($_POST['editLeaveId']),mysqli_real_escape_string($_POST['editUserId']), mysqli_real_escape_string($_POST['editHours']),mysqli_real_escape_string($_POST['editMinutes']),mysqli_real_escape_string($_POST['editLeaveType']),mysqli_real_escape_string($_POST['editLeaveTypeSpecial']),mysqli_real_escape_string($_POST['editDescription']),$loggedUser);
 	}
 
 	if(isset($_POST['CreateLeavePopup']))
@@ -54,7 +54,7 @@ if($authenticated)
 		$helper = new Helper($sqlDataBase);
 		if(isset($_POST['leaveDays']))
 		{
-			$messageBox = $helper->CreateLeave(mysql_real_escape_string($_POST['user_id']),$_POST['leaveDays'],mysql_real_escape_string($_POST['monthHidden']),mysql_real_escape_string($_POST['yearHidden']),mysql_real_escape_string($_POST['hours']),mysql_real_escape_string($_POST['minutes']),mysql_real_escape_string($_POST['leaveType']),mysql_real_escape_string($_POST['leaveTypeSpecial']),mysql_real_escape_string($_POST['description']), $loggedUser);
+			$messageBox = $helper->CreateLeave(mysqli_real_escape_string($_POST['user_id']),$_POST['leaveDays'],mysqli_real_escape_string($_POST['monthHidden']),mysqli_real_escape_string($_POST['yearHidden']),mysqli_real_escape_string($_POST['hours']),mysqli_real_escape_string($_POST['minutes']),mysqli_real_escape_string($_POST['leaveType']),mysqli_real_escape_string($_POST['leaveTypeSpecial']),mysqli_real_escape_string($_POST['description']), $loggedUser);
 		}
 	}
 }

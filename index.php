@@ -6,10 +6,10 @@
  *
  * @author Nevo Band
  */
-#error_reporting(E_ALL);
+error_reporting(E_ALL);
 #ini_set('display_errors', '1');
-error_reporting(0);
-
+#error_reporting(0);
+date_default_timezone_set("America/Chicago");
 session_start();
 //Load the classes automatically without having to include them
 function __autoload($class_name) {
@@ -34,7 +34,8 @@ include "includes/authenticate.php";
 if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !isset($_SESSION['vacation_auth_key']))) ||
 (isset($_GET['confirmtoken']) && (isset($_GET['autoapprove']) || isset($_GET['autonotapprove'])))  )
 {
-	$confirmKey = mysql_real_escape_string($_GET['confirmtoken']);
+
+	$confirmKey = mysqli_real_escape_string($_GET['confirmtoken']);
 	$authenticated = 0;
 	$loggedUser = new User($sqlDataBase);
 
@@ -126,6 +127,11 @@ elseif($loggedUser->getUserId() > 0)
 			{
 				include "includes/calendar_admin.php";
 			}
+                        elseif($_GET['view']=='bannerUpload') 
+                        {
+                                include "includes/banner_upload.php";
+                        }
+                        
 			elseif($loggedUser->getUserPermId()==ADMIN)
 			{
 				//User is an admin so show him the admin tabs

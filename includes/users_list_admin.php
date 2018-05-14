@@ -19,7 +19,7 @@ if(isset($_POST['search']))
 	}
 	else
 	{
-		$searchString = mysql_real_escape_string($_POST['searchBox']);
+		$searchString = mysqli_real_escape_string($_POST['searchBox']);
 	}
 }
 else
@@ -61,6 +61,7 @@ if(isset($_POST['applyEditUser']))
 	$editUser->setStartDate($year."-".$month."-".$day);
 	$editUser->setAutoApprove(((isset($_POST['autoApprove']))?1:0));
 	$editUser->setEnabled(((isset($_POST['enabled']))?1:0));
+        $editUser->setBannerInclude(((isset($_POST['banner_include']))?1:0));
 	$editUser->UpdateDb();
 }
 
@@ -115,6 +116,17 @@ if(isset($_POST['createUser']))
 							value="Search IGB Users">
 						</td>
 					</tr>
+                                        <tr>
+						<td class="col_title" colspan="2">View options</td>
+					</tr>
+                                        <tr><td></td>
+                                            <td class="form_field"><input class="ui-state-default ui-corner-all" type="submit" name="allUsers"
+							value="Show All Users">
+                                            <input class="ui-state-default ui-corner-all" type="submit" name="enabled_users"
+							value="Show Enabled Users">
+                                            <input class="ui-state-default ui-corner-all" type="submit" name="disabled_users"
+							value="Show Disabled Users">
+                                            </td>
 				</table>
 			</form>
 		</td>
@@ -158,6 +170,7 @@ if(isset($_POST['createUser']))
 							$editUser->setUserEmail($attrs['mail'][0]);
 							$editUser->setUserPermId(USER);
 							$editUser->setEnabled(ENABLED);
+                                                        
 						}
 					}
 				}
@@ -178,6 +191,7 @@ if(isset($_POST['createUser']))
 						<th>Permissions</th>
 						<th>Employee Type</th>
 						<th>Enabled</th>
+                                                <th>Banner Include</th>
 						<td>Options</td>
 					</tr>
 				</thead>
@@ -217,7 +231,14 @@ if(isset($_POST['createUser']))
 				else
 				{
 
-					$queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as type, up.name as perm, u.enabled FROM users u, user_type ut, user_perm up WHERE up.user_perm_id = u.user_perm_id AND ut.user_type_id = u.user_type_id AND (u.first_name LIKE \"".$searchString."\" OR u.last_name LIKE \"".$searchString."\" OR u.netid LIKE \"".$searchString."\") ORDER BY u.netid ASC";
+                                        $additionalQuery = "";
+                                        if(isset($_POST['enabled_users'])) {
+                                            $additionalQuery = " and enabled=1 ";
+                                        }
+                                        if(isset($_POST['disabled_users'])) {
+                                            $additionalQuery = " and enabled=0 ";
+                                        }
+					$queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as type, up.name as perm, u.enabled, u.banner_include FROM users u, user_type ut, user_perm up WHERE up.user_perm_id = u.user_perm_id AND ut.user_type_id = u.user_type_id AND (u.first_name LIKE \"".$searchString."\" OR u.last_name LIKE \"".$searchString."\" OR u.netid LIKE \"".$searchString."\") $additionalQuery ORDER BY u.last_name ASC";
 					$users = $sqlDataBase->query($queryUsers);
 					if($users)
 					{
@@ -230,6 +251,7 @@ if(isset($_POST['createUser']))
 								<td>".$userInfo['perm']."</td>
 								<td>".$userInfo['type']."</td>
 								<td><img src=\"css/images/".(($userInfo['enabled'])?"approved.png":"notapproved.png")."\"></td>
+                                                                <td><img src=\"css/images/".(($userInfo['banner_include'])?"approved.png":"notapproved.png")."\"></td>
 								<td><a href=\"index.php?view=adminUsers&edit_user=".$userInfo['user_id']."\">Edit</a></td>
 							</tr>";
 						}

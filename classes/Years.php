@@ -57,7 +57,8 @@ class Years
 	public function GetPayPeriodId($day,$month,$year,$yearId)
 	{
 		$queryPayPeriodId = "SELECT pay_period_id FROM pay_period WHERE start_date <= \"".$year."-".$month."-".$day."\" AND end_date >= \"".$year."-".$month."-".$day."\" AND year_info_id=".$yearId;
-		$payPeriodId = $this->sqlDataBase->singleQuery($queryPayPeriodId);
+		//echo("pay period query = $queryPayPeriodId<BR>");
+                $payPeriodId = $this->sqlDataBase->singleQuery($queryPayPeriodId);
 
 		if($payPeriodId)
 		{
@@ -120,6 +121,7 @@ class Years
 
 		if($lastYearId)
 		{
+                        echo ("Last Year id = $lastYearId<BR>");
 			return $lastYearId;
 		}
 		else
@@ -130,7 +132,7 @@ class Years
 	}
 
 	/**
-	 * Gets the earliest year created. Return's it's ID 
+	 * Gets the earliest year created. Return's its ID 
 	 *
 	 * @param unknown_type $yearTypeId
 	 */
@@ -338,7 +340,7 @@ class Years
 	public function CreateYear($nextYear,$prevYear,$yearTypeId, $locked)
 	{
 		$yearId = 0;
-			
+			//echo "CREATEYEAR START <BR>";
 		$prevYearDates = $this->GetYearDates($prevYear);
 		$nextYearDates = $this->GetYearDates($nextYear);
 		$yearTypeInfo = $this->GetYearTypeInfo($yearTypeId);
@@ -403,16 +405,21 @@ class Years
 		$addedHours = 0;
 
 		$queryCreateYear = "INSERT INTO year_info (start_date,end_date,locked,year_type_id,next_year_id,prev_year_id)VALUES(\"".$dateStart."\",\"".$dateEnd."\",".$locked.",".$yearTypeId.",".$nextYear.",".$prevYear.")";
-		$yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
+		echo("queryCreateYear = ". $queryCreateYear . "<BR>");
+                $yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
+                
+                echo("new Year ID = $yearId <BR>");
 
 		if($prevYear)
 		{
 			$updatePrevYear = "UPDATE year_info SET next_year_id=".$yearId." WHERE year_info_id=".$prevYear;
+                        echo("updatePrevYear = $updatePrevYear <BR>");
 			$this->sqlDataBase->nonSelectQuery($updatePrevYear);
 		}
 		if($nextYear)
 		{
 			$updateNextYear = "UPDATE year_info SET prev_year_id=".$yearId." WHERE year_info_id=".$nextYear;
+                        echo("updateNextYear = $updateNextYear <BR>");
 			$this->sqlDataBase->nonSelectQuery($updateNextYear);
 		}
 

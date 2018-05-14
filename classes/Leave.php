@@ -100,7 +100,10 @@ class Leave
 	private function WriteLeave()
 	{
 		$queryInsertLeave = "INSERT INTO leave_info (date,time,leave_type_id,leave_type_id_special, user_id,description, submit_date, status_id, leave_hours,year_info_id)VALUES(\"".$this->date."\",".$this->time.",".$this->leaveTypeId.",".$this->leaveTypeSpecialId.",".$this->userId.",\"".$this->description."\",NOW(),".$this->statusId.",".$this->hours.",".$this->yearId.")";
-		$this->leaveId = $this->sqlDataBase->insertQuery($queryInsertLeave);
+
+                $leaveId = $this->sqlDataBase->insertQuery($queryInsertLeave);
+                $this->leaveId = $leaveId;
+
 	}
 
 	/**
@@ -120,7 +123,7 @@ class Leave
 	 */
 	public function UpdateDb()
 	{
-		$this->description = mysql_real_escape_string($this->description);
+		$this->description = mysqli_real_escape_string($this->sqlDataBase->getLink(), $this->description);
 		$queryUpdateLeave = "UPDATE leave_info SET date = \"".$this->date."\", time = ".$this->time.", leave_type_id = \"".$this->leaveTypeId."\", user_id = \"".$this->userId."\", description = \"".$this->description."\", status_id=".$this->statusId.", leave_type_id_special=".$this->leaveTypeSpecialId.", leave_hours = ".$this->hours.", year_info_id=".$this->yearId." WHERE leave_id = ".$this->leaveId;
 		error_log($queryUpdateLeave,0);
 		$this->sqlDataBase->nonSelectQuery($queryUpdateLeave);

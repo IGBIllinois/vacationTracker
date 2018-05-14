@@ -10,6 +10,7 @@
 echo "<tr><td align=\"right\">";
 
 echo "<table cellspacing=\"20\"><tr>";
+
 if($loggedUser->getUserPermId() == ADMIN)
 {
 	echo "<td><a class=\"main_nav\" href=\"index.php?view=adminCalendar\">Admin View</a></td>";
@@ -19,7 +20,7 @@ echo "<td><a class=\"main_nav\" href=\"index.php?logout=1\">Logout</a></td>";
 echo "</tr></table>";
 
 echo "</td></tr><tr><td align=\"left\">";
-$adminNavigationArray = array('adminCalendar'=>'Calendar Settings','adminUsers'=>'Manage Users','adminYears'=>'Years','adminLeaves'=>'Leave Type Settings','adminAddLeaves'=>'Add Leaves');
+$adminNavigationArray = array('adminCalendar'=>'Calendar Settings','adminUsers'=>'Manage Users','adminYears'=>'Years','adminLeaves'=>'Leave Type Settings','adminAddLeaves'=>'Add Leaves', 'bannerUpload'=>"Banner Upload");
 $userNavigationArray = array('calendar'=>'Calendar','create'=>'Manage Leaves','employees'=>'User Accounts','tree'=>'Department');
 $imagePath = "css/images/";
 

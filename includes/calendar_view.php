@@ -37,11 +37,16 @@ if(isset($_POST['notApprove']))
 
 if(isset($_POST['CreateLeavePopup']))
 {
+
 	$helper = new Helper($sqlDataBase);
 	if(isset($_POST['leaveDays']))
 	{
-		$messageBox = $helper->CreateLeave($_POST['user_id'],$_POST['leaveDays'],$_POST['monthHidden'],$_POST['yearHidden'],$_POST['hours'],$_POST['minutes'],$_POST['leaveType'],$_POST['leaveTypeSpecial'],mysql_real_escape_string($_POST['description']), $loggedUser);
-	}
+
+		$messageBox = $helper->CreateLeave($_POST['user_id'],$_POST['leaveDays'],$_POST['monthHidden'],$_POST['yearHidden'],$_POST['hours'],$_POST['minutes'],$_POST['leaveType'],$_POST['leaveTypeSpecial'],mysqli_real_escape_string($sqlDataBase->getLink(), $_POST['description']), $loggedUser);
+                print_r($messageBox);
+            
+        }
+           
 }
 
 if(isset($_POST['DeleteLeavePopup']))
@@ -53,7 +58,7 @@ if(isset($_POST['DeleteLeavePopup']))
 if(isset($_POST['ModifyLeavePopup']))
 {
 	$helper = new Helper($sqlDataBase);
-	$messageBox = $helper->ModifyLeave($_POST['editLeaveId'],$_POST['editUserId'], $_POST['editHours'],$_POST['editMinutes'],$_POST['editLeaveType'],$_POST['editLeaveTypeSpecial'],mysql_real_escape_string($_POST['editDescription']),$loggedUser);
+	$messageBox = $helper->ModifyLeave($_POST['editLeaveId'],$_POST['editUserId'], $_POST['editHours'],$_POST['editMinutes'],$_POST['editLeaveType'],$_POST['editLeaveTypeSpecial'],mysqli_real_escape_string($sqlDataBase->getLink(), $_POST['editDescription']),$loggedUser);
 }
 
 if(isset($_POST['employeeids']))
@@ -121,7 +126,7 @@ if(isset($_POST['sharedUsers']))
 	{
 		$queryUnshare = "DELETE FROM shared_calendars WHERE owner_id=".$loggedUser->getUserId()." AND viewer_id=".$unshareUser;
 		$sqlDataBase->nonSelectQuery($queryUnshare);
-		echo mysql_error();
+		echo mysqli_error($sqlDataBase->getLink());
 	}
 }
 
@@ -189,9 +194,10 @@ if(isset($_POST['sharedUsers']))
 								}else
 								{
 									$querySharedCalendars = "SELECT u.user_id, u.first_name, u.last_name
-							FROM users u LEFT JOIN shared_calendars sc 
-							ON u.user_id = sc.owner_id WHERE sc.viewer_id = ".$loggedUser->getUserId()." OR (u.supervisor_id=".$loggedUser->getUserId().") GROUP BY user_id";
-									$sharedCalendars = $sqlDataBase->query($querySharedCalendars);
+                                                                    FROM users u LEFT JOIN shared_calendars sc 
+                                                                    ON u.user_id = sc.owner_id WHERE (sc.viewer_id = ".$loggedUser->getUserId()." OR (u.supervisor_id=".$loggedUser->getUserId().")) and u.enabled=".ENABLED." GROUP BY user_id";
+                                                                     					
+                                                                        $sharedCalendars = $sqlDataBase->query($querySharedCalendars);
 									echo "<tr><td><input type=\"checkbox\" name=\"employeeids[]\" value=".$loggedUser->getUserId()." id=\"calendarchecbox_".$loggedUser->getUserId()."\"";
 									if(in_array($loggedUser->getUserId(),$employeeId))
 									{
