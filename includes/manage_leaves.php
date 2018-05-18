@@ -330,6 +330,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				}
                                 
                                 // Report panel
+                                if($loggedUser->getUserPermId() == ADMIN) {
                                 echo "<form name=\"year_type_"."report"."\" action=\"index.php?view=create#yeartabs-"."report"."\" method=\"post\">";
 					echo "<input type=\"hidden\" name=\"displayUserLeaves\" value=\"".$leavesShowUser."\">";
 					echo "<div id=\"yeartabs-"."report"."\">";
@@ -379,7 +380,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                     //echo "<BR><input class=\"ui-state-default ui-corner-all\" type=\"submit\" name=\"excel\" value=\"Export to Excel\">";
                                     //echo("</form>");
                                 //echo("<a href='excel/vacation.xls' target=_blank>Download Excel file</A>");
-
+                                }
 				?>
 				</div>
                                 
