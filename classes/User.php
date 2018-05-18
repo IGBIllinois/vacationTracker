@@ -119,7 +119,7 @@ class User
 			foreach($years->getYearsIds($leaveTypeId['year_type_id']) as $id=>$yearInfo)
 			{
 				$queryInsertUserLeaveType = "INSERT INTO leave_user_info (user_id,leave_type_id,used_hours,hidden, year_info_id, initial_hours, added_hours)VALUES(".$this->userId.",".$leaveTypeId['leave_type_id'].",0, ".$leaveTypeId['hidden'].",".$yearInfo['year_info_id'].", 0.0, 0.0)";
-				echo("queryInsertUserLeaveType = $queryInsertUserLeaveType<BR>");
+				//echo("queryInsertUserLeaveType = $queryInsertUserLeaveType<BR>");
                                 $this->sqlDataBase->insertQuery($queryInsertUserLeaveType);
 			}
 		}

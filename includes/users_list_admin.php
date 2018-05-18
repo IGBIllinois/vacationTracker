@@ -19,7 +19,7 @@ if(isset($_POST['search']))
 	}
 	else
 	{
-		$searchString = mysqli_real_escape_string($_POST['searchBox']);
+		$searchString = mysqli_real_escape_string($sqlDataBase->getLink(),$_POST['searchBox']);
 	}
 }
 else

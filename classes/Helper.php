@@ -852,7 +852,8 @@ class Helper
 					$leaveToApprove->setStatusId(WAITING_APPROVAL);
 					$leaveToApprove->UpdateDb();
 					$queryAddAuthenKey = "INSERT INTO authen_key (confirm_key,leave_id,status_id,date_created,supervisor_id)VALUES(\"".$confirmCode."\",".$leaveToApprove->getLeaveId().",".APPROVED.",NOW(),".$loggedUser->getSupervisorId().")";
-					$this->sqlDataBase->insertQuery($queryAddAuthenKey);
+					//echo("request query = ".$queryAddAuthenKey."<BR>");
+                                        $this->sqlDataBase->insertQuery($queryAddAuthenKey);
 					$message .= "<tr class=\"success_row\"><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Requested</td></tr>";
 
 				}

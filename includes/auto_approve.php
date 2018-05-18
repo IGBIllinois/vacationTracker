@@ -14,7 +14,7 @@ $helper = new Helper($sqlDataBase);
 
 $messageBox = "";
 
-$confirmKey = mysqli_real_escape_string($_GET['confirmtoken']);
+$confirmKey = mysqli_real_escape_string($sqlDataBase->getLink(), $_GET['confirmtoken']);
 $queryConfirmKeyLeaves = "SELECT leave_id, supervisor_id FROM authen_key WHERE confirm_key=\"".$confirmKey."\"";
 $confirmKeyLeaves = $sqlDataBase->query($queryConfirmKeyLeaves);
 $leaveIds = array();

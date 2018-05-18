@@ -35,7 +35,7 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 (isset($_GET['confirmtoken']) && (isset($_GET['autoapprove']) || isset($_GET['autonotapprove'])))  )
 {
 
-	$confirmKey = mysqli_real_escape_string($_GET['confirmtoken']);
+	$confirmKey = mysqli_real_escape_string($sqlDataBase->getLink(),$_GET['confirmtoken']);
 	$authenticated = 0;
 	$loggedUser = new User($sqlDataBase);
 
