@@ -118,6 +118,7 @@ class Helper
            $fiscYear = "<b>".Date("F Y",strtotime($fiscYearInfo[0]['start_date']))." - ".Date("F Y",strtotime($fiscYearInfo[0]['end_date']))."<b>";
            
             //$yearId = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
+           
 		$tableString = "Vacation: ( $start_date - $end_date ) <BR>";
 		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
 				FROM (leave_info li)
@@ -125,7 +126,7 @@ class Helper
 				JOIN status s ON li.status_id = s.status_id
 				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
 				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$appointment_year_id."
-                                AND lt.name != 'Sick'
+                                AND lt.name = 'Vacation'
                                 and date between '$start_date' and '$end_date' 
 				ORDER BY li.date DESC";
                 //echo("Vacation leave query = $queryLeaves <BR>");
@@ -205,6 +206,8 @@ class Helper
                 // Floating holidays
                 //$yearType = $yearTypes[1]; // 1
             //$yearId = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
+                
+                
 		$tableString .= "Floating Holidays: ( $fiscYear ) <BR>";
 		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
 				FROM (leave_info li)
@@ -511,6 +514,9 @@ class Helper
 
 		$leaveType = new LeaveType($this->sqlDataBase);
 		$leaveType->LoadLeaveType($leaveToModify->getLeaveTypeId());
+                
+                $newLeaveType = new LeaveType($this->sqlDataBase);
+		$newLeaveType->LoadLeaveType($leaveTypeId);
 
 		$leaveBlockSec = AP_HOURS_BLOCK*60*60 * ($leaveUser->getPercent()/100);
 
@@ -541,16 +547,19 @@ class Helper
 				{
 					$leaveDayHours = (2 * $leaveBlockSec) / 60 / 60;
 				}
+                                list($year,$month,$day) = explode("-",$leaveToModify->getDate());
+                                
+                                $yearId = $years->GetYearId($day,$month,$year,$newLeaveType->getYearTypeId());
+                                
 				$leaveToModify->setTime($timeSec);
 				$leaveToModify->setHours($leaveDayHours);
 				$leaveToModify->setLeaveTypeId($leaveTypeId);
 				$leaveToModify->setLeaveTypeIdSpecial($specialLeaveId);
 				$leaveToModify->setUserId($userId);
 				$leaveToModify->setDescription($description);
+                                $leaveToModify->setYearId($yearId);
 				$leaveToModify->UpdateDb();
-				list($year,$month,$day) = explode("-",$leaveToModify->getDate());
-				$yearId = $years->GetYearId($day,$month,$year,$leaveType->getYearTypeId());
-
+				
 				$this->RunRules($userId,$yearId);
 			}
 

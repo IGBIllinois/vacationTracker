@@ -50,7 +50,7 @@ function writeExcel($user_id, $status_id, $appointment_year_id, $fiscal_year_id,
 				JOIN status s ON li.status_id = s.status_id
 				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
 				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$appointment_year_id."
-                                AND lt.name != 'Sick'
+                                AND lt.name = 'Vacation'
                                 and date between '$start_date' and '$end_date' 
 				ORDER BY li.date DESC";
     

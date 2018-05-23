@@ -34,7 +34,7 @@ class Years
 	public function GetYearId($day,$month,$year, $yearTypeId)
 	{
 		$queryDateYearId = "SELECT year_info_id FROM year_info WHERE start_date <= \"".$year."-".$month."-".$day."\" AND end_date >= \"".$year."-".$month."-".$day."\" AND year_type_id=".$yearTypeId;
-		$yearId = $this->sqlDataBase->singleQuery($queryDateYearId);
+                $yearId = $this->sqlDataBase->singleQuery($queryDateYearId);
 
 		if($yearId)
 		{
