@@ -63,7 +63,7 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 			switch($authen->getError())
 			{
 				case Auth::TOKEN_EXPIRED:
-					echo Helper::MessageBox("Token Expried","Automatic login confirmation token has expired please authenticate first.","error");
+					echo Helper::MessageBox("Token Expired","Automatic login confirmation token has expired please authenticate first.","error");
 					include "includes/login.php";
 					break;
 				case Auth::TOKEN_INVALID:
