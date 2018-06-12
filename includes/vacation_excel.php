@@ -87,12 +87,12 @@ function writeExcel($user_id, $status_id, $appointment_year_id, $fiscal_year_id,
         $user = new User($db);
 	$user->LoadUser($user_id);
         $username = $user->getNetid();
-        
+        $user_fullname = $user->getFirstName() . " ". $user->getLastName();
         $total_vac = 0;
         $total_sick = 0;
         $total_float = 0;
         
-        $excel->writeLine(array("<B>Vacation Leave for $username</B>"));
+        $excel->writeLine(array("<B>Vacation Leave for $user_fullname ($username)</B>"));
         $excel->writeLine(array($start_date . " - " . $end_date));
         $excel->writeLine(array());
         
