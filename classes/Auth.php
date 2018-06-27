@@ -63,7 +63,9 @@ class Auth
 		$queryAuthenCodeInfo = "SELECT date_created,supervisor_id,cookie_created
                                 FROM authen_key
                                 WHERE confirm_key=\"".$confirmKey."\"";
+                //echo("authquery = ".$queryAuthenCodeInfo."<BR>");
 		$authenCodeInfo = $this->sqlDataBase->query($queryAuthenCodeInfo);
+                
 		if(isset($authenCodeInfo))
 		{
 			if( abs(time()-strtotime($authenCodeInfo[0]['date_created'])) < ($tokenTimeOut*24*60*60) || (@$loggedUser->getUserId()==$authenCodeInfo[0]['supervisor_id']))

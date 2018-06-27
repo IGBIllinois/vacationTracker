@@ -214,7 +214,7 @@ class Helper
 				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
 				JOIN status s ON li.status_id = s.status_id
 				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$fiscal_year_id."
+				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$fiscal_year_id." AND li.date between '$start_date' and '$end_date' 
                                 
 				ORDER BY li.date DESC";
                 if($limit>0)
@@ -1143,6 +1143,132 @@ class Helper
 	    	return $workingDays;
 	}
 
+
+
+/*
+ * Updates a users sick and vacation hours in Banner
+ * 
+ * $userUin: A user's UIN
+ * $vacHours: Vacation Hours used
+ * $sickHours: Sick hours used. 
+ * $date: Date for this transaction (MM/DD/YYYY)
+ * 
+ */
+function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
+    //echo("UPDATE HOURS:<BR>");
+    //echo("uin = $userUin <BR>");
+    global $bannerUrl;
+    global $senderAppId;
+    $apiURL = $bannerUrl;
+    
+    //echo(" setting VacHours = $vacHours<BR>");
+    //echo(" setting SickHours = $sickHours<BR>");
+    //echo("date = $date<BR>");
+    //return;
+    if($userUin == 0) {
+        return "";
+    }
+
+       $fields = "senderAppId=".$senderAppId."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
+
+       $fieldsArray = array('senderAppId'=>$senderAppId,
+                       'institutionalId'=>$userUin,
+                       'vacTaken'=>$vacHours,
+                       'sickTaken'=>$sickHours,
+                       'dateAvailable'=>$date,
+                       'sbTaken'=>-1,
+                       'separationFlag'=>'N',
+                       'conversionFlag'=>'N',
+                       'validateOnlyFlag'=>'N' 
+               );
+        
+       $fullURL = $bannerUrl ."?". $fields;
+
+       $result = $this->get_curl_result($fullURL, $fields, $fieldsArray);
+       
+       $xml = new SimpleXMLElement($result);
+       
+
+       foreach($xml->children() as $attr) {
+
+           $updateResult = $attr->attributes()->value;
+
+           if($updateResult == "success") {
+                echo("<div class='alert alert-success'>User $userUin updated successfully.</div>");
+           } else {
+               $error = $attr->Error[0];
+               echo("<div class='alert alert-warning'>Error updating $userUin: $error.</div>");
+           }
+       }
+       return $result;    
+}
+
+/* Gets a user UIN from the IGB People Database
+ * @param $netId the user's UIUC netId
+ */
+    function getUserUIN($netId) {
+        global $peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password;
+
+        $peopleDB = new SQLDataBase($peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password);
+        $query="SELECT uin from users where netid='".$netId."'";
+
+        try {
+            $uin = $peopleDB->query($query);
+            //print_r($uin);
+        } catch(Exception $e) {
+            return 0;
+        }
+            if(isset($uin)) {
+                return $uin[0]['uin'];
+            } else {
+                return 0;
+            }
+    }
+    
+    /* Get user info from Banner
+     * 
+     * @param $userUin The user's university id number
+     */
+    function apiGetUserInfo($userUin) {
+        global $bannerUrl;
+        global $senderAppId;
+        $apiURL = $bannerUrl . "?senderAppId=$senderAppId&institutionalId=$userUin";
+
+           $curl = curl_init();
+           curl_setopt($curl, CURLOPT_URL, $apiURL);
+
+           curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+           curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+
+           //echo ("url = $apiURL<BR>");
+
+           $result = curl_exec($curl);
+           curl_close($curl);
+
+           return $result;       
+    }
 	
+    
+    function get_curl_result($url, $fields, $fields_array=null) {
+        
+       $curl = curl_init();
+
+       curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+       
+       curl_setopt($curl, CURLOPT_URL, $url);
+
+       if($fields_array != null) {
+        curl_setopt($curl,CURLOPT_POST, count($fields_array));
+       }
+       curl_setopt($curl, CURLOPT_POSTFIELDS, $fields);
+       
+       $result = curl_exec($curl);
+       
+       curl_close($curl);
+       
+       return $result;
+    }
+    
 }
 ?>

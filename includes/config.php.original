@@ -45,6 +45,10 @@ $adminGroup="SomeLDAPGroup"; //Some group of admins in ldap
 $ldapNetIdParam="uid="; //Ldap Parameter to search for when searching user netid
 $searchTerms=array('uid','cn','mail'); //All parameters to search
 
+// Banner info
+$bannerUrl = "";
+$senderAppId = "";
+
 /*
  Authentication
  */

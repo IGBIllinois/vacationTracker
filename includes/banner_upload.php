@@ -5,149 +5,13 @@ include_once "includes/config.php";
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-# Development URL
-# $bannerUrl = "https://webservices-dev.admin.uillinois.edu/employeeWS/employeeLeaveBalance";
 
-
-$senderAppId = "edu.illinois.igb.vsl";
-
-# Testing URL
-# $url = "https://webservices-test.admin.uillinois.edu/employeeWS/employeeLeaveBalance";
-
-# Production URL
-$bannerUrl = "https://webservices.admin.uillinois.edu/employeeWS/employeeLeaveBalance"; 
-
-
-function apiGetUserInfo($userUin) {
-    global $bannerUrl;
-    global $senderAppId;
-    $apiURL = $bannerUrl . "?senderAppId=$senderAppId&institutionalId=$userUin";
-    
-       $curl = curl_init();
-       curl_setopt($curl, CURLOPT_URL, $apiURL);
-       #curl_setopt($curl, CURLOPT_USERPWD, $username.":".$password);
-       curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-       
-       //echo ("url = $apiURL<BR>");
-        //curl_setopt($curl, CURLOPT_HEADER, 0);
-       $result = curl_exec($curl);
-       curl_close($curl);
-       //print_r($result);
-       return $result;
-       
-
-}
-
-/*
- * $userUin: A user's UIN
- * $vacHours: Vacation Hours used
- * $sickHours: Sick hours used. 
- * $date: Date for this transaction (MM/DD/YYYY)
- * 
- */
-function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
-    //echo("UPDATE HOURS:<BR>");
-    //echo("uin = $userUin <BR>");
-    global $bannerUrl;
-    global $senderAppId;
-    $apiURL = $bannerUrl;
-    
-    //echo(" setting VacHours = $vacHours<BR>");
-    //echo(" setting SickHours = $sickHours<BR>");
-    //echo("date = $date<BR>");
-    //return;
-    if($userUin == 0) {
-        return "";
-    }
-       $curl = curl_init();
-       //curl_setopt($curl, CURLOPT_URL, $apiURL);
-       #curl_setopt($curl, CURLOPT_USERPWD, $username.":".$password);
-       curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-       //curl_setopt($curl, CURLOPT_POST, 1);
-       //echo("test<BR>");
-       $fields = "senderAppId=".$senderAppId."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
-       
-       //$fields = "senderAppId=".curl_escape($curl, $senderAppId)."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".curl_escape($curl, $date)."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
-       //echo("fields = $fields<BR>");
-       
-       $fieldsArray = array('senderAppId'=>$senderAppId,
-                       'institutionalId'=>$userUin,
-                       'vacTaken'=>$vacHours,
-                       'sickTaken'=>$sickHours,
-                       'dateAvailable'=>$date,
-                       'sbTaken'=>-1,
-                       'separationFlag'=>'N',
-                       'conversionFlag'=>'N',
-                       'validateOnlyFlag'=>'N' 
-               );
-        
-
-       //print_r($fieldsArray);
-       $fullUrl = $bannerUrl ."?". $fields;
-       //echo("url = $fullUrl <BR>");
-       curl_setopt($curl, CURLOPT_URL,$fullUrl);
-       //echo("fields = $fields<BR>");
-       curl_setopt($curl,CURLOPT_POST, count($fieldsArray));
-       curl_setopt($curl, CURLOPT_POSTFIELDS, $fields);
-       //curl_setopt($curl, CURLOPT_HEADER, 0);
-       //
-       
-       // TODO: UNCOMMENT FOR PRODUCTION
-       $result = curl_exec($curl);
-       
-       
-       curl_close($curl);
-       //echo($result);
-       $xml = new SimpleXMLElement($result);
-       
-       //print_r($xml);
-       //foreach($xml->children()->attributes() as $value => $updateResult) {
-       foreach($xml->children() as $attr) {
-           //echo("attr = $attr<BR>");
-           $updateResult = $attr->attributes()->value;
-           //echo("updateResult = $value<BR>");
-           
-           
-           //$updateResult = $attr->attributes()['value'];
-           
-           //print_r($xmlResult[0][0]);
-           //$updateResult = $xmlResult[0]->value;
-           if($updateResult == "success") {
-                echo("<div class='alert alert-success'>User $userUin updated successfully.</div>");
-           } else {
-               $error = $attr->Error[0];
-               echo("<div class='alert alert-warning'>Error updating $userUin: $error.</div>");
-           }
-       }
-       return $result;    
-}
-
-function getUserUIN($netId) {
-    global $peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password;
-
-    $peopleDB = new SQLDataBase($peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password);
-    $query="SELECT uin from users where netid='".$netId."'";
-
-try {
-    $uin = $peopleDB->query($query);
-    //print_r($uin);
-} catch(Exception $e) {
-    return 0;
-}
-    if(isset($uin)) {
-        return $uin[0]['uin'];
-    } else {
-        return 0;
-    }
-}
 
 $day = Date('d');
 $month = Date('m');
 $year = Date('Y');
 $year_type = "Appointment";
-
+$helperClass = new Helper($sqlDataBase);
 
 if(isset($_POST['update'])) {
 
@@ -205,7 +69,7 @@ if(isset($_POST['update'])) {
             
             $vacHours += $takenVacHours;
         }
-        apiUpdateUserHours($uin, $vacHours, $sickHours, $date);
+        $helperClass->apiUpdateUserHours($uin, $vacHours, $sickHours, $date);
         
     } 
     
@@ -224,17 +88,17 @@ if(isset($_POST['update'])) {
                     $takenSickHours = $_POST['takenSickHours'.$i];
                     //echo("takenSickHours = ".$takenSickHours."<BR>");
                     $takenVacHours = $_POST['takenVacHours'.$i];
-                    $takenNoncumulativeSickHours = $_POST['takenNoncumulativeSickHours'.$i];
-                    $noncumulativeSickHours = $_POST['noncumulativeSickHours'.$i];
+                    //$takenNoncumulativeSickHours = $_POST['takenNoncumulativeSickHours'.$i];
+                    //$noncumulativeSickHours = $_POST['noncumulativeSickHours'.$i];
                     //echo("NoncumulativeSickHours = $noncumulativeSickHours<BR>");
                     $sickHours += $takenSickHours;
-                    $sickHours += $takenNoncumulativeSickHours;
-                    $sickHours += $noncumulativeSickHours;
+                    //$sickHours += $takenNoncumulativeSickHours;
+                    //$sickHours += $noncumulativeSickHours;
                     $vacHours += $takenVacHours;
                     //echo("total sickHours = $sickHours<BR>");
                     
                  }
-                apiUpdateUserHours($uin, $vacHours, $sickHours, $date);
+                $helperClass->apiUpdateUserHours($uin, $vacHours, $sickHours, $date);
             }
     }
     }
@@ -281,9 +145,10 @@ $userLeavesHoursAvailable = new Rules($sqlDataBase);
 ?>
 
 <?php
-// List all users
-if(!isset($_GET['user_id'])) {
-    
+$pay_period_text = "8/16 - 5/15";
+if($pay_period == 2) {
+    $pay_period_text = "5/16 - 8/15";
+}
 ?>
 
 	<table class="content">
@@ -298,10 +163,11 @@ if(!isset($_GET['user_id'])) {
 		</tr>
 	</table>
 <?php 
-$pay_period_text = "8/16 - 5/15";
-if($pay_period == 2) {
-    $pay_period_text = "5/16 - 8/15";
-}
+// List all users
+if(!isset($_GET['user_id'])) {
+    
+
+
 echo("<h2 style='font-style:normal; text-align:left'>$year_type Year: " . $pay_period_text . " " . $year . "</h2>");
 echo("<form action=#>"
         ."<input type=hidden name=view value=bannerUpload>".
@@ -385,9 +251,9 @@ $queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as 
                                                     //echo("LEAVES:<BR:");
                                                     //print_r($leavesAvailable);
                                                     //echo("<BR><BR>");
-                                                    $uin = getUserUIN($userInfo['netid']);
+                                                    $uin = $helperClass->getUserUIN($userInfo['netid']);
                                                     echo("<input type='hidden' name=uin".$i." value=".$uin.">");
-                                                    $userXML= apiGetUserInfo($uin);
+                                                    $userXML= $helperClass->apiGetUserInfo($uin);
                                                     //echo("UserXML = " . $userXML);
                                                     $xml = "";
                                                     try {
@@ -518,30 +384,9 @@ echo("</form>");
 <?php 
 } else {
     // List single user for editing
- 
-?>
-
-	<table class="content">
-		<tr>
-			<td class="page_title" width=300></td>
-			<td class="page_title"><br>
-			</td>
-		</tr>
-		<tr>
-			<td valign="top">
-			</td>
-		</tr>
-	</table>
-<?php 
-
+//echo("Banner URL = $bannerUrl<BR>");
 $user_id = $_GET['user_id'];
 
-
-
-$pay_period_text = "8/16 - 5/15";
-if($pay_period == 2) {
-    $pay_period_text = "5/16 - 8/15";
-}
 echo("<U><h2 style='font-style:normal; text-align:left'> Edit user info </H2></U>");
 echo("<h2 style='font-style:normal; text-align:left'>$year_type Year: " . $pay_period_text . " " . $year . "</h2>");
 
@@ -554,14 +399,12 @@ echo("<form action=#>"
             Pay Period: <select name='pay_period'><option value='1' ". (($pay_period==1) ? " SELECTED " : "").">8/16 - 5/15</option><option value='2' ". (($pay_period==2) ? " SELECTED " : "").">5/16 - 8/15</select>
             Year: <input type=string name='year' value='".$year."'><button type='submit'>Submit</button>
                 </form>");
-?>
 
-<?php
-echo("<form action='#' method=POST name='update'>");
-echo("<input type=hidden name=view value=bannerUpload>");
-echo("<input type=hidden name=update value=update>");
-echo("<input type=hidden name=pay_period value=$pay_period>");
-echo("<input type=hidden name=year value=$year>");
+        echo("<form action='#' method=POST name='update'>");
+        echo("<input type=hidden name=view value=bannerUpload>");
+        echo("<input type=hidden name=update value=update>");
+        echo("<input type=hidden name=pay_period value=$pay_period>");
+        echo("<input type=hidden name=year value=$year>");
 ?>
         
     <table class="hover_table" id="hover_table">
@@ -574,27 +417,20 @@ echo("<input type=hidden name=year value=$year>");
                             
                             
                             <?php
-                                //if($year_type == 'Fiscal') {
-                                //    echo("<th>Total Banner<BR>Floating Holiday Hours</th>");
-                                //    echo("<th>Banner Holiday<BR>Hours Taken</th>");
-                                //    echo("<th>Floating Holiday<BR>Hours Taken</th>");
-                                //} else {
+
                                     echo("<th>Total Banner<BR>Vacation Hours</th>
                                             <th>Total Banner<BR>Sick Hours</th>
                                             <th>Banner Vacation<BR>Hours Taken</th>
                                             <th>Banner Sick<BR>Hours Taken</th>");
-                                            //if($pay_period == 2) {
-                                                echo("<th>Banner Non-cumulative Sick<BR>Hours Taken</th>");
+                                    echo("<th>Banner Non-cumulative Sick<BR>Hours Taken</th>");
                                                 
-                                            //}
-                                            echo("<th>Vacation Hours Taken".(($pay_period == 2) ? "<BR>(Hours will be added)" : "") ."</th>
+
+                                    echo("<th>Vacation Hours Taken".(($pay_period == 2) ? "<BR>(Hours will be added)" : "") ."</th>
                                             <th>Sick Hours Taken".(($pay_period == 2) ? "<BR>(Hours will be added)" : "") ."</th>");
-                                            //if($pay_period == 2) {
-                                                //echo("<th>Non-cumulative Sick Leave <BR>(Hours will be added)</th>");
-                                            //}
+
                                             
                                 //}
-                                ?>
+?>
                             
                             
                     </tr>
@@ -623,13 +459,10 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                         $endDate = $year. "-08-15";
                                                     }
                                                     $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($userInfo['user_id'],$yearId, $startDate, $endDate);
-                                                    //echo("LEAVES:<BR:");
-                                                    //print_r($leavesAvailable);
-                                                    //echo("<BR><BR>");
-                                                    $uin = getUserUIN($userInfo['netid']);
+
+                                                    $uin = $helperClass->getUserUIN($userInfo['netid']);
                                                     echo("<input type='hidden' name=uin".$i." value=".$uin.">");
-                                                    $userXML= apiGetUserInfo($uin);
-                                                    //echo("UserXML = " . $userXML);
+                                                    $userXML= $helperClass->apiGetUserInfo($uin);
                                                     
                                                     try {
                                                     $xml = new SimpleXMLElement($userXML);
@@ -676,53 +509,31 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                             $taken_floating_hours = $leave->Leave[0]->Taken;
                                                             $total_floating_hours = $current_floating_hours + $accrued_floating_hours;
                                                         }
-                                                        //echo $leave['Leave']['ValidLeaveTitle']['Code'];
-                                                        //echo "<BR>";
+
                                                     }
-                                                    //echo apiGetUserInfo("654954407");
-                                                    //echo apiUpdateUserHours($uin, 0, 0, "04/05/2017");
+
 							echo "<tr>
                                                                 <td>".$uin."</td>
                                                                 <td>".$userInfo['last_name']."</td>
 								<td>".$userInfo['first_name']."</td>";
-								
-                                                                
-                                                                
-                                                                //if($year_type == 'Fiscal') {
-                                                                //    echo("<td>". $total_floating_hours."</td>");
-                                                                //    echo("<td>".$taken_floating_hours."</td>");
-                                                                //    echo("<td>". $leavesAvailable[13]['calc_used_hours']."</td>");
-                                                                //} else {
+
                                                                     echo ("<td>".$total_vacation_hours."</td>
                                                                     <td>".$total_sick_hours."</td>");
                                                                     
                                                                     echo("<td>".$taken_vacation_hours."</td>");
                                                                     echo("<td>".$taken_sick_hours."</td>");
-                                                                    //if($pay_period == 2) {
-                                                                        echo("<td>".$taken_nonc_sick_hours."</td>");
-                                                                        //echo("<td>".$current_nonc_sick_hours."</td>");
-                                                                        //echo("<input type='hidden' name='noncumulativeSickHours".$i."' value=".$leavesAvailable[10]['calc_used_hours']."</td>");
-                                                                    //} 
+                                                                    echo("<td>".$taken_nonc_sick_hours."</td>");
+
                                                                     
                                                                     echo("<td><input type=text name='vacHours".$i."' value=".$leavesAvailable[1]['calc_used_hours']."></input></td>
                                                                     <td><input type=text name='sickHours".$i."' value=".$leavesAvailable[2]['calc_used_hours']."></input></td>");
-                                                                    //if($pay_period == 2) {
-                                                                        //echo("<td><input type=text name='noncumulativeSickHours".$i."' value=".$leavesAvailable[10]['calc_used_hours']."></input></td>");
- 
-                                                                   //}
-                                                                    //echo("<input type='hidden' name=vacHours".$i." value=".$leavesAvailable[1]['calc_used_hours'].">");
-                                                                    //echo("<input type='hidden' name=sickHours".$i." value=".$leavesAvailable[2]['calc_used_hours'].">");
+
                                                                     echo("<input type='hidden' name=takenVacHours".$i." value=".$taken_vacation_hours.">");
                                                                     echo("<input type='hidden' name=takenSickHours".$i." value=".$taken_sick_hours.">");
-                                                                    //if($pay_period == 2) {
+
                                                                         
                                                                     echo("<input type='hidden' name=takenNoncumulativeSickHours".$i." value=".$taken_nonc_sick_hours.">");
-                                                                        //echo("<td>".$leavesAvailable[10]['calc_used_hours']."</td>");
-                                                                        //echo("<input type='hidden' name='noncumulativeSickHours".$i."' value=".$noncumulativeSickHours."</td>");
-                                                                    //}
-                                                                //}
-                                                        //echo "<td><a href=\"index.php?view=adminUsers&edit_user_banner=".$userInfo['user_id']."\">Edit</a></td>
-                                                                
+           
 								
 							echo("</tr>");
 						}

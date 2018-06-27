@@ -5,77 +5,13 @@ include_once "includes/config.php";
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-# Development URL
-$bannerUrl = "https://webservices-dev.admin.uillinois.edu/employeeWS/employeeLeaveBalance";
-$senderAppId = "edu.illinois.igb.vsl";
 
-# Testing URL
-# $url = "https://webservices-test.admin.uillinois.edu/employeeWS/employeeLeaveBalance";
-
-# Production URL
-# $url = "https://webservices.admin.uillinois.edu/employeeWS/employeeLeaveBalance"; 
-
-
-function apiGetUserInfo($userUin) {
-    global $bannerUrl;
-    global $senderAppId;
-    $apiURL = $bannerUrl . "?senderAppId=$senderAppId&institutionalId=$userUin";
-    
-       $curl = curl_init();
-       curl_setopt($curl, CURLOPT_URL, $apiURL);
-       #curl_setopt($curl, CURLOPT_USERPWD, $username.":".$password);
-       curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-       
-       //echo ("url = $apiURL<BR>");
-        //curl_setopt($curl, CURLOPT_HEADER, 0);
-       $result = curl_exec($curl);
-       curl_close($curl);
-       return $result;
-       
-
-}
-
-/*
- * $userUin: A user's UIN
- * $vacHours: Vacation Hours used
- * $sickHours: Sick hours used. 
- * $date: Date for this transaction (MM/DD/YYYY)
- * 
- */
-function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
-    global $bannerUrl;
-    global $senderAppId;
-    $apiURL = $bannerUrl;
-       $curl = curl_init();
-       curl_setopt($curl, CURLOPT_URL, $apiURL);
-       #curl_setopt($curl, CURLOPT_USERPWD, $username.":".$password);
-       curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-       curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-       curl_setopt($curl, CURLOPT_POST, 1);
-       $fields = "senderAppId=$senderAppId&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
-       echo("fields = $fields<BR>");
-       curl_setopt($curl, CURLOPT_POSTFIELDS, $fields);
-       //curl_setopt($curl, CURLOPT_HEADER, 0);
-       $result = curl_exec($curl);
-       return $result;    
-}
-
-function getUserUIN($netId) {
-    global $peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password;
-
-    $peopleDB = new SQLDataBase($peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password);
-    $query="SELECT uin from users where netid='".$netId."'";
-    //echo("uin query = $query");
-    $uin = $peopleDB->query($query);
-    //print_r($uin);
-    return $uin[0]['uin'];
-}
 
 $day = Date('d');
 $month = Date('m');
 $year = Date('Y');
 $year_type = "Appointment";
+$helperClass = new Helper($sqlDataBase);
 
 if(isset($_GET['year'])) {
     $year = $_GET['year'];
@@ -186,8 +122,8 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                     //echo("LEAVES:<BR:");
                                                     //print_r($leavesAvailable);
                                                     //echo("<BR><BR>");
-                                                    $uin = getUserUIN($userInfo['netid']);
-                                                    $userXML= apiGetUserInfo($uin);
+                                                    $uin = $helperClass->getUserUIN($userInfo['netid']);
+                                                    $userXML= $helperClass->apiGetUserInfo($uin);
                                                     //echo("UserXML = " . $userXML);
                                                     
                                                     try {

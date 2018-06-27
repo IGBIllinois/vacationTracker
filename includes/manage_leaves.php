@@ -130,13 +130,19 @@ if(isset($_GET['email'])) {
     $status_id = $_GET['status_id'];
     $app_year = $_GET['app_year_id'];
     $fisc_year = $_GET['fisc_year_id'];
-    $to = $_GET['to'];
+    //$to = $_GET['to'];
     //$from = $_GET['from'];
     $pay_period = $_GET['pay_period'];
     //echo("TO: $to<BR>");
     //echo("FROM: $from<BR>");
     //echo("EMAIL = ");
-    sendEmail($user_id, $status_id, $app_year, $fisc_year, $to, $pay_period);
+    $email =  new Email($sqlDataBase);
+    $result = $email->sendReportEmail($user_id, $status_id, $app_year, $fisc_year, $pay_period);
+    if($result['RESULT'] == TRUE) {
+        echo("<div class='alert alert-success'>".$result['MESSAGE']."</div>");
+    } else {
+        echo("<div class='alert alert-danger'>".$result['MESSAGE']."</div>");
+    }
 }
 if($loggedUser->GetUserPermId()==ADMIN)
 {
@@ -360,18 +366,30 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         $from = $loggedUser->getUserEmail();
                                         $supervisor = $loggedUser->GetSupervisor();
                                         $supervisor_email = $supervisor->getUserEmail();
+                                        if($supervisor_email == "") {
+                                            $supervisor_email = $to;
+                                        }
                                         
-                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
-                                       //echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&from=". $from . "&to=". $to ."&supervisorEmail=".$supervisor_email."&pay_period=1' >Email Period 1 Notice</A></U>");
+                                        $user = new User($sqlDataBase);
+                                        $user->LoadUser($leavesShowUser);
+                                        $user_email = $user->getUserEmail();
+                                        $user_supervisor = $user->GetSupervisor();
+                                        $user_supervisor_email = $user_supervisor->getUserEmail();
+                                        $actual_to = $user_email . "," . $user_supervisor_email;
+                                        
+                                       echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
+                                       echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=1' >Email Pay Period 1 Notice</A></U>");
+                                       echo(" (for testing, will send email to $to, $supervisor_email)<BR>");
+                                       echo(" (would actually send mail to $actual_to)<BR>");
 
-                                       
-                                        
                                         echo("<BR><BR><HR><BR><BR>");
                                         echo("<B><U>Pay Period 2 ($mid_date - $end_date)</U></B><BR><BR>");
                                         echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,2);
                                         //echo("</table>");
                                         
                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=2' target='_blank'>Download Excel file (Pay Period 2)</A></U>");
+                                       echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=2' >Email Pay Period 2 Notice</A></U>");
+                                       echo(" (will send email to $to, $supervisor_email)<BR>");
                                        echo("</div></form>");
                                 // end Report panel
                                 
@@ -399,169 +417,6 @@ if(isset($_GET['excel'])) {
     writeExcel($user_id, $status_id, $app_year_id, $fisc_year_id, $sqlDataBase, $pay_period);
 }
 */
-function sendEmail($user_id, $status_id, $appointment_year_id, $fiscal_year_id, $to, $pay_period) {
-    
-    
-    global $sqlDataBase;
-    global $loggedUser;
-    
-    $from = $loggedUser->GetUserEmail();
 
-           $years = new Years($sqlDataBase);
-           $appYearInfo = $years->GetYearDates($appointment_year_id);
-           $fiscYearInfo = $years->GetYearDates($fiscal_year_id);
-           
-           $start_year = Date("Y",strtotime($appYearInfo[0]['start_date']));
-           $end_year = Date("Y",strtotime($appYearInfo[0]['end_date']));
-                   
-           $start_date = $start_year . "-08-15";
-           $end_date = $end_year. "-05-15";
-           //echo("curr Pay period = $curr_pay_period<BR>");
-           if($pay_period == 2) {
-               $start_date = $end_year . "-05-15";
-               $end_date = $end_year . "-08-15";
-               
-           }
-    
-     $vacationLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$appointment_year_id."
-                                AND lt.name != 'Sick'
-                                and date between '$start_date' and '$end_date' 
-				ORDER BY li.date DESC";
-    
-    $sickLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$appointment_year_id."
-                                AND lt.name = 'Sick'
-                                and date between '$start_date' and '$end_date' 
-				ORDER BY li.date DESC";
-    
-    $floatingLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$fiscal_year_id."
-                                ORDER BY li.date DESC";
-    $vacation_results = $sqlDataBase->query($vacationLeaves);
-    $sick_results = $sqlDataBase->query($sickLeaves);
-    $floating_results = $sqlDataBase->query($floatingLeaves);
-    $user = new User($sqlDataBase);
-    $user->LoadUser($user_id);
-    $supervisor = new User($sqlDataBase);
-    $supervisor->LoadUser($user->getSupervisorId());
-    $supervisorEmail = $supervisor->GetUserEmail();
-    $message = "TESTING: Would normally go to: ".$user->GetUserEmail() . "," .$supervisorEmail."\n";
-    $message .= "Instead, going to: ".$to."\n";
-    $message .= "". $user->getFirstName()." ".$user->getLastName().",\n
-       
-Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
-
-If you & your supervisor can forward me your confirmation no later than, Monday, August 21, 2017, that would be great.
-If you have any questions, just let me know.\n
-
-Thanks for your assistance in this process,\n"
-            . $loggedUser->getFirstName() . " " . $loggedUser->getLastName();
-    
-    $emailText = $message . "\n\n";
-    $emailText .= "---------------\n";
-    //$myArr=array("Date","Type","Special","Charge Time","Actual Time","Description","Status");
-    $titles = "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
-    $emailText .= "Vacation Time\n";
-    $emailText .= $titles;
-    
-    	for ($i = 0; $i < count($vacation_results); $i++) {
-		//$thisuser = new user($dbase, $search_results[$i]['user_id']);
-            /*
-		$line = array($search_results[$i]['first_name'] . " " . $search_results[$i]['last_name'],
-					  $search_results[$i]['email'],
-					  $search_results[$i]['theme_name'],
-					  $search_results[$i]['type_name'],
-					  $search_results[$i]['igb_room'],
-					  get_address($db, $search_results[$i]['user_id'], "HOME")
-
-					  );
-             * 
-             */
-            $emailText .= $vacation_results[$i]['date'] . "\t" .
-                            $vacation_results[$i]['name'] . "\t" .
-                            $vacation_results[$i]['special_name'] . "\t" .
-                            $vacation_results[$i]['leave_hours'] . "\t" .
-                            $vacation_results[$i]['time'] . "\t" .
-                            $vacation_results[$i]['description'] . "\t" .
-                            $vacation_results[$i]['statusName'] . "\n\n";
-                    
-                  
-		
-	}
-        
-                $emailText .= "Sick Leave\n\n";
-        
-	$emailText .=  "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
-	
-        
-	for ($i = 0; $i < count($sick_results); $i++) {
-		//$thisuser = new user($dbase, $search_results[$i]['user_id']);
-            /*
-		$line = array($search_results[$i]['first_name'] . " " . $search_results[$i]['last_name'],
-					  $search_results[$i]['email'],
-					  $search_results[$i]['theme_name'],
-					  $search_results[$i]['type_name'],
-					  $search_results[$i]['igb_room'],
-					  get_address($db, $search_results[$i]['user_id'], "HOME")
-
-					  );
-             * 
-             */
-            $emailText .= $sick_results[$i]['date'] . "\t" .
-                            $sick_results[$i]['name'] . "\t" .
-                            $sick_results[$i]['special_name'] . "\t" .
-                            $sick_results[$i]['leave_hours'] . "\t" .
-                            $sick_results[$i]['time'] . "\t" .
-                            $sick_results[$i]['description'] . "\t" .
-                            $sick_results[$i]['statusName'] . "\n\n";
-                    
-	}
-        
-        $emailText .= "Floating Holidays\n\n";
-        
-	$emailText .= $titles;
-        
-        //$excel->writeLine($queryLeaves);
-	for ($i = 0; $i < count($floating_results); $i++) {
-		//$thisuser = new user($dbase, $search_results[$i]['user_id']);
-            /*
-		$line = array($search_results[$i]['first_name'] . " " . $search_results[$i]['last_name'],
-					  $search_results[$i]['email'],
-					  $search_results[$i]['theme_name'],
-					  $search_results[$i]['type_name'],
-					  $search_results[$i]['igb_room'],
-					  get_address($db, $search_results[$i]['user_id'], "HOME")
-
-					  );
-             * 
-             */
-            $emailText .= $floating_results[$i]['date']. "\t" .
-                            $floating_results[$i]['name']. "\t" .
-                            $floating_results[$i]['special_name']. "\t" .
-                            $floating_results[$i]['leave_hours']. "\t" .
-                            $floating_results[$i]['time']. "\t" .
-                            $floating_results[$i]['description']. "\t" .
-                            $floating_results[$i]['statusName']. "\n\n";
-                    
-	}
-        
-        echo($emailText);
-        //mail($recipient, $subject, $mail_body,$header);
-        $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date ) TEST";
-        mail($to, $subject, $emailText, "From:$from");
-}
 
 ?>
