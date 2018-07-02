@@ -389,7 +389,8 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         
                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=2' target='_blank'>Download Excel file (Pay Period 2)</A></U>");
                                        echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=2' >Email Pay Period 2 Notice</A></U>");
-                                       echo(" (will send email to $to, $supervisor_email)<BR>");
+                                       echo(" (for testing, will send email to $to)<BR>");
+                                       echo(" (would actually send mail to $actual_to)<BR>");
                                        echo("</div></form>");
                                 // end Report panel
                                 
