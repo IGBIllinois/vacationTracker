@@ -62,6 +62,7 @@ if(isset($_POST['applyEditUser']))
 	$editUser->setAutoApprove(((isset($_POST['autoApprove']))?1:0));
 	$editUser->setEnabled(((isset($_POST['enabled']))?1:0));
         $editUser->setBannerInclude(((isset($_POST['banner_include']))?1:0));
+        $editUser->setUIN($_POST['uin']);
 	$editUser->UpdateDb();
 }
 
@@ -220,6 +221,8 @@ if(isset($_POST['createUser']))
 								<td>".$lastName."</td>
 								<td>n/a</td>
 								<td>n/a</td>
+                                                                <td>n/a</td>
+                                                                <td>n/a</td>
 								<td><a href=\"index.php?view=adminUsers&create_user=".$attrs['uid'][0]."\">Add</a></td></tr>";
 									}
 
@@ -231,7 +234,12 @@ if(isset($_POST['createUser']))
 				else
 				{
 
-                                        $additionalQuery = "";
+                                        // Default, show enabled users
+                                        $additionalQuery = " and enabled=1 ";
+                                        
+                                        if(isset($_POST['allUsers'])) {
+                                            $additionalQuery = "";
+                                        }
                                         if(isset($_POST['enabled_users'])) {
                                             $additionalQuery = " and enabled=1 ";
                                         }

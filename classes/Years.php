@@ -121,7 +121,7 @@ class Years
 
 		if($lastYearId)
 		{
-                        echo ("Last Year id = $lastYearId<BR>");
+                        //echo ("Last Year id = $lastYearId<BR>");
 			return $lastYearId;
 		}
 		else
@@ -405,21 +405,21 @@ class Years
 		$addedHours = 0;
 
 		$queryCreateYear = "INSERT INTO year_info (start_date,end_date,locked,year_type_id,next_year_id,prev_year_id)VALUES(\"".$dateStart."\",\"".$dateEnd."\",".$locked.",".$yearTypeId.",".$nextYear.",".$prevYear.")";
-		echo("queryCreateYear = ". $queryCreateYear . "<BR>");
+		//echo("queryCreateYear = ". $queryCreateYear . "<BR>");
                 $yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
                 
-                echo("new Year ID = $yearId <BR>");
+                //echo("new Year ID = $yearId <BR>");
 
 		if($prevYear)
 		{
 			$updatePrevYear = "UPDATE year_info SET next_year_id=".$yearId." WHERE year_info_id=".$prevYear;
-                        echo("updatePrevYear = $updatePrevYear <BR>");
+                        //echo("updatePrevYear = $updatePrevYear <BR>");
 			$this->sqlDataBase->nonSelectQuery($updatePrevYear);
 		}
 		if($nextYear)
 		{
 			$updateNextYear = "UPDATE year_info SET prev_year_id=".$yearId." WHERE year_info_id=".$nextYear;
-                        echo("updateNextYear = $updateNextYear <BR>");
+                        //echo("updateNextYear = $updateNextYear <BR>");
 			$this->sqlDataBase->nonSelectQuery($updateNextYear);
 		}
 

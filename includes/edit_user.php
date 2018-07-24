@@ -40,6 +40,14 @@
 	        <input type="text" name="netid" value="<?php echo $editUser->getNetId();?>">
 	        </td>
 	</tr>
+        <tr>
+	        <td class="form_field">
+	        UIN:
+	        </td>
+	        <td class="form_field">
+	        <input type="text" name="uin" value="<?php echo $editUser->getUIN();?>">
+	        </td>
+	</tr>
 	<tr>
 	        <td class="form_field">
 	        E-Mail:

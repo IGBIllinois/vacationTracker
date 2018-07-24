@@ -28,6 +28,7 @@ class User
 	private $startDate;
 	private $enabled;
         private $banner_include; 
+        private $uin;
         
     private $authKey;
 
@@ -55,7 +56,7 @@ class User
 	public function LoadUser($userId)
 	{
 		$this->userId = $userId;
-		$queryUserInfo = "SELECT netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, auth_key FROM users WHERE user_id=".$userId;
+		$queryUserInfo = "SELECT netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, auth_key, uin FROM users WHERE user_id=".$userId;
 		$userInfo = $this->sqlDataBase->query($queryUserInfo);
 		if(!isset($userInfo))
 		{
@@ -75,6 +76,7 @@ class User
 		$this->enabled = $userInfo[0]['enabled'];
                 $this->banner_include = $userInfo[0]['banner_include'];
                 $this->authKey = $userInfo[0]['auth_key'];
+                $this->uin = $userInfo[0]['uin'];
 	}
 
 	/**
@@ -91,7 +93,7 @@ class User
 	 * @param unknown_type $autoApprove
 	 * @param unknown_type $percent
 	 */
-	public function CreateUser($firstName, $lastName, $userPermId, $userEmail, $userTypeId, $netid, $supervisorId,$startDate, $autoApprove,$percent,$enabled, $banner_include=1)
+	public function CreateUser($firstName, $lastName, $userPermId, $userEmail, $userTypeId, $netid, $supervisorId,$startDate, $autoApprove,$percent,$enabled, $uin, $banner_include=1)
 	{
 		$this->firstName = $firstName;
 		$this->lastName = $lastName;
@@ -105,7 +107,7 @@ class User
 		$this->percent = $percent;
 		$this->enabled = $enabled;
                 $this->banner_include = $banner_include;
-		$queryInsertUser = "INSERT INTO users (netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, group_id,block_days, auth_key)VALUES(\"".$this->netid."\",\"".$this->firstName."\",\"".$this->lastName."\",\"".$this->userTypeId."\",\"".$this->userPermId."\",\"".$this->userEmail."\",\"".$this->supervisorId."\",".$this->percent.",".$this->calendarFormat.", ".$this->autoApprove.",\"".$this->startDate."\",".$this->enabled.",".$this->banner_include.",0,0,0)";
+		$queryInsertUser = "INSERT INTO users (netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, group_id,block_days, auth_key, uin)VALUES(\"".$this->netid."\",\"".$this->firstName."\",\"".$this->lastName."\",\"".$this->userTypeId."\",\"".$this->userPermId."\",\"".$this->userEmail."\",\"".$this->supervisorId."\",".$this->percent.",".$this->calendarFormat.", ".$this->autoApprove.",\"".$this->startDate."\",".$this->enabled.",".$this->banner_include.",0,0,0, '".$this->uin."')";
 		echo("queryInsertUser = $queryInsertUser<BR>");
                 $this->userId = $this->sqlDataBase->insertQuery($queryInsertUser);
 
@@ -132,7 +134,7 @@ class User
 	 */
 	public function UpdateDb()
 	{
-		$queryUpdateUserDb = "UPDATE users SET first_name = \"".$this->firstName."\", last_name = \"".$this->lastName."\", user_perm_id = \"".$this->userPermId."\", email = \"".$this->userEmail."\", user_type_id = \"".$this->userTypeId."\", netid = \"".$this->netid."\", supervisor_id = \"".$this->supervisorId."\", percent=".$this->percent.", calendar_format=".$this->calendarFormat.", auto_approve=".$this->autoApprove.", start_date=\"".$this->startDate."\",enabled=".$this->enabled.",banner_include=".$this->banner_include." WHERE user_id=".$this->userId;
+		$queryUpdateUserDb = "UPDATE users SET first_name = \"".$this->firstName."\", last_name = \"".$this->lastName."\", user_perm_id = \"".$this->userPermId."\", email = \"".$this->userEmail."\", user_type_id = \"".$this->userTypeId."\", netid = \"".$this->netid."\", supervisor_id = \"".$this->supervisorId."\", percent=".$this->percent.", calendar_format=".$this->calendarFormat.", auto_approve=".$this->autoApprove.", start_date=\"".$this->startDate."\",enabled=".$this->enabled.",banner_include=".$this->banner_include.", uin='".$this->uin."' WHERE user_id=".$this->userId;
 		$this->sqlDataBase->nonSelectQuery($queryUpdateUserDb);
 
 	}
@@ -242,6 +244,7 @@ class User
 	public function getEnabled() { return $this->enabled; }
         public function getAuthKey() { return $this->authKey; }
         public function getBannerInclude() { return $this->banner_include; }
+        public function getUIN() { return $this->uin; }
 
 	public function setSupervisorId($x) { $this->supervisorId = $x; }
 	public function setFirstName($x) { $this->firstName = $x; }
@@ -256,6 +259,7 @@ class User
 	public function setStartDate($x) { $this->startDate = $x; }
 	public function setEnabled($x) { $this->enabled = $x; }
         public function setBannerInclude($x) { $this->banner_include = $x; }
+        public function setUIN($x) { $this->uin = $x; }
 
 }
 ?>
