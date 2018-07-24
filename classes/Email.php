@@ -45,7 +45,7 @@ class Email
 			$header= "From: ".$userInfo->getUserEmail()." ".PHP_EOL .
 				 "Reply-To: ".$userInfo->getUserEmail() ." " . PHP_EOL .
     				 'X-Mailer: PHP/' . phpversion();
-			//echo "<pre>".$message."</pre>";
+
 			return $this->CreateMail($userSupervisor->getUserEmail(),$message, $subject,$header);
 		}
 		else
@@ -110,6 +110,8 @@ class Email
             global $loggedUser;
 
             $from = $loggedUser->GetUserEmail();
+            $cc = $loggedUser->GetUserEmail();
+
 
                    $years = new Years($sqlDataBase);
                    $appYearInfo = $years->GetYearDates($appointment_year_id);
@@ -120,7 +122,7 @@ class Email
 
                    $start_date = $start_year . "-08-15";
                    $end_date = $end_year. "-05-15";
-                   //echo("curr Pay period = $curr_pay_period<BR>");
+
                    if($pay_period == 2) {
                        $start_date = $end_year . "-05-15";
                        $end_date = $end_year . "-08-15";
@@ -167,29 +169,35 @@ class Email
             
             $temp_to = $user_email . "," .$supervisor_email;
             // TEMP TESTING: only send to current user for testing
-            $to = $from.", ".$from;
+            $to = $from.", "."$from";
             
-            $due_date = date("l, F d, Y", mktime(0,0,0, 5, 18, date("Y") ));
+            $due_date = date("l, F d, Y", mktime(0,0,0, 5, 15, date("Y") ));
             if($pay_period == 2) {
-                $due_date = date("l, F d, Y", mktime(0,0,0, 8, 18, date("Y") ));
+                $due_date = date("l, F d, Y", mktime(0,0,0, 8, 15, date("Y") ));
             }
             
+            // Due date +5 days
+            $due_date = strtotime($due_date);
+            $due_date = strtotime("+5 day", $due_date);
+            $due_date = date("l, F d, Y", $due_date);
+                    
             $message = "TESTING: Would normally go to: ".$temp_to."\n";
             $message .= "Instead, going to: ".$to."\n";
             $message .= "". $user->getFirstName()." ".$user->getLastName().",\n
 
-        Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
+Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
 
-        If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
-        If you have any questions, just let me know.\n
+If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
+If you have any questions, just let me know.\n
 
-        Thanks for your assistance in this process,\n"
-                    . $loggedUser->getFirstName() . " " . $loggedUser->getLastName();
+Thanks for your assistance in this process,\n"
+                    
+            . $loggedUser->getFirstName() . " " . $loggedUser->getLastName();
 
             $emailText = $message . "\n\n";
             $emailText .= "---------------\n";
             $titles = "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
-            $emailText .= "Vacation Time\n";
+            $emailText .= "Vacation Time\n\n";
             $emailText .= $titles;
 
                 for ($i = 0; $i < count($vacation_results); $i++) {
@@ -201,8 +209,6 @@ class Email
                                     $vacation_results[$i]['time'] . "\t" .
                                     $vacation_results[$i]['description'] . "\t" .
                                     $vacation_results[$i]['statusName'] . "\n\n";
-
-
 
                 }
 
@@ -243,7 +249,10 @@ class Email
                 //mail($recipient, $subject, $mail_body,$header);
                 $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date ) TEST";
                 //mail($to, $subject, $emailText, "From:$from");
-                $email_result =  $this->CreateMail($to, $emailText, $subject, "From:$from");
+                $header= "From: ".$from." ".PHP_EOL .
+				 "CC: ".$cc ." " . PHP_EOL .
+    				 'X-Mailer: PHP/' . phpversion();
+                $email_result =  $this->CreateMail($to, $emailText, $subject, $header);
                 
                 if($email_result == TRUE) {
                     $result = array("RESULT"=>TRUE,
