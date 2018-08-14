@@ -159,6 +159,7 @@ class Email
             $vacation_results = $sqlDataBase->query($vacationLeaves);
             $sick_results = $sqlDataBase->query($sickLeaves);
             $floating_results = $sqlDataBase->query($floatingLeaves);
+            
             $user = new User($sqlDataBase);
             $user->LoadUser($user_id);
             $user_email = $user->getUserEmail();
@@ -167,9 +168,7 @@ class Email
             $supervisor->LoadUser($user->getSupervisorId());
             $supervisor_email = $supervisor->GetUserEmail();
             
-            $temp_to = $user_email . "," .$supervisor_email;
-            // TEMP TESTING: only send to current user for testing
-            $to = $from.", "."$from";
+            $to = $user_email . "," .$supervisor_email;
             
             $due_date = date("l, F d, Y", mktime(0,0,0, 5, 15, date("Y") ));
             if($pay_period == 2) {
@@ -181,11 +180,7 @@ class Email
             $due_date = strtotime("+5 day", $due_date);
             $due_date = date("l, F d, Y", $due_date);
                     
-            $message = "TESTING: Would normally go to: ".$temp_to."\n";
-            $message .= "Instead, going to: ".$to."\n";
-            $message .= "". $user->getFirstName()." ".$user->getLastName().",\n
-
-Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
+            $message = "Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
 
 If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
 If you have any questions, just let me know.\n
@@ -245,10 +240,9 @@ Thanks for your assistance in this process,\n"
 
                 }
 
-                //echo($emailText);
-                //mail($recipient, $subject, $mail_body,$header);
+
                 $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date ) TEST";
-                //mail($to, $subject, $emailText, "From:$from");
+
                 $header= "From: ".$from." ".PHP_EOL .
 				 "CC: ".$cc ." " . PHP_EOL .
     				 'X-Mailer: PHP/' . phpversion();

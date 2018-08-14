@@ -125,17 +125,13 @@ else
 }
 
 if(isset($_GET['email'])) {
-    //$user_id, $status_id, $appointment_year_id, $fiscal_year_id, $db, $to, $from) 
+
     $user_id = $_GET['user_id'];
     $status_id = $_GET['status_id'];
     $app_year = $_GET['app_year_id'];
     $fisc_year = $_GET['fisc_year_id'];
-    //$to = $_GET['to'];
-    //$from = $_GET['from'];
     $pay_period = $_GET['pay_period'];
-    //echo("TO: $to<BR>");
-    //echo("FROM: $from<BR>");
-    //echo("EMAIL = ");
+
     $email =  new Email($sqlDataBase);
     $result = $email->sendReportEmail($user_id, $status_id, $app_year, $fisc_year, $pay_period);
     if($result['RESULT'] == TRUE) {
@@ -360,45 +356,32 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         $mid_date = $mid_year."-5-15";
                                         echo("<B><U>Pay Period 1 ($start_date - $mid_date)</U></B><BR><BR>");
                                         echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,1);
-                                       
-                                        $to = $loggedUser->getUserEmail(); 
-
-                                        $from = $loggedUser->getUserEmail();
-                                        $supervisor = $loggedUser->GetSupervisor();
-                                        $supervisor_email = $supervisor->getUserEmail();
-                                        if($supervisor_email == "") {
-                                            $supervisor_email = $to;
-                                        }
-                                        
+                                                                             
                                         $user = new User($sqlDataBase);
                                         $user->LoadUser($leavesShowUser);
                                         $user_email = $user->getUserEmail();
+                                        
                                         $user_supervisor = $user->GetSupervisor();
                                         $user_supervisor_email = $user_supervisor->getUserEmail();
-                                        $actual_to = $user_email . "," . $user_supervisor_email;
+                                        
+                                        $to = $user_email . "," . $user_supervisor_email;
                                         
                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
                                        echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=1' >Email Pay Period 1 Notice</A></U>");
-                                       echo(" (for testing, will send email to $to)<BR>");
-                                       echo(" (would actually send mail to $actual_to)<BR>");
+                                       echo(" (Will send email to $to)<BR>");
 
                                         echo("<BR><BR><HR><BR><BR>");
                                         echo("<B><U>Pay Period 2 ($mid_date - $end_date)</U></B><BR><BR>");
                                         echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,2);
-                                        //echo("</table>");
+
                                         
                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=2' target='_blank'>Download Excel file (Pay Period 2)</A></U>");
                                        echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=2' >Email Pay Period 2 Notice</A></U>");
-                                       echo(" (for testing, will send email to $to)<BR>");
-                                       echo(" (would actually send mail to $actual_to)<BR>");
+                                       echo(" (Will send email to $to)<BR>");
                                        echo("</div></form>");
                                 // end Report panel
                                 
-                                    //echo("<form action='index.php?view=create&excel=1' method='POST'>");
-                                //echo("<form action='index.php?view=create&excel=1' method='POST'>");
-                                    //echo "<BR><input class=\"ui-state-default ui-corner-all\" type=\"submit\" name=\"excel\" value=\"Export to Excel\">";
-                                    //echo("</form>");
-                                //echo("<a href='excel/vacation.xls' target=_blank>Download Excel file</A>");
+
                                 }
 				?>
 				</div>
