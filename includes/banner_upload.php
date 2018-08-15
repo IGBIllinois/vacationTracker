@@ -205,6 +205,7 @@ $queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as 
                                             echo("<input type='hidden' name='numRecords' value=".$numRecords.">");
 						foreach($users as $id=>$userInfo)
 						{
+                                                    try{
                                                     $curr_user = new User($sqlDataBase);
                                                     $curr_user->LoadUser($userInfo['user_id']);
                                                     //echo("id=$id <BR>");
@@ -321,8 +322,11 @@ $queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as 
                                                                     
 
                                                                     echo "<td><a href=\"index.php?view=bannerUpload&user_id=".$userInfo['user_id']."&pay_period=$pay_period&year_type=$year_type&year=$year\">Edit</a></td>";  
-								
+							
 							echo("</tr>");
+                                                    } catch(Exception $e) {
+                                                        echo($e->getTraceAsString());
+                                                    }	
                                                         $i++;
 						}
 					}
