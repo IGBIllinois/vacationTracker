@@ -342,6 +342,12 @@ if($loggedUser->GetUserPermId()==ADMIN)
 
                                 $app_year_type_id=$yearTypes[0]['year_type_id']; 
                                 $fisc_year_type_id=$yearTypes[1]['year_type_id']; 
+                                
+                                // default to today
+                                $appointment_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[0]['year_type_id']);
+                                $fiscal_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[1]['year_type_id']);
+                                                        
+                                echo "<input type=\"hidden\" name=\"displayUserLeaves\" value=\"".$leavesShowUser."\">";
                                 echo "<input type=submit value=\"\" name=\"decYear-".$app_year_type_id."\" class=\"left_button\"><input type=submit value=\"\" name=\"incYear-".$app_year_type_id."\" class=\"right_button\">";
 						
 						
