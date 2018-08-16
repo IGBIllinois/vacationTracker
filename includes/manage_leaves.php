@@ -248,7 +248,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 						}
 						else
 						{
-                                                    //echo("C");
+
 							$yearSelected = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
 						}
                                                 
@@ -333,19 +333,70 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                 
                                 // Report panel
                                 if($loggedUser->getUserPermId() == ADMIN) {
-                                echo "<form name=\"year_type_"."report"."\" action=\"index.php?view=create#yeartabs-"."report"."\" method=\"post\">";
+ 
 					echo "<input type=\"hidden\" name=\"displayUserLeaves\" value=\"".$leavesShowUser."\">";
 					echo "<div id=\"yeartabs-"."report"."\">";
-                                        /*
-                                        echo "<table class=\"hover_table\" id=\""."0"."_"."1"."_leaves_table\">";
-                                        echo $helperClass->DrawLeavesTableRows($leavesShowUser,1,$yearSelected);
-                                        echnao("</table>");
-                                        echo "<table class=\"hover_table\" id=\""."0"."_"."25"."_leaves_table\">";
-                                        echo $helperClass->DrawLeavesTableRows($leavesShowUser,25,$yearSelected);
-                                        echo("</table");
-                                        echo("TEST");*/
-                                        $appointment_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[0]['year_type_id']);
-                                        $fiscal_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[1]['year_type_id']);
+
+                                                                        echo "<form name=\"year_type_"."report"."\" action=\"index.php?view=create#yeartabs-"."report"."\" method=\"post\">";
+                                // prev/ next arrows
+
+                                $app_year_type_id=$yearTypes[0]['year_type_id']; 
+                                $fisc_year_type_id=$yearTypes[1]['year_type_id']; 
+                                echo "<input type=submit value=\"\" name=\"decYear-".$app_year_type_id."\" class=\"left_button\"><input type=submit value=\"\" name=\"incYear-".$app_year_type_id."\" class=\"right_button\">";
+						
+						
+						if(isset($_POST["app-year-".$app_year_type_id]))
+						{
+							$appointment_year_id= $_POST["app-year-".$app_year_type_id];
+                                                        
+							if(isset($_POST["decYear-".$app_year_type_id]))
+							{
+
+								$prevYearSelected = $years->PrevYearId($_POST["app-year-".$app_year_type_id]);
+
+								if($prevYearSelected)
+								{
+                                                                    
+									$appointment_year_id = $prevYearSelected;
+								}
+                                                                
+                                                                $prevYearSelected = $years->PrevYearId($_POST["fisc-year-".$fisc_year_type_id]);
+
+								if($prevYearSelected)
+								{
+                                                                    
+									$fiscal_year_id = $prevYearSelected;
+								}
+                                                                
+                                                                
+							}
+							elseif(isset($_POST["incYear-".$app_year_type_id]))
+							{
+								$nextYearSelected = $years->NextYearId($_POST["app-year-".$app_year_type_id]);
+								if($nextYearSelected)
+								{
+                                                                    
+									$appointment_year_id = $nextYearSelected;
+								}
+                                                                
+                                                                $nextYearSelected = $years->NextYearId($_POST["fisc-year-".$fisc_year_type_id]);
+								if($nextYearSelected)
+								{
+                                                                    
+									$fiscal_year_id = $nextYearSelected;
+								}
+							}
+						}
+						else
+						{
+
+							$appointment_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[0]['year_type_id']);
+                                                        $fiscal_year_id = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearTypes[1]['year_type_id']);
+						}
+                                                
+                                            echo "<input type=hidden value=".$appointment_year_id." name=\"app-year-".$app_year_type_id."\">";
+                                            echo "<input type=hidden value=".$fiscal_year_id." name=\"fisc-year-".$fisc_year_type_id."\">";
+
                                         $dates = $years->GetYearDates($appointment_year_id);
 
                                         $start_date = $dates[0]['start_date'];
@@ -354,6 +405,11 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         $mid_year = substr($end_date, 0, 4);
 
                                         $mid_date = $mid_year."-5-15";
+                                        
+                                        
+                                        $yearInfo = $years->GetYearDates($appointment_year_id);
+					echo "<b>".Date("F Y",strtotime($yearInfo[0]['start_date']))." - ".Date("F Y",strtotime($yearInfo[0]['end_date']))."<b>";
+                                        echo("<BR><BR>");
                                         echo("<B><U>Pay Period 1 ($start_date - $mid_date)</U></B><BR><BR>");
                                         echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,1);
                                                                              
