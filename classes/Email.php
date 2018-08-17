@@ -241,7 +241,7 @@ Thanks for your assistance in this process,\n"
                 }
 
 
-                $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date ) TEST";
+                $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date )";
 
                 $header= "From: ".$from." ".PHP_EOL .
 				 "CC: ".$cc ." " . PHP_EOL .
