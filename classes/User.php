@@ -227,6 +227,143 @@ class User
             $allBannerUsers = $this->sqlDataBase->query($queryAllBannerUsers);
             return $allBannerUsers;
         }
+        
+         
+        /** Gets the vacation leaves for a user for a specified appointment year and pay period
+         * 
+         * @param string $type Type of Leave to get ("Vacation", "Sick", "Floating Holiday")
+         * @param int $appointment_year_id ID for the Appointment Year to get data from
+         * @param int $pay_period The Pay Period to get data from
+         *          1 = 8/15 - 5/15
+         *          2 = 5/15 - 8/15
+         * @param $status_id ID of the status of Leaves to get (2 = APPROVED). See config.php for full list
+         * 
+         * @return array An array of Vacation Leave data for the user and time period specified
+         */  
+        public function GetLeaves($type, $year_id, $pay_period, $status_id) {
+            
+            $user_id = $this->userId;
+            
+            $years = new Years($this->sqlDataBase);
+            $yearInfo = $years->GetYearDates($year_id);
+
+            $start_year = Date("Y",strtotime($yearInfo[0]['start_date']));
+            $end_year = Date("Y",strtotime($yearInfo[0]['end_date']));
+
+            $start_date = $start_year . "-08-15";
+            $end_date = $end_year. "-05-15";
+
+            if($pay_period == 2) {
+                $start_date = $end_year . "-05-15";
+                $end_date = $end_year . "-08-15";
+
+            }
+            
+            $query = "";
+            if($type == "Vacation") {
+             $query = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
+                 li.leave_hours, 
+                 TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, 
+                 li.description, 
+                 lt.name, 
+                 s.name as statusName, 
+                 li.leave_type_id_special, 
+                 lts.name as special_name
+                   FROM (leave_info li)
+                   JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+                   JOIN status s ON li.status_id = s.status_id
+                   LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+                   WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$year_id."
+                   AND lt.name != 'Sick'
+                   and date between '$start_date' and '$end_date' 
+                   ORDER BY li.date DESC";
+            } else if($type == "Sick") {
+                $query ="SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
+                    li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, 
+                    li.description, 
+                    lt.name, 
+                    s.name as statusName, 
+                    li.leave_type_id_special, 
+                    lts.name as special_name
+                        FROM (leave_info li)
+                        JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+                        JOIN status s ON li.status_id = s.status_id
+                        LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+                        WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$year_id."
+                        AND lt.name = 'Sick'
+                        and date between '$start_date' and '$end_date' 
+                        ORDER BY li.date DESC";
+            } else if($type == "Floating Holiday") {
+                $query = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
+                    li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, 
+                    li.description, 
+                    lt.name, 
+                    s.name as statusName, 
+                    li.leave_type_id_special, 
+                    lts.name as special_name
+                        FROM (leave_info li)
+                        JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+                        JOIN status s ON li.status_id = s.status_id
+                        LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+                        WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$year_id.
+                        " AND li.date between '$start_date' and '$end_date'". 
+                        " ORDER BY li.date DESC";
+            }
+
+            $results_array = $this->sqlDataBase->query($query);
+
+            $results = array();
+            if(count($results_array) > 0) {
+            foreach($results_array as $result) {
+                $leave = new Leave($this->sqlDataBase);
+                $leave->LoadLeave($result['leave_id']);
+                $results[] = $leave;
+            }
+            }
+            return $results;
+        }
+        /** Gets the vacation leaves for a user for a specified appointment year and pay period
+         * 
+         * @param int $appointment_year_id ID for the Appointment Year to get data from
+         * @param int $pay_period The Pay Period to get data from
+         *          1 = 8/15 - 5/15
+         *          2 = 5/15 - 8/15
+         * @param $status_id ID of the status of Leaves to get (2 = APPROVED). See config.php for full list
+         * 
+         * @return array An array of Vacation Leave data for the user and time period specified
+         */    
+        public function GetVacationLeaves($appointment_year_id, $pay_period, $status_id) {
+            return $this->GetLeaves("Vacation", $appointment_year_id, $pay_period, $status_id);
+        }
+        
+         /** Gets the sick leaves for a user for a specified appointment year and pay period
+         * 
+         * @param int $appointment_year_id ID for the Appointment Year to get data from
+         * @param int $pay_period The Pay Period to get data from
+         *          1 = 8/15 - 5/15
+         *          2 = 5/15 - 8/15
+         * @param $status_id ID of the status of Leaves to get (2 = APPROVED). See config.php for full list
+         * 
+         * @return array An array of Vacation Leave data for the user and time period specified
+         */    
+        public function GetSickLeaves($appointment_year_id, $pay_period, $status_id) {
+            return $this->GetLeaves("Sick", $appointment_year_id, $pay_period, $status_id);
+        }
+        
+       /** Gets the floating holidays for a user for a specified appointment year and pay period
+         * 
+         * @param int $appointment_year_id ID for the Appointment Year to get data from
+         * @param int $pay_period The Pay Period to get data from
+         *          1 = 8/15 - 5/15
+         *          2 = 5/15 - 8/15
+         * @param $status_id ID of the status of Leaves to get (2 = APPROVED). See config.php for full list
+         * 
+         * @return array An array of Vacation Leave data for the user and time period specified
+         */    
+        public function GetFloatingHolidays($fiscal_year_id, $pay_period, $status_id) {
+            return $this->GetLeaves("Floating Holiday", $fiscal_year_id, $pay_period, $status_id);
+        }
+        
 	//Getters and setters -------------------------------------------------------------------------------------------
 	
 	public function getSupervisorId() { return $this->supervisorId; }

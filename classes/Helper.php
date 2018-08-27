@@ -93,9 +93,6 @@ class Helper
 	public function DrawLeavesTableRowsForReport($userId, $statusId,$appointment_year_id, $fiscal_year_id, $pay_period=1, $limit=0)
 	{
             
-            //$queryYearTypes = "SELECT year_type_id,name,description FROM year_type DESC";
-	    //$yearTypes = $this->sqlDataBase->query($queryYearTypes);
-            
             // Regular leave
             
            $years = new Years($this->sqlDataBase);
@@ -107,7 +104,7 @@ class Helper
            
            $start_date = $start_year . "-08-15";
            $end_date = $end_year. "-05-15";
-           //echo("curr Pay period = $curr_pay_period<BR>");
+
            if($pay_period == 2) {
                $start_date = $end_year . "-05-15";
                $end_date = $end_year . "-08-15";
@@ -117,7 +114,6 @@ class Helper
 	   $appYear = "<b>".Date("F Y",strtotime($appYearInfo[0]['start_date']))." - ".Date("F Y",strtotime($appYearInfo[0]['end_date']))."<b>";
            $fiscYear = "<b>".Date("F Y",strtotime($fiscYearInfo[0]['start_date']))." - ".Date("F Y",strtotime($fiscYearInfo[0]['end_date']))."<b>";
            
-            //$yearId = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
            
 		$tableString = "Vacation: ( $start_date - $end_date ) <BR>";
 		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
@@ -129,13 +125,17 @@ class Helper
                                 AND lt.name = 'Vacation'
                                 and date between '$start_date' and '$end_date' 
 				ORDER BY li.date DESC";
-                //echo("Vacation leave query = $queryLeaves <BR>");
+
 		if($limit>0)
 		{
 			$queryLeaves = $queryLeaves." LIMIT ".$limit;
 		}
                 $tableString.= "<table class=\"hover_table\" id=\""."report_table\">";
 		$leaves = $this->sqlDataBase->query($queryLeaves);
+                $user = new User($this->sqlDataBase);
+                $user->LoadUser($userId);
+                $leaves = $user->GetVacationLeaves($appointment_year_id, $pay_period, $statusId);
+                
 		$tableString.= "<thead><tr>";
 		$tableString.= "<td>Select</td>";
 		$tableString.= "<th>Date</th>";
@@ -147,11 +147,21 @@ class Helper
 		$tableString.= "<th>Status</th>";
 		$tableString.= "</tr></thead><tbody>";
 
-		if(isset($leaves))
+		if(count($leaves) > 0)
 		{
-			foreach($leaves as $id => $leave)
+			foreach($leaves as  $leave)
 			{
-				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".$leave['leave_id']."\"></td><td>".$leave['date']."</td><td>".$leave['name']."</td><td>".$leave['special_name']."</td><td>".$leave['leave_hours']."</td><td>".$leave['time']."</td><td>".$leave['description']."</td><td>".$leave['statusName']."</td></tr>";
+                            $leaveType = new LeaveType($this->sqlDataBase);
+                            $leaveType->LoadLeaveType($leave->getLeaveTypeId());
+                            $tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".
+                                    $leave->getLeaveId()."\"></td><td>".
+                                    $leave->GetDate()."</td><td>".
+                                    $leaveType->getName()."</td><td>".
+                                    $leaveType->getSpecial()."</td><td>".
+                                    $leave->GetHours()."</td><td>".
+                                    gmdate('g\h i\m',$leave->GetTime())."</td><td>".
+                                    $leave->getDescription()."</td><td>".
+                                    $leave->GetStatusString()."</td></tr>";
 			}
 		}
 		else
@@ -162,23 +172,11 @@ class Helper
 		
                 // Sick Leave
                 $tableString .= "Sick Leave: ( $start_date - $end_date  )<BR>";
-                $queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$appointment_year_id."
-                                AND lt.name = 'Sick'
-                                and date between '$start_date' and '$end_date' 
-				ORDER BY li.date DESC";
-                
-                
-                if($limit>0)
-		{
-			$queryLeaves = $queryLeaves." LIMIT ".$limit;
-		}
+
                 $tableString .= "<table class=\"hover_table\" id=\""."report_table\">";
-		$leaves = $this->sqlDataBase->query($queryLeaves);
+
+                $leaves = $user->GetSickLeaves($appointment_year_id, $pay_period, $statusId);
+                
 		$tableString.= "<thead><tr>";
 		$tableString.= "<td>Select</td>";
 		$tableString.= "<th>Date</th>";
@@ -190,12 +188,23 @@ class Helper
 		$tableString.= "<th>Status</th>";
 		$tableString.= "</tr></thead><tbody>";
 
-		if(isset($leaves))
+		if(count($leaves) > 0)
 		{
-			foreach($leaves as $id => $leave)
+			foreach($leaves as  $leave)
 			{
-				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".$leave['leave_id']."\"></td><td>".$leave['date']."</td><td>".$leave['name']."</td><td>".$leave['special_name']."</td><td>".$leave['leave_hours']."</td><td>".$leave['time']."</td><td>".$leave['description']."</td><td>".$leave['statusName']."</td></tr>";
-			}
+			    $leaveType = new LeaveType($this->sqlDataBase);
+                            $leaveType->LoadLeaveType($leave->getLeaveTypeId());
+                            $tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".
+                                    $leave->getLeaveId()."\"></td><td>".
+                                    $leave->GetDate()."</td><td>".
+                                    $leaveType->getName()."</td><td>".
+                                    $leaveType->getSpecial()."</td><td>".
+                                    $leave->GetHours()."</td><td>".
+                                    gmdate('g\h i\m',$leave->GetTime())."</td><td>".
+                                    $leave->getDescription()."</td><td>".
+                                    $leave->GetStatusString()."</td></tr>";
+                            
+                        }
 		}
 		else
 		{
@@ -204,25 +213,10 @@ class Helper
 		$tableString.="</tbody></table>";
                 
                 // Floating holidays
-                //$yearType = $yearTypes[1]; // 1
-            //$yearId = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
-                
-                
-		$tableString .= "Floating Holidays: ( $fiscYear ) <BR>";
-		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$fiscal_year_id." AND li.date between '$start_date' and '$end_date' 
                                 
-				ORDER BY li.date DESC";
-                if($limit>0)
-		{
-			$queryLeaves = $queryLeaves." LIMIT ".$limit;
-		}
+		$tableString .= "Floating Holidays: ( $fiscYear ) <BR>";
 
-		$leaves = $this->sqlDataBase->query($queryLeaves);
+                $leaves = $user->GetFloatingHolidays($fiscal_year_id, $pay_period, $statusId);
                 $tableString .= "<table class=\"hover_table\" id=\""."report_table\">";
 		$tableString.= "<thead><tr>";
 		$tableString.= "<td>Select</td>";
@@ -235,11 +229,22 @@ class Helper
 		$tableString.= "<th>Status</th>";
 		$tableString.= "</tr></thead><tbody>";
 
-		if(isset($leaves))
+		if(count($leaves) > 0)
 		{
-			foreach($leaves as $id => $leave)
+
+			foreach($leaves as $leave)
 			{
-				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".$leave['leave_id']."\"></td><td>".$leave['date']."</td><td>".$leave['name']."</td><td>".$leave['special_name']."</td><td>".$leave['leave_hours']."</td><td>".$leave['time']."</td><td>".$leave['description']."</td><td>".$leave['statusName']."</td></tr>";
+                            $leaveType = new LeaveType($this->sqlDataBase);
+                            $leaveType->LoadLeaveType($leave->getLeaveTypeId());
+				$tableString.= "<tr><td><input type=checkbox name=\"leavesCheckBox[]\" value=\"".
+                                        $leave->getLeaveId()."\"></td><td>".
+                                        $leave->GetDate()."</td><td>".
+                                        $leaveType->getName()."</td><td>".
+                                        $leaveType->getSpecial()."</td><td>".
+                                        $leave->GetHours()."</td><td>".
+                                        gmdate('g\h i\m',$leave->GetTime())."</td><td>".
+                                        $leave->getDescription()."</td><td>".
+                                        $leave->GetStatusString()."</td></tr>";
 			}
 		}
 		else
@@ -255,8 +260,8 @@ class Helper
 	 *
 	 * Draw leave types available hours for a given user on a given year
 	 *
-	 * @param unknown_type $yearId
-	 * @param unknown_type $userId
+	 * @param int $yearId ID for the Year to get data from
+	 * @param int $userId ID for the User to get data for
 	 * @param unknown_type $edit
 	 */
 	public function DrawLeaveHoursAvailable($yearId,$userId, $edit)
@@ -268,8 +273,7 @@ class Helper
 		$years = new Years($this->sqlDataBase);
 		$thisPayPeriodId = $years->GetPayPeriodId(Date("d"),Date("m"),Date("Y"),$yearId);
 		$userLeavesHoursAvailable = new Rules($this->sqlDataBase);
-                //echo("LoadUserYearUsage test...<BR>");
-                //echo("pay period 1 = $thisPayPeriodId<BR>");
+
 		$leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userId,$yearId,$thisPayPeriodId);
 		$tableString.= "<tr>";
 		$tableString.= "<td class=\"col_title\">Name</td>";
@@ -284,9 +288,6 @@ class Helper
 		{
 			foreach($leavesAvailable as $id=>$leaveAvailable)
 			{
-                            //echo("leaveAvailable = ");
-                            //print_r($leaveAvailable);
-                            //echo("<BR><BR>");
                             
                          // Leave Type 10 = Non-cumulative sick leave, and shouldn't be shown until after the current pay period has passed
                         if($thisPayPeriodId != 0 && $leaveAvailable['leave_type_id'] == 10) {
@@ -414,14 +415,7 @@ class Helper
 						$yearId = $years->GetYearId($day,$month,$year,$leaveType->getYearTypeId());
 						if($newLeave->CreateLeave($date,$timeSec,$leaveTypeId,$description,$userId,$specialLeaveId,$yearId, $leaveDayHours))
 						{
-							/*
-							 //Admins can auto approve themselves
-							 if($loggedUser->getUserPermId()==ADMIN)
-							 {
-								$newLeave->setStatusId(APPROVED);
-								$newLeave->UpdateDb();
-								}
-								*/
+
 							if($loggedUser->getAutoApprove() || $loggedUser->getSupervisorId()==0)
 							{
 								$newLeave->setStatusId(APPROVED);
@@ -1211,7 +1205,7 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
 
         $peopleDB = new SQLDataBase($peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password);
         $query="SELECT uin from users where netid='".$netId."'";
-
+        
         try {
             $uin = $peopleDB->query($query);
             //print_r($uin);
@@ -1228,6 +1222,8 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
     /* Get user info from Banner
      * 
      * @param $userUin The user's university id number
+     * 
+     * @return Array of Vacation Leave data from Banner
      */
     function apiGetUserInfo($userUin) {
         global $bannerUrl;
@@ -1239,8 +1235,6 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
 
            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-
-           //echo ("url = $apiURL<BR>");
 
            $result = curl_exec($curl);
            curl_close($curl);

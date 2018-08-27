@@ -425,7 +425,10 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         
                                         $user_supervisor = $user->GetSupervisor();
                                         $user_supervisor_email = $user_supervisor->getUserEmail();
-                                        
+                                        if($debug) {
+                                            $user_email = $loggedUser->getUserEmail();
+                                            $user_supervisor_email = $loggedUser->getUserEmail();
+                                        }
                                         $to = $user_email . "," . $user_supervisor_email;
                                         
                                        echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
@@ -451,18 +454,3 @@ if($loggedUser->GetUserPermId()==ADMIN)
 		</td>
 	</tr>
 </table>
-<?php
-
-/*
-if(isset($_GET['excel'])) {
-    $user_id = $_GET['user_id'];
-    $status_id = $_GET['status_id'];
-    $app_year_id = $_GET['app_year_id'];
-    $fisc_year_id = $_GET['fisc_year_id'];
-    $pay_period = $_GET['pay_period'];
-    writeExcel($user_id, $status_id, $app_year_id, $fisc_year_id, $sqlDataBase, $pay_period);
-}
-*/
-
-
-?>
