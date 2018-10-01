@@ -18,7 +18,7 @@ function my_autoloader($class_name) {
 spl_autoload_register('my_autoloader');
 
 
-require_once '/vendor/autoload.php';
+require_once './vendor/autoload.php';
 
 //Load configuration file
 require_once "config.php";
