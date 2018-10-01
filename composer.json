@@ -1,0 +1,8 @@
+{
+	"require": {
+		"phpoffice/phpexcel": "1.8.1" 
+       },
+        "config": {
+		"component-dir": "html/vendor/components"
+	}
+}

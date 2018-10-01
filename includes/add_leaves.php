@@ -64,9 +64,10 @@ if(isset($_POST['yearType']))
 				<option value=0>None</option>
 				<?php
 
-				$queryYearTypesInfo = "SElECT year_type_id,name FROM year_type";
-				$yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
+				//$queryYearTypesInfo = "SElECT year_type_id,name FROM year_type";
+				//$yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
 
+                                $yearTypesInfo = Years::GetYearTypes();
 				if($yearTypesInfo)
 				{
 					foreach($yearTypesInfo as $id=>$yearTypeInfo)

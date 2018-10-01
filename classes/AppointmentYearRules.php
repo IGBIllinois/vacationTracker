@@ -64,7 +64,9 @@ class AppointmentYearRules extends Rules
 		if($nextYearId && ($hasRollOver || $this->force))
 		{
 			$nextYearUsage = $this->LoadUserYearUsage($userId,$nextYearId);
-			
+                        //echo("<BR>nextYearUsage = ");
+			//print_r($nextYearUsage);
+                        //echo("<BR>");
 			if($hasRollOver)
 			{
 				//echo "Year ID: ".$nextYearId."<br>";
@@ -99,14 +101,7 @@ class AppointmentYearRules extends Rules
 		//Sick Days Rules
 		//Check if we have a spill over to noncomltv hours
                 // Update 07/16: only do this for current year, not future years.
-                //echo("User Year Usage = ");
-                //print_r($userYearUsage);
-            //rpint_r($userYearUsage[self::SICK_LEAVE]);
-                //echo("added hours = ". $userYearUsage[self::SICK_LEAVE]['added_hours'] . "<BR>");
-                //echo("Used hours = " . $userYearUsage[self::SICK_LEAVE]['used_hours'] . "<BR><BR>");
-            //echo("Non-cumulative hours = ");
-           // print_r($userYearUsage[self::NONCMLTV_SICK_LEAVE]);
-           // echo("<BR>");
+
 		if($userYearUsage[self::SICK_LEAVE]['added_hours'] - $userYearUsage[self::SICK_LEAVE]['used_hours'] < 0)
 		{	
 			//Check if we have a spill over to initial comltv hours
@@ -129,7 +124,6 @@ class AppointmentYearRules extends Rules
 				$userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours'] = $userYearUsage[self::SICK_LEAVE]['used_hours'] - $userYearUsage[self::SICK_LEAVE]['added_hours'];
 				$userYearUsage[self::SICK_LEAVE]['used_hours'] =  $userYearUsage[self::SICK_LEAVE]['added_hours'];
                                 
-                                echo("New non-cumulative sick used hours= ". $userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours']. "<BR>");
 				
 			}
 		}

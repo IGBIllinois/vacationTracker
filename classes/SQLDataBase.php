@@ -21,7 +21,6 @@ class SQLDataBase {
 	private $database; //database name
 	private $username; //username to connect to the database
 	private $password; //password of the username
-	private $totalSeconds = 0;
 
 	////////////////Public Functions///////////
 
@@ -41,15 +40,14 @@ class SQLDataBase {
 	//opens a connect to the database
 	public function open($host,$database,$username,$password) {
 		//Connects to database.
-		//$this->link = mysql_connect($host,$username,$password) or die("Unable to connect to database");
-		//@mysql_select_db($database,$this->link) or die("Unable to select database " . $database);
+
                 $this->link = mysqli_connect($host,$username,$password) or die("Unable to connect to database");
 		@mysqli_select_db($this->link, $database) or die("Unable to select database " . $database);
 		$this->host = $host;
 		$this->database = $database;
 		$this->username = $username;
 		$this->password = $password;
-                //echo("OK");
+
 
 	}
 
@@ -63,19 +61,13 @@ class SQLDataBase {
 	//$sql - sql string to run on the database
 	//returns the id number of the new record, 0 if it fails
 	public function insertQuery($sql) {
-		//if (mysqli_query($sql,$this->link)) {
-            //try {
-            //    mysqli_query($this->link, $sql);
-            //    
-            //} catch (Exception $ex) {
-            //    echo($ex->getTraceAsString());
-            //}
+
                 if (mysqli_query($this->link, $sql)) {
-                    //echo("1");
+
 			return mysqli_insert_id($this->link);
 		}
 		else {
-                    //echo("0");
+
 			return 0;
 		}
 
@@ -86,7 +78,8 @@ class SQLDataBase {
 	//For update and delete queries
 	//returns true on success, false otherwise
 	public function nonSelectQuery($sql) {
-		//return mysqli_query($sql,$this->link);
+
+            set_time_limit ( 3000 );
                 $result = mysqli_query($this->link, $sql);
 	}
 
@@ -95,14 +88,9 @@ class SQLDataBase {
 	//Used for SELECT queries
 	//returns an associative array of the select query results.
 	public function query($sql) {
-            //echo("sql = $sql");
-		//$result = mysqli_query($sql,$this->link);
+
                 $result = mysqli_query($this->link, $sql);
-                //echo("<BR>");
-                //print_r($result);
-                //echo("<BR>");
-               //print_r($this->mysqlToArray($result));
-               //echo("<BR>");
+
 		return $this->mysqlToArray($result);
 	}
 
@@ -121,18 +109,14 @@ class SQLDataBase {
 	//Used for SELECT queries
 	//returns single result value in first row
 	public function singleQuery($sql) {
-		//$result = mysqli_query($sql,$this->link);
-            //echo("singleQuery=".$sql."<BR>");
+
                 $result = mysqli_query($this->link, $sql);
-                //echo("done with query<BR>");
-		//return @mysqli_result($result, 0);
 
 		$row = mysqli_fetch_array($result,MYSQL_ASSOC);
-               // print_r($row);
+
                 if($row != null) {
 			foreach($row as $key=>$data) {
 				//there should be only one
-                            //echo("key, data = $key , $data");
                                 return $data;
 			}
                 }
@@ -162,9 +146,6 @@ class SQLDataBase {
 	private function mysqlToArray($mysqlResult) {
 		$dataArray;
 		$i =0;
-                //echo("mysqlResult =");
-                //print_r($mysqlResult);
-                //echo("<BR>");
 		while($row = mysqli_fetch_array($mysqlResult,MYSQL_BOTH)){
                 
 			foreach($row as $key=>$data) {
@@ -189,6 +170,32 @@ class SQLDataBase {
 	{
 		return $this->database;
 	}
+        
+        public function get_query_result($query_string, $query_array) {
+            $statement = $this->get_link()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $statement->execute($query_array);
+            $result = $statement->fetchAll();
+            return $result;
+
+        }
+
+
+        public function get_update_result($query_string, $query_params) {
+            // Update queries should probably only update one record. This will ensure 
+            // only one record gets updated in case of a malformed query.
+            $query_string .= " LIMIT 1"; 
+            $statement = $this->get_link()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $result = $statement->execute($query_params);
+            return $result;
+        }
+
+        public function get_insert_result($query_string, $query_array) {
+
+            $statement = $this->get_link()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $stmt = $statement->execute($query_array);
+            $result =  $this->get_link()->lastInsertId();
+            return $result;
+        }
 
 }
 

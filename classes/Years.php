@@ -246,6 +246,7 @@ class Years
 	public function GetYearTypeInfo($yearTypeId)
 	{
 		$queryYearTypeInfo = "SELECT name,description,start_date,end_date,num_periods FROM year_type WHERE year_type_id=".$yearTypeId;
+
 		$yearTypeInfo = $this->sqlDataBase->query($queryYearTypeInfo);
 
 		if(isset($yearTypeInfo))
@@ -328,6 +329,8 @@ class Years
 			return 0;
 		}
 	}
+        
+        
 
 	/**
 	 * create a new year for a particular year type.
@@ -339,6 +342,7 @@ class Years
 	 */
 	public function CreateYear($nextYear,$prevYear,$yearTypeId, $locked)
 	{
+            $createYearStartTime = time();
 		$yearId = 0;
 			//echo "CREATEYEAR START <BR>";
 		$prevYearDates = $this->GetYearDates($prevYear);
@@ -378,16 +382,33 @@ class Years
 
 			$yearTypeInfo = $this->GetYearTypeInfo($yearTypeId);
 			$this->CreatePayPeriod($dateStart,$dateEnd,$yearId,$yearTypeInfo['0']['num_periods']);
-				
+
+                        $createYearEndTime = time();
+                        $totalTime = ($createYearEndTime - $createYearStartTime)/60;
+                        //echo("CreateYear time  = $totalTime");
+                        
 			return $yearId;
 				
 		}
 		else
 		{
+                    $createYearEndTime = time();
+                        $totalTime = ($createYearEndTime - $createYearStartTime)/60;
+                        //echo("CreateYear time  = $totalTime");
 			return 0;
 		}
 
 	}
+        
+        // Static functions
+        
+        public static function GetYearTypes() {
+            $queryYearTypesInfo = "SELECT * FROM year_type";
+            $yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
+            return $yearTypesInfo;
+        }
+        
+        // Private functions
 
 	/**
 	 * Insert year information into the database
@@ -405,21 +426,17 @@ class Years
 		$addedHours = 0;
 
 		$queryCreateYear = "INSERT INTO year_info (start_date,end_date,locked,year_type_id,next_year_id,prev_year_id)VALUES(\"".$dateStart."\",\"".$dateEnd."\",".$locked.",".$yearTypeId.",".$nextYear.",".$prevYear.")";
-		//echo("queryCreateYear = ". $queryCreateYear . "<BR>");
                 $yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
                 
-                //echo("new Year ID = $yearId <BR>");
 
 		if($prevYear)
 		{
 			$updatePrevYear = "UPDATE year_info SET next_year_id=".$yearId." WHERE year_info_id=".$prevYear;
-                        //echo("updatePrevYear = $updatePrevYear <BR>");
 			$this->sqlDataBase->nonSelectQuery($updatePrevYear);
 		}
 		if($nextYear)
 		{
 			$updateNextYear = "UPDATE year_info SET prev_year_id=".$yearId." WHERE year_info_id=".$nextYear;
-                        //echo("updateNextYear = $updateNextYear <BR>");
 			$this->sqlDataBase->nonSelectQuery($updateNextYear);
 		}
 
@@ -431,6 +448,7 @@ class Years
 
 		if(isset($leaveTypes))
 		{
+                    $helper = new Helper($this->sqlDataBase);
 			foreach($userIds as $id_u=>$userId)
 			{
 				$user = new User($this->sqlDataBase);
@@ -446,14 +464,13 @@ class Years
 				$queryInsertUserLeaveInfo = substr($queryInsertUserLeaveInfo,0,-1);
 				$leaveUserInfoId = $this->sqlDataBase->insertQuery($queryInsertUserLeaveInfo);
 
-				if($prevYear)
-				{
-					//$rules = new Rules($this->sqlDataBase);
-					//$rules->RunRules($userId['user_id'],$prevYear);
-				}
+                                
+                                $helper->RunRulesYearType($userId['user_id'], $yearTypeId, false);
+
 			}
 		}
-
+                
+                                        
 		return $yearId;
 	}
 
@@ -499,6 +516,7 @@ class Years
 		$queryCreatePayPeriod = substr($queryCreatePayPeriod,0,-1);
 		$this->sqlDataBase->insertQuery($queryCreatePayPeriod);
 	}
+        
 }
 
 

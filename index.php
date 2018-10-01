@@ -6,29 +6,8 @@
  *
  * @author Nevo Band
  */
-error_reporting(E_ALL);
-#ini_set('display_errors', '1');
-#error_reporting(0);
-date_default_timezone_set("America/Chicago");
-session_start();
-//Load the classes automatically without having to include them
-function __autoload($class_name) {
-	require_once 'classes/' . $class_name . '.php';
-}
 
-//Load configuration file
-include "includes/config.php";
-
-//Initialize database 
-$sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
-
-//initialize ldap authentication object
-$authen=new Auth($sqlDataBase);
-$authen->SetLdapVars($host,$peopleDN,$groupDN,$ssl,$port);
-$loggedUser = new User($sqlDataBase);
-
-//Authenticate user with LDAP and existing account
-include "includes/authenticate.php";
+include_once "includes/main.inc.php";
 
 //Check if user is connected using a token to allow automatic approving of leaves
 if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !isset($_SESSION['vacation_auth_key']))) ||

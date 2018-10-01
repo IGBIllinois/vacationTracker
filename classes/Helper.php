@@ -251,6 +251,28 @@ class Helper
 		{
 			$tableString .= "<tr><td colspan=8><center>No Leaves</center></td></tr>";
 		}
+                        if($pay_period == 2) {
+            //write yearly totals
+            $userLeavesHoursAvailable = new Rules($this->sqlDataBase);
+            $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userId,$appointment_year_id);
+            
+            $totalVacHours = round(($leavesAvailable[1]['initial_hours']+$leavesAvailable[1]['added_hours']-$leavesAvailable[1]['calc_used_hours']),2);
+            $estimatedVacHours = round(($leavesAvailable[1]['initial_hours']+$leavesAvailable[1]['est_added_hours']-$leavesAvailable[1]['calc_used_hours']),2);
+            
+            $totalSickHours = round(($leavesAvailable[2]['initial_hours']+$leavesAvailable[2]['added_hours']-$leavesAvailable[2]['calc_used_hours']),2);
+            $estimatedSickHours = round(($leavesAvailable[2]['initial_hours']+$leavesAvailable[2]['est_added_hours']-$leavesAvailable[2]['calc_used_hours']),2);
+            
+            $data[] = (array());
+            $total_vac_hours = $leavesAvailable[1]['calc_used_hours'];
+            $total_sick_hours = $leavesAvailable[2]['calc_used_hours'];
+            
+            $tableString.=("<BR>Yearly Total Vacation Hours Taken:". round($leavesAvailable[1]['calc_used_hours'],2));
+            $tableString.=(("<BR>Yearly Total Sick Hours Taken:". round($leavesAvailable[2]['calc_used_hours'],2)));
+            
+            $tableString.=(("<BR>Vacation Hours Available:". $estimatedVacHours));
+            $tableString.=(("<BR>Sick Hours Available:". $estimatedSickHours));
+        }
+        
 		$tableString.="</tbody></table>";
                 
                 return $tableString;
@@ -288,7 +310,6 @@ class Helper
 		{
 			foreach($leavesAvailable as $id=>$leaveAvailable)
 			{
-                            
                          // Leave Type 10 = Non-cumulative sick leave, and shouldn't be shown until after the current pay period has passed
                         if($thisPayPeriodId != 0 && $leaveAvailable['leave_type_id'] == 10) {
                         } else {
@@ -620,6 +641,8 @@ class Helper
 			$payPeriodTimeSec = $payPeriodEndDateEpoch - $payPeriodStartDateEpoch;
 			foreach($users as $id=>$userInfo)
 			{
+                            $user = new User($this->sqlDataBase);
+                            $user->LoadUser($userInfo['user_id']);
                             //print_r($userInfo);
 				$startDateCalculation="";
 
@@ -645,8 +668,8 @@ class Helper
 					//echo($showCalculation);
 //					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,user_type_id,description, year_info_id,begining_of_pay_period,date)
 //						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",".$userInfo['user_type_id'].",\"".$description."\",".$yearId.",$hoursAddBegin, NOW())";\
-                                        $queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period)
-						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin)";
+                                        $queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period, user_type_id, date)
+						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,".$user->getUserTypeId().", NOW())";
 					//$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period,date)
 					//	VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin, NOW())";
 
@@ -662,12 +685,13 @@ class Helper
 				{
                                     //echo("NOPE2");
 					//Give full leave time since user worked prior to start to pay period
-					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period)
-						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin)";
+                                    //print_r($userInfo);
+					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period, user_type_id, date)
+						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,".$user->getUserTypeId().", NOW())";
 					
                                         //$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,user_type_id,description, year_info_id,begining_of_pay_period,date)
 					//	VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",".$userInfo['user_type_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,NOW())";
-					//echo("queryAddUserHours 2 = $queryAddUserHours<BR>");
+					echo("queryAddUserHours 2 = $queryAddUserHours<BR>");
                                         $this->sqlDataBase->insertQuery($queryAddUserHours);
 					if($userInfo['user_id'])
 					{

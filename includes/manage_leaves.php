@@ -431,7 +431,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         }
                                         $to = $user_email . "," . $user_supervisor_email;
                                         
-                                       echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
+                                       echo("<BR><U><a href='includes/vacation_excel.php?vacation_report=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=1' target='_blank'>Download Excel file (Pay Period 1)</A></U>");
                                        echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=1' >Email Pay Period 1 Notice</A></U>");
                                        echo(" (Will send email to $to)<BR>");
 
@@ -440,7 +440,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         echo $helperClass->DrawLeavesTableRowsForReport($leavesShowUser, APPROVED, $appointment_year_id, $fiscal_year_id,2);
 
                                         
-                                       echo("<BR><U><a href='includes/vacation_excel.php?excel=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=2' target='_blank'>Download Excel file (Pay Period 2)</A></U>");
+                                       echo("<BR><U><a href='includes/vacation_excel.php?vacation_report=1&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id . "&pay_period=2' target='_blank'>Download Excel file (Pay Period 2)</A></U>");
                                        echo("<BR><BR><U><a href='index.php?view=create&email=true&user_id=".$leavesShowUser. "&status_id=". APPROVED . "&app_year_id=". $appointment_year_id . "&fisc_year_id=". $fiscal_year_id ."&pay_period=2' >Email Pay Period 2 Notice</A></U>");
                                        echo(" (Will send email to $to)<BR>");
                                        echo("</div></form>");

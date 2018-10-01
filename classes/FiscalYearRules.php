@@ -54,6 +54,8 @@ class FiscalYearRules extends Rules
 					if($nextYearUsageLeaveType['roll_over'])
 					{
 						$nextYearUsage[$id]['initial_hours'] = $userYearUsage['initial_hours']+$userYearUsage['added_hours']-$userYearUsage['used_hours'];
+                                                echo("nextYearUsage = ".$nextYearUsage[$id]['initial_hours']);
+                                                echo("(".$userYearUsage['initial_hours']." + ".$userYearUsage['added_hours']." - ".$userYearUsage['used_hours'].")");
 					}
 				}
 			}
