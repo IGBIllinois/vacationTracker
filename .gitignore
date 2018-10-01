@@ -1,3 +1,5 @@
 /includes/config.php
 .swp
 /nbproject/
+/vendor/
+composer.lock
