@@ -21,7 +21,7 @@ spl_autoload_register('my_autoloader');
 require_once '/vendor/autoload.php';
 
 //Load configuration file
-include "config.php";
+require_once "config.php";
 
 
 
@@ -34,4 +34,4 @@ $authen->SetLdapVars($host,$peopleDN,$groupDN,$ssl,$port);
 $loggedUser = new User($sqlDataBase);
 
 //Authenticate user with LDAP and existing account
-include "authenticate.php";
+require_once "authenticate.php";
