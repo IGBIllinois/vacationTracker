@@ -21,6 +21,8 @@ class SQLDataBase {
 	private $database; //database name
 	private $username; //username to connect to the database
 	private $password; //password of the username
+        
+        private $PDOlink;
 
 	////////////////Public Functions///////////
 
@@ -42,6 +44,8 @@ class SQLDataBase {
 		//Connects to database.
 
                 $this->link = mysqli_connect($host,$username,$password) or die("Unable to connect to database");
+                $this->PDOlink = new PDO("mysql:host=$host;dbname=$database",$username,$password,
+					array(PDO::ATTR_PERSISTENT => true));
 		@mysqli_select_db($this->link, $database) or die("Unable to select database " . $database);
 		$this->host = $host;
 		$this->database = $database;
@@ -130,6 +134,12 @@ class SQLDataBase {
 	public function getLink() {
 		return $this->link;
 	}
+        
+        //getLink
+	//returns the mysql resource link
+	public function getPDOLink() {
+		return $this->PDOlink;
+	}
 
 	public function fetchAssoc($sql)
 	{
@@ -172,7 +182,7 @@ class SQLDataBase {
 	}
         
         public function get_query_result($query_string, $query_array) {
-            $statement = $this->get_link()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $statement = $this->getPDOlink()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $statement->execute($query_array);
             $result = $statement->fetchAll();
             return $result;
@@ -184,16 +194,15 @@ class SQLDataBase {
             // Update queries should probably only update one record. This will ensure 
             // only one record gets updated in case of a malformed query.
             $query_string .= " LIMIT 1"; 
-            $statement = $this->get_link()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $statement = $this->getPDOlink()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $result = $statement->execute($query_params);
             return $result;
         }
 
         public function get_insert_result($query_string, $query_array) {
-
-            $statement = $this->get_link()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            $statement = $this->getPDOlink()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $stmt = $statement->execute($query_array);
-            $result =  $this->get_link()->lastInsertId();
+            $result =  $this->getPDOlink()->lastInsertId();
             return $result;
         }
 
