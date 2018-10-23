@@ -67,7 +67,7 @@ if(isset($_POST['yearType']))
 				//$queryYearTypesInfo = "SElECT year_type_id,name FROM year_type";
 				//$yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
 
-                                $yearTypesInfo = Years::GetYearTypes();
+                                $yearTypesInfo = Years::GetYearTypes($sqlDataBase);
 				if($yearTypesInfo)
 				{
 					foreach($yearTypesInfo as $id=>$yearTypeInfo)

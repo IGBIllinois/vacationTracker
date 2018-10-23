@@ -402,7 +402,7 @@ class Years
         
         // Static functions
         
-        public static function GetYearTypes() {
+        public static function GetYearTypes($sqlDataBase) {
             $queryYearTypesInfo = "SELECT * FROM year_type";
             $yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
             return $yearTypesInfo;
