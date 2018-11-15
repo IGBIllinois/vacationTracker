@@ -63,7 +63,7 @@ else
 	</td valign="top">
 	<td class="content_bg">
 	<?php
-	include "includes/user_information.php";
+	require_once "includes/user_information.php";
 	?>
 	</td>
 </tr>

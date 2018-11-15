@@ -3,7 +3,6 @@
  * class FiscalYearRules
  * this class extends Rules.php
  * Used check rules for all fiscal year leaves on a particular year
- * Enter description here ...
  * @author nevoband
  *
  */

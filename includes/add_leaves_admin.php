@@ -115,13 +115,13 @@ if(isset($_POST['deleteSelectedAddedLeaves']))
 			<td valign="top">
 			<form action="index.php?view=adminAddLeaves" method="POST" name="add_leaves">
 			<?php
-			include "includes/add_leaves.php";
+			require_once "includes/add_leaves.php";
 			?>
 			</form>
 			</td>
 			<td class="content_bg" valign="top"><?php
 			echo $message;
-			include "includes/added_leaves_list.php";
+			require_once "includes/added_leaves_list.php";
 			?>
 			</td>
 		</tr>

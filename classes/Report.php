@@ -78,7 +78,6 @@ class Report {
                                     
                                     } else {
 					$excel_file->getActiveSheet()->setCellValueByColumnAndRow($column,$start_row,$value);
-                                        //$excel_file->getActiveSheet()->getStyleByColumnAndRow($column,$start_row)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_TEXT);
                                         $excel_file->getActiveSheet()->getStyleByColumnAndRow($column,$start_row)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
                                         $excel_file->getActiveSheet()->getColumnDimensionByColumn($column)->setAutoSize(true);
                                         

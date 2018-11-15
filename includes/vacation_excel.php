@@ -10,7 +10,7 @@ spl_autoload_register('my_autoloader');
 require_once '../vendor/autoload.php';
 
 //Load configuration file
-include_once "config.php";
+require_once "config.php";
 $sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
 
 $type = "xlsx";

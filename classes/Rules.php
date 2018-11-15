@@ -71,26 +71,22 @@ class Rules
 	 */
 	public function LoadUserYearUsageCalc($userId,$yearId,$payPeriod=false)
 	{
-            //echo("Pay period = $payPeriod<BR><BR>");
 		$years = new Years($this->sqlDataBase);
 		$yearTypeId = $years->GetYearTypeId($yearId);
 		$userLeaveTypesUsage = $this->LoadLeaveTypesUsage($yearTypeId);
                 if($userLeaveTypesUsage != null) {
-                    //$userLeaveTypesUsage = $userLeaveTypesUsage[0];
-                    //print_r($userLeaveTypesUsage);
+
                     
 		foreach($userLeaveTypesUsage as $id=>$userLeaveTypeUsage)
 		{
-                    
-                    //echo("Rules: id = $id <BR>");
+
                     
 			$leaveUserInfo =$this->LoadLeaveUserInfo($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['added_hours'] = $this->LoadAddedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId,$payPeriod);
 			$userLeaveTypesUsage[$id]['initial_hours'] = $leaveUserInfo[0]['initial_hours'];
 			$userLeaveTypesUsage[$id]['est_added_hours'] = $this->LoadAddedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['calc_used_hours'] = $this->LoadCalcUsedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
-                        //print_r($userLeaveTypeUsage);
-                        //echo("<BR><BR>");
+
 		} 
 		return $userLeaveTypesUsage;
                 }
@@ -102,13 +98,11 @@ class Rules
 		$yearTypeId = $years->GetYearTypeId($yearId);
 		$userLeaveTypesUsage = $this->LoadLeaveTypesUsage($yearTypeId);
                 if($userLeaveTypesUsage != null) {
-                    //$userLeaveTypesUsage = $userLeaveTypesUsage[0];
-                    //print_r($userLeaveTypesUsage);
+
                     
 		foreach($userLeaveTypesUsage as $id=>$userLeaveTypeUsage)
 		{
-                    
-                    //echo("Rules: id = $id <BR>");
+
                     
 			$leaveUserInfo =$this->LoadLeaveUserInfo($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			//$userLeaveTypesUsage[$id]['added_hours'] = $this->LoadAddedHoursPayPeriod($yearId,$userLeaveTypeUsage['leave_type_id'],$userId,$payPeriod);
@@ -116,8 +110,7 @@ class Rules
 			//$userLeaveTypesUsage[$id]['initial_hours'] = $leaveUserInfo[0]['initial_hours'];
 			//$userLeaveTypesUsage[$id]['est_added_hours'] = $this->LoadAddedHoursPayPeriod($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['calc_used_hours'] = $this->LoadCalcUsedHoursPayPeriod($yearId,$userLeaveTypeUsage['leave_type_id'],$userId, $startDate, $endDate);
-                        //print_r($userLeaveTypeUsage);
-                        //echo("<BR><BR>");
+
 		} 
 		return $userLeaveTypesUsage;
                 }
@@ -186,6 +179,7 @@ class Rules
 	protected function LoadCalcUsedHours($yearId,$leaveTypeId,$userId)
 	{
 		$queryCalcUsedHours = "SELECT used_hours FROM leave_user_info WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
+
 		$calcUsedHours = $this->sqlDataBase->singleQuery($queryCalcUsedHours);
 		if($calcUsedHours)
 		{
@@ -306,7 +300,7 @@ class Rules
 	protected function UpdateLeaveUserInfo($userId,$yearId,$usedHours,$initialHours,$leaveTypeId,$leaveUserInfoId)
 	{
 		$queryUpdateLeaveUserInfo = "UPDATE leave_user_info SET used_hours=".$usedHours.", initial_hours=".$initialHours." WHERE leave_user_info_id=".$leaveUserInfoId;
-		$this->sqlDataBase->nonSelectQuery($queryUpdateLeaveUserInfo);
+                $this->sqlDataBase->nonSelectQuery($queryUpdateLeaveUserInfo);
 	}
 }
 ?>

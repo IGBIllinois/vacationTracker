@@ -121,8 +121,8 @@ else
 	action="index.php?view=calendar&confirmtoken=<?php echo $_GET['confirmtoken']; ?>"
 	method="post">
 	<?php
-	include "includes/create_leave_popup.php";
-	include "includes/edit_leave_popup.php";
+	require_once "includes/create_leave_popup.php";
+	require_once "includes/edit_leave_popup.php";
 	?>
 	<a
 		href="index.php?view=calendar&confirmtoken=<?php echo $_GET['confirmtoken']; ?>&logout=1"><?php echo (isset($_SESSION['vacation_user_id']))?"logout":"Authenticate"; ?>

@@ -21,7 +21,7 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 	//Check if token and login are valid
 	if($authen->AuthenticateToken($confirmKey,$tokenTimeOut,$loggedUser) && !isset($_GET['logout']))
 	{
-		include "includes/header.php";
+		require_once "includes/header.php";
 		//Check if user selecte to autoapprove all leaves for this token
 		if(isset($_GET['autoapprove'])||isset($_GET['autonotapprove']))
 		{
@@ -65,7 +65,7 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 elseif($loggedUser->getUserId() > 0)
 {
 
-		include "includes/header.php";
+		require_once "includes/header.php";
 
 
 		if(!isset($_GET['view']))

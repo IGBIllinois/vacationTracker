@@ -40,8 +40,6 @@ if(isset($_GET['year_type']) && $_GET['year_type'] == "fiscal") {
     $yearId = $fiscal_year_id;
 }
 
-//$thisPayPeriodId = $years->GetPayPeriodId(Date("d"),Date("m"),$year,$yearId);
-//$date = Date("m")."/".Date("d")."/".$year;
 $thisPayPeriodId = $years->GetPayPeriodId($day, $month, $year, $yearId);
 $userLeavesHoursAvailable = new Rules($sqlDataBase);
 
@@ -108,23 +106,37 @@ echo("<form action=#>"
 <?php
 
 
-$queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as type, up.name as perm, u.enabled FROM users u, user_type ut, user_perm up WHERE up.user_perm_id = u.user_perm_id AND ut.user_type_id = u.user_type_id AND enabled=1 and u.user_id='".$user_id."' ORDER BY u.netid ASC";
-					$userInfo = $sqlDataBase->query($queryUser);
+$queryUser = "SELECT u.user_id, "
+        . "u.first_name, "
+        . "u.last_name, "
+        . "u.netid, "
+        . "ut.name as type, "
+        . "up.name as perm, "
+        . "u.enabled FROM users u,"
+        . " user_type ut, "
+        . "user_perm up "
+        . "WHERE up.user_perm_id = u.user_perm_id "
+        . "AND ut.user_type_id = u.user_type_id "
+        . "AND enabled=1 and u.user_id = :user_id "
+        . "ORDER BY u.netid ASC";
+                                    
+                                    $params = array("user_id"=>$user_id);
+					//$userInfo = $sqlDataBase->query($queryUser);
+                                    $userInfo = $sqlDataBase->get_query_result($query, $params);
                                         $userInfo = $userInfo[0];
-                                        //print_r($userInfo);
+                                        $curr_user_id = $userInfo['user_id'];
+                                        $curr_user = new User($sqlDataBase);
+                                        $curr_user->LoadUser(curr_user_id);
+
 					if($userInfo)
 					{
-						
-                                                    //echo("id=$id <BR>");
+
                                                     // See Helper->DrawLeaveHoursAvailable for hour calculation
                                                     
-                                                    $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userInfo['user_id'],$yearId,$thisPayPeriodId);
-                                                    //echo("LEAVES:<BR:");
-                                                    //print_r($leavesAvailable);
-                                                    //echo("<BR><BR>");
-                                                    $uin = $helperClass->getUserUIN($userInfo['netid']);
+                                                    $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($curr_user_id,$yearId,$thisPayPeriodId);
+
+                                                    $uin = $curr_user->getUIN();
                                                     $userXML= $helperClass->apiGetUserInfo($uin);
-                                                    //echo("UserXML = " . $userXML);
                                                     
                                                     try {
                                                     $xml = new SimpleXMLElement($userXML);
@@ -136,7 +148,7 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                     $current_sick_hours = 0;
                                                     $current_floating_hours = 0;
                                                     foreach($xml->children() as $leave) {
-                                                        //print_r($leave);
+
                                                         $code = $leave->Leave[0]->ValidLeaveTitle[0]->Code;
                                                         if($code == "VACA") {
                                                             $current_vacation_hours = $leave->Leave[0]->BeginBalance;
@@ -151,14 +163,12 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                             $accrued_floating_hours = $leave->Leave[0]->Accrued;
                                                             $total_floating_hours = $current_floating_hours + $accrued_floating_hours;
                                                         }
-                                                        //echo $leave['Leave']['ValidLeaveTitle']['Code'];
-                                                        //echo "<BR>";
+
                                                     }
-                                                    //echo apiGetUserInfo("654954407");
-                                                    //echo apiUpdateUserHours($uin, 0, 0, "04/05/2017");
+
 							echo "<tr>
-								<td>".$userInfo['first_name']."</td>
-								<td>".$userInfo['last_name']."</td>
+								<td>".$curr_user->getFirstName()."</td>
+								<td>".$curr_user->getLastName()."</td>
                                                                 <td>".$uin."</td>";
                                                                 
                                                                 if($year_type == 'Fiscal') {
@@ -171,7 +181,6 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                                     "<td><input type=text name='vac_hours_used'>".$leavesAvailable[1]['calc_used_hours']."</input></td>
                                                                     <td><input type=text name='sick_hours_used'>".$leavesAvailable[2]['calc_used_hours']."</input></td>");
                                                                 }
-                                                        //echo "<td><a href=\"index.php?view=adminUsers&edit_user_banner=".$userInfo['user_id']."\">Edit</a></td>
                                                                 
 								
 							echo("</tr>");

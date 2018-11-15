@@ -141,7 +141,7 @@ if(isset($_POST['createUser']))
 			$editUser = new User($sqlDataBase);
 			$editUser->LoadUser($editUserId);
 			echo "<input type=\"hidden\" name=\"userId\" value=".$editUserId.">";
-			include "includes/edit_user.php";
+			require_once "includes/edit_user.php";
 			echo "</form>";
 		}
 		elseif($createUserId)
@@ -177,7 +177,7 @@ if(isset($_POST['createUser']))
 				}
 			}
 
-			include "includes/edit_user.php";
+			require_once"includes/edit_user.php";
 			echo "</form>";
 		}
 		else

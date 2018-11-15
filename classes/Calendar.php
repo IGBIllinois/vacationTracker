@@ -26,9 +26,9 @@ class Calendar
 	/**
 	 * Return the calendar table
 	 * 
-	 * @param unknown_type $month
-	 * @param unknown_type $year
-	 * @param unknown_type $users
+	 * @param int $month The month to display
+	 * @param int $year The year to display
+	 * @param  $users
 	 * @param User $loggedUser
 	 */
 	public function Show($month,$year,$users,User $loggedUser)
@@ -49,7 +49,14 @@ class Calendar
 
 		$calendar_html = "";
 		$calendar_html .= "<table class=\"month\" cellspacing=\"1\">";
-		$calendar_html .= "<tr><td class=\"calendar_day_title\" width=\"15%\"> SUNDAY </td><td class=\"calendar_day_title\" width=\"14%\"> MONDAY </td><td class=\"calendar_day_title\" width=\"14%\"> TUESDAY </td><td class=\"calendar_day_title\" width=\"14%\"> WEDNESDAY </td><td class=\"calendar_day_title\" width=\"14%\">THURSDAY </td><td class=\"calendar_day_title\" width=\"14%\"> FRIDAY </td><td class=\"calendar_day_title\" width=\"15%\"> SATURDAY </td></tr>";
+		$calendar_html .= "<tr><td class=\"calendar_day_title\" width=\"15%\"> "
+                        . "SUNDAY </td><td class=\"calendar_day_title\" width=\"14%\"> "
+                        . "MONDAY </td><td class=\"calendar_day_title\" width=\"14%\"> "
+                        . "TUESDAY </td><td class=\"calendar_day_title\" width=\"14%\"> "
+                        . "WEDNESDAY </td><td class=\"calendar_day_title\" width=\"14%\">"
+                        . "THURSDAY </td><td class=\"calendar_day_title\" width=\"14%\"> "
+                        . "FRIDAY </td><td class=\"calendar_day_title\" width=\"15%\"> "
+                        . "SATURDAY </td></tr>";
 		$calendar_html .= "<tr>";
 
 		//Fill the first week of the month with the appropriate number of blanks.
@@ -167,26 +174,50 @@ class Calendar
 	/**
 	 * Get all events for this user for the month
 	 * 
-	 * @param unknown_type $month
-	 * @param unknown_type $year
-	 * @param unknown_type $users
+	 * @param int $month Month for user events
+	 * @param int $year Year for user events
+	 * @param array[int] $users array of user id numbers
 	 */
 	private function DateMonthEvents($month,$year, $users)
 	{
 		$dateEventsArr = array();
-
-		$queryLeaves = "SELECT li.leave_id, li.date, li.description, li.user_id, u.first_name, u.last_name, lt.calendar_color, li.leave_hours, lt.name, li.status_id, li.leave_type_id, li.leave_type_id_special, li.time, DAY(li.date) as day, u.supervisor_id
-                                FROM leave_info li, users u , leave_type lt
-                                WHERE MONTH(li.date)=".$month." AND YEAR(li.date)=".$year." AND u.user_id = li.user_id AND lt.leave_type_id = li.leave_type_id AND(";
-
-		foreach($users as $user)
+                
+                $queryLeaves = "SELECT li.leave_id, 
+                    li.date, 
+                    li.description, 
+                    li.user_id, 
+                    u.first_name, 
+                    u.last_name, 
+                    lt.calendar_color, 
+                    li.leave_hours, 
+                    lt.name, 
+                    li.status_id, 
+                    li.leave_type_id, 
+                    li.leave_type_id_special, 
+                    li.time, 
+                    DAY(li.date) as day, 
+                    u.supervisor_id
+                    FROM leave_info li, users u , leave_type lt
+                    WHERE MONTH(li.date)=:month "
+                        . " AND YEAR(li.date)= :year "
+                        . "AND u.user_id = li.user_id "
+                        . "AND lt.leave_type_id = li.leave_type_id AND(";
+                
+                $params = array("month"=>$month, "year"=>$year);
+                
+                $i = 0;
+                foreach($users as $user)
 		{
-			$queryLeaves .= " li.user_id=$user OR";
+                        $key = "user".$i;
+			$queryLeaves .= " li.user_id= :$key OR";
+                        $params[$key] = $user;
+                        $i++;
 		}
 		$queryLeaves .= " li.user_id = 0)";
 
-		$events = $this->sqlDataBase->query($queryLeaves);
-
+                $events = $this->sqlDataBase->get_query_result($queryLeaves, $params);
+                
+                
 		if(isset($events))
 		{
 			foreach($events as $id=>$event)
@@ -204,36 +235,18 @@ class Calendar
 		return $dateEventsArr;
 	}
 
-	/**
-	 * Delete an event from the calendar
-	 * 
-	 * @param unknown_type $leaveId
-	 */
-	public function DeleteEvent($leaveId)
-	{
-		if($this->AuthorizeEventAction($eventID))
-		{
-			$queryDelLeave = "DELETE FROM leave WHERE leave_id=".$leaveId;
-			$this->sqlDataBase->nonSelectQuery($queryDelLeave);
-			$queryDelLeaveDay = "DELETE FROM leave WHERE leave_id=".$leaveId;
-			$this->sqlDataBase->nonSelectQuery($queryDelLeaveDay);
-		}
-		else
-		{
-			echo "<font color=\"red\">Notice: Failed to authorize or event does not exist</font>";
-		}
-	}
-
 
 	/**
 	 * Load all special days as in holidays etc..
 	 * 
-	 * @param unknown_type $loggedUserId
+	 * @param int $loggedUserId Id number of the currently logged in user
 	 */
 	private function LoadSpecialDays($loggedUserId)
 	{
-		$querySpecialDaysIds = "SELECT id FROM calendar_special_days WHERE user_id=".$loggedUserId." OR user_id=0 ORDER BY priority DESC";
-		$specialDaysIds = $this->sqlDataBase->query($querySpecialDaysIds);
+
+                $querySpecialDaysIds = "SELECT id FROM calendar_special_days WHERE user_id= :loggedUserId OR user_id=0 ORDER BY priority DESC";
+                $params = array("loggedUserId"=>$loggedUserId);
+                $specialDaysIds = $this->sqlDataBase->get_query_result($querySpecialDaysIds, $params);
 		foreach($specialDaysIds as $id=>$specialDayId)
 		{
 			$specialDay = new SpecialDay($this->sqlDataBase);
@@ -247,10 +260,10 @@ class Calendar
 	 * used to save on queries from the database by loading all events for the month once
 	 * using the LoadSpecialDays function and then searching the array for each date.
 	 * 
-	 * @param unknown_type $day
-	 * @param unknown_type $month
-	 * @param unknown_type $year
-	 * @param unknown_type $userId
+	 * @param int $day The day of the month
+	 * @param int $month The month (1-12)
+	 * @param int $year The year
+	 * @param int $userId ID of the user to get special days for
 	 */
 	private function CheckForSpecialDay($day,$month,$year,$userId)
 	{

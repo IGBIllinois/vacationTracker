@@ -19,6 +19,13 @@ class Email
 
 	}
 
+        /** Send an email request for leave approval
+         * 
+         * @param Leave[] $leavesArray An array of Leave objects to get approval for
+         * @param int $userid User of the Leaves
+         * @param in5 $confirmCode Authenticaion code
+         * @return boolean True if the email was sent properly, else false
+         */
 	public function RequestLeaveApproval($leavesArray, $userid, $confirmCode)
 	{
 		if(count($leavesArray)>0)
@@ -56,6 +63,12 @@ class Email
 
 	}
 
+        /** Send an email regarding the approval or denial of a Leave request
+         * 
+         * @param Leave[] $leavesArray An array of Leave objects
+         * @param int $userid ID of the user who has requested the Leaves
+         * @return boolean True if the email was sent properly, else false
+         */
 	public function ReplyLeaveApprovalStatus($leavesArray,$userid)
 	{
 		$leavesInfoString = "";
@@ -85,6 +98,11 @@ class Email
 
 	}
 
+        /** Gets the URL the user is currently viewing. Used in ReplyLeaveApprovalStatus()
+         *  to send a link to the supervisor. 
+         * 
+         * @return type
+         */
 	private function CurrentPageURL()
 	{
 		$pageURL = 'https://';
@@ -93,6 +111,14 @@ class Email
 		return $pageURL;
 	}
 
+        /** Send an email
+         * 
+         * @param string $recipient Email addres of the recipient
+         * @param string $mail_body Text of the message body
+         * @param string $subject Text of the email Subject
+         * @param string $header Extra email parameters like "From: ", "Reply-To:", etc.
+         * @return boolean
+         */
 	private function CreateMail($recipient, $mail_body, $subject,$header)
 	{
 		if(mail($recipient, $subject, $mail_body,$header))
@@ -180,10 +206,10 @@ class Email
                     
             $message = "Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
 
-If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
-If you have any questions, just let me know.\n
+            If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
+            If you have any questions, just let me know.\n
 
-Thanks for your assistance in this process,\n"
+            Thanks for your assistance in this process,\n"
                     
             . $loggedUser->getFirstName() . " " . $loggedUser->getLastName();
 

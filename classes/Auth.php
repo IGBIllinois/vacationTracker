@@ -63,7 +63,7 @@ class Auth
 		$queryAuthenCodeInfo = "SELECT date_created,supervisor_id,cookie_created
                                 FROM authen_key
                                 WHERE confirm_key=\"".$confirmKey."\"";
-                //echo("authquery = ".$queryAuthenCodeInfo."<BR>");
+
 		$authenCodeInfo = $this->sqlDataBase->query($queryAuthenCodeInfo);
                 
 		if(isset($authenCodeInfo))

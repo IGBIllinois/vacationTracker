@@ -64,23 +64,18 @@ class AppointmentYearRules extends Rules
 		if($nextYearId && ($hasRollOver || $this->force))
 		{
 			$nextYearUsage = $this->LoadUserYearUsage($userId,$nextYearId);
-                        //echo("<BR>nextYearUsage = ");
-			//print_r($nextYearUsage);
-                        //echo("<BR>");
+
 			if($hasRollOver)
 			{
-				//echo "Year ID: ".$nextYearId."<br>";
 				
 				foreach($nextYearUsage as $id=>$nextYearUsageLeaveType)
 				{
 					if($nextYearUsageLeaveType['roll_over'])
 					{
 						$nextYearUsage[$id]['initial_hours'] = $userYearUsage[$id]['initial_hours']+$userYearUsage[$id]['added_hours']-$userYearUsage[$id]['used_hours'];
-						//echo "initial hours: ".$nextYearUsage[$id]['initial_hours']."<br>";
 						if( $nextYearUsage[$id]['initial_hours'] > ( ($this->userInfo->getPercent()/100) * $nextYearUsageLeaveType['max'] ) )
 						{
 							$nextYearUsage[$id]['initial_hours'] = ($this->userInfo->getPercent()/100) *$nextYearUsageLeaveType['max'];
-							//echo "initial hours greater than max: ". $nextYearUsage[$id]['initial_hours']."<br>";
 						}
 					}
 				}
@@ -107,11 +102,9 @@ class AppointmentYearRules extends Rules
 			//Check if we have a spill over to initial comltv hours
 			if($userYearUsage[self::SICK_LEAVE]['added_hours'] + $userYearUsage[self::NONCMLTV_SICK_LEAVE]['added_hours'] - $userYearUsage[self::SICK_LEAVE]['used_hours'] < 0)
 			{
-                            //echo("SPILL OVER<BR><BR>");
 				//Spill over to initial comltv hours detected
 				//Add all used horus to regular sick leave minus noncomltv added hours as we used all of them.
 				$userYearUsage[self::SICK_LEAVE]['used_hours'] = $userYearUsage[self::SICK_LEAVE]['used_hours']-$userYearUsage[self::NONCMLTV_SICK_LEAVE]['added_hours'];
-				//echo "Sick leave used hours: ".$userYearUsage[self::SICK_LEAVE]['used_hours'];
 				$userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours'] = $userYearUsage[self::NONCMLTV_SICK_LEAVE]['added_hours'];
 				
 			}
@@ -119,9 +112,7 @@ class AppointmentYearRules extends Rules
 			{
 				//No spill to initial comltv sick leave detected
 				//Add all added hours to used_hours of sick leave and the rest to noncomltv
-                            
-                            //echo("NO SPILL OVER: ADD TO NONCUMULATIVE<BR><BR>");
-				$userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours'] = $userYearUsage[self::SICK_LEAVE]['used_hours'] - $userYearUsage[self::SICK_LEAVE]['added_hours'];
+                           	$userYearUsage[self::NONCMLTV_SICK_LEAVE]['used_hours'] = $userYearUsage[self::SICK_LEAVE]['used_hours'] - $userYearUsage[self::SICK_LEAVE]['added_hours'];
 				$userYearUsage[self::SICK_LEAVE]['used_hours'] =  $userYearUsage[self::SICK_LEAVE]['added_hours'];
                                 
 				

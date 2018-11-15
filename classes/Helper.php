@@ -34,14 +34,17 @@ class Helper
 	 * Draws a table with all leaves created for a particular user
 	 * on a given year with a certain status.
 	 *
-	 * @param unknown_type $userId
-	 * @param unknown_type $statusId
-	 * @param unknown_type $appointmentYear
-	 * @param unknown_type $limit
+	 * @param int $userId Id of the user to draw table for
+	 * @param int $statusId Status ID of the leaves
+	 * @param int $yearId ID of the year to get leaves for 
+	 * @param int $limit Maximum number of records to display, or 0 if no limit
+         * 
+         * @return string an HTML table displaying the Leave information
 	 */
 	public function DrawLeavesTableRows($userId, $statusId,$yearId, $limit=0)
 	{
 		$tableString = "";
+                /*
 		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
 				FROM (leave_info li)
 				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
@@ -53,8 +56,31 @@ class Helper
 		{
 			$queryLeaves = $queryLeaves." LIMIT ".$limit;
 		}
-//echo("drawLeavesQuery = $queryLeaves<BR>");
+
 		$leaves = $this->sqlDataBase->query($queryLeaves);
+                 * 
+                 */
+                
+                $queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
+				FROM (leave_info li)
+				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+				JOIN status s ON li.status_id = s.status_id
+				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+				WHERE li.user_id = :userId AND li.status_id=:statusId AND li.year_info_id=:yearId
+				ORDER BY li.date DESC";
+                
+                $params = array("userId"=>$userId, "statusId"=>$statusId, "yearId"=>$yearId);
+                    
+		if($limit>0)
+		{
+			$queryLeaves = $queryLeaves." LIMIT :limit";
+                        $params["limit"] = $limit;
+		}
+
+                
+                
+                $leaves = $this->sqlDataBase->get_query_result($queryLeaves, $params);
+                
 		$tableString.= "<thead><tr>";
 		$tableString.= "<td>Select</td>";
 		$tableString.= "<th>Date</th>";
@@ -81,14 +107,19 @@ class Helper
 		return $tableString;
 	}
         
-        	/**
+        /**
 	 * Draws a table with all leaves created for a particular user
 	 * on a given year with a certain status.
 	 *
-	 * @param unknown_type $userId
-	 * @param unknown_type $statusId
-	 * @param unknown_type $appointmentYear
-	 * @param unknown_type $limit
+	 * @param int $userId Id of the user to draw table for
+	 * @param int $statusId Status ID of the leaves
+	 * @param int $appointment_year_id Id of the Appointment Year to get leaves for
+         * @param int $fiscal_year_id ID of the Fiscal Year to get Floating Holidays for
+         * $param int $pay_period Pay period id (1 = first pay period (8/15 - 5/15)
+         *                                      2 = second pay period (5/15 - 8/15))
+         *              Defaults to 1
+         * 
+	 * @param int $limit Limit of how many entries to display in each table, or 0 if no limit
 	 */
 	public function DrawLeavesTableRowsForReport($userId, $statusId,$appointment_year_id, $fiscal_year_id, $pay_period=1, $limit=0)
 	{
@@ -116,22 +147,9 @@ class Helper
            
            
 		$tableString = "Vacation: ( $start_date - $end_date ) <BR>";
-		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$appointment_year_id."
-                                AND lt.name = 'Vacation'
-                                and date between '$start_date' and '$end_date' 
-				ORDER BY li.date DESC";
-
-		if($limit>0)
-		{
-			$queryLeaves = $queryLeaves." LIMIT ".$limit;
-		}
+    
                 $tableString.= "<table class=\"hover_table\" id=\""."report_table\">";
-		$leaves = $this->sqlDataBase->query($queryLeaves);
+		
                 $user = new User($this->sqlDataBase);
                 $user->LoadUser($userId);
                 $leaves = $user->GetVacationLeaves($appointment_year_id, $pay_period, $statusId);
@@ -617,15 +635,17 @@ class Helper
 	 * Add leave hours for a user or group of users.
 	 * leave hours will show as Added Leave hours for the user also known as available hours.
 	 *
-	 * @param unknown_type $yearId
-	 * @param unknown_type $leaveTypeId
-	 * @param unknown_type $hoursToAdd
-	 * @param unknown_type $payPeriodId
-	 * @param unknown_type $users
-	 * @param unknown_type $description
-	 * @param unknown_type $hoursAddBegin
-	 * @param unknown_type $onlyCurrentUsers
-	 * @param unknown_type $yearType
+	 * @param int $yearId ID of the year to add hours to
+	 * @param int $leaveTypeId ID of the Type of Leave to add
+	 * @param int $hoursToAdd Number of hours to add
+	 * @param int $payPeriodId ID of the Pay Period to add to
+	 * @param array $users Array of user info 
+	 * @param string $description Description
+	 * @param boolean $hoursAddBegin True if you are adding hours to the beginning of the pay period,
+         *                              otherwise add at the end
+	 * @param bool $onlyCurrentUsers True if only adding to current users, 
+         *                              otherwise add to all users
+	 * @param string $yearType Year type string ("appointment" for appointment year)
 	 */
 	public function AddLeaveHours($yearId,$leaveTypeId,$hoursToAdd,$payPeriodId,$users,$description,$hoursAddBegin, $onlyCurrentUsers, $yearType="appointment")
 	{
@@ -634,8 +654,11 @@ class Helper
 
 		if(is_numeric($hoursToAdd) && $yearId>0 && $leaveTypeId>0 && $payPeriodId>0 && $yearType >0)
 		{
-			$queryPayPeriodRange = "SELECT start_date,end_date FROM pay_period WHERE pay_period_id=".$payPeriodId;
-			$payPeriodRange = $this->sqlDataBase->query($queryPayPeriodRange);
+			//$queryPayPeriodRange = "SELECT start_date,end_date FROM pay_period WHERE pay_period_id=".$payPeriodId;
+                        $queryPayPeriodRange = "SELECT start_date,end_date FROM pay_period WHERE pay_period_id=:payPeriodId";
+                        $params = array("payPeriodId"=>$payPeriodId);
+                        $payPeriodRange = $this->sqlDataBase->get_query_result($queryPayPeriodRange, $params);
+			//$payPeriodRange = $this->sqlDataBase->query($queryPayPeriodRange);
 			$payPeriodEndDateEpoch = strtotime($payPeriodRange[0]['end_date']);
 			$payPeriodStartDateEpoch = strtotime($payPeriodRange[0]['start_date']);
 			$payPeriodTimeSec = $payPeriodEndDateEpoch - $payPeriodStartDateEpoch;
@@ -643,7 +666,6 @@ class Helper
 			{
                             $user = new User($this->sqlDataBase);
                             $user->LoadUser($userInfo['user_id']);
-                            //print_r($userInfo);
 				$startDateCalculation="";
 
                                 if($yearType=='fiscal') {
@@ -665,34 +687,83 @@ class Helper
 						."<br>Percent worked this month: ".($payPeriodWorkPercent*100)."%"
 						."<br>Percent employment: ".$userInfo['percent']."%"
 						."<br>".$payPeriodWorkPercent."*".$hoursToAdd."*".($userInfo['percent']/100)."=".$hoursToAddUser;
-					//echo($showCalculation);
-//					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,user_type_id,description, year_info_id,begining_of_pay_period,date)
-//						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",".$userInfo['user_type_id'].",\"".$description."\",".$yearId.",$hoursAddBegin, NOW())";\
-                                        $queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period, user_type_id, date)
-						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,".$user->getUserTypeId().", NOW())";
-					//$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period,date)
-					//	VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin, NOW())";
 
-					//echo($queryAddUserHours);
-                                        $this->sqlDataBase->insertQuery($queryAddUserHours);
+                                        $queryAddUserHours = "INSERT INTO added_hours (
+                                            hours,
+                                            pay_period_id,
+                                            leave_type_id,
+                                            user_id,
+                                            description, 
+                                            year_info_id,
+                                            begining_of_pay_period, 
+                                            user_type_id, 
+                                            date)
+						VALUES(
+                                                :hours,".
+                                                ":payPeriodId,".
+                                                ":leaveTypeId,".
+                                                ":userId,".
+                                                ":description,".
+                                                ":year_info_id, ".
+                                                ":hoursAddBegin, ".
+                                                ":year_type_id, ".
+                                                "NOW())";
+                                        
+                                        $params = array("hours"=>$hoursToAddUser,
+                                            "payPeriodId"=>$payPeriodId,
+                                            "leaveTypeId"=>$leaveTypeId,
+                                            "user_id"=>$user->getUserId(),
+                                            "description"=>$description,
+                                            "year_info_id",$yearId,
+                                            "hoursAddBegin"=>$hoursAddBegin,
+                                            "year_type_id"=>$user->getUserTypeId());
+
+                                        //$this->sqlDataBase->insertQuery($queryAddUserHours);
+                                        $this->sqlDataBase->get_query_result($queryAddUserHours, $params);
 				}
 				elseif($userStartDateEpoch >= $payPeriodEndDateEpoch)
 				{
 					//Do nothing the user doesn't recieve vacation days if he wasn't working at the time
-                                    //echo("NOPE");
+
 				}
 				elseif($userStartDateEpoch <= $payPeriodStartDateEpoch || ($leaveType->getYearTypeId() == FISCAL_YEAR) )
 				{
-                                    //echo("NOPE2");
+
 					//Give full leave time since user worked prior to start to pay period
-                                    //print_r($userInfo);
-					$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,description, year_info_id,begining_of_pay_period, user_type_id, date)
-						VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,".$user->getUserTypeId().", NOW())";
+
+					$queryAddUserHours = "INSERT INTO added_hours (
+                                            hours,
+                                            pay_period_id,
+                                            leave_type_id,
+                                            user_id,
+                                            description, 
+                                            year_info_id,
+                                            begining_of_pay_period, 
+                                            user_type_id, 
+                                            date)
+						VALUES(".
+                                                ":hours, ".
+                                                ":payPeriodId, ".
+                                                ":leaveTypeId, ".
+                                                ":user_id, ".
+                                                ":description, ".
+                                                ":yearId, ".
+                                                ":hoursAddBegin, ".
+                                                ":user_type_id, ".
+                                                "NOW())";
 					
-                                        //$queryAddUserHours = "INSERT INTO added_hours (hours,pay_period_id,leave_type_id,user_id,user_type_id,description, year_info_id,begining_of_pay_period,date)
-					//	VALUES(".$hoursToAddUser.",".$payPeriodId.",".$leaveTypeId.",".$userInfo['user_id'].",".$userInfo['user_type_id'].",\"".$description."\",".$yearId.",$hoursAddBegin,NOW())";
-					echo("queryAddUserHours 2 = $queryAddUserHours<BR>");
-                                        $this->sqlDataBase->insertQuery($queryAddUserHours);
+                                        $params = array("hours"=>$hoursToAddUser,
+                                            "payPeriodId"=>$payPeriodId,
+                                            "leaveTypeId"=>$leaveTypeId,
+                                            "user_id"=>$user->getUserId(),
+                                            "description"=>$description,
+                                            "yearId"=>$yearId,
+                                            "hoursAddBegin"=>$hoursAddBegin,
+                                            "user_type_id"=>$user->getUserTypeId()
+                                            );
+                                        //$this->sqlDataBase->insertQuery($queryAddUserHours);
+                                        $this->sqlDataBase->get_insert_result($queryAddUserHours, $params);
+
 					if($userInfo['user_id'])
 					{
 						$this->RunRules($userInfo['user_id'],$yearId,true);
@@ -770,9 +841,9 @@ class Helper
 	}
 
 	/**
-	 * Add new user hours to an existing user incase
-	 * Could be used incases when a new user was added but
-	 * admin forgot to check the add new user hours when user was created.
+	 * Add new user hours to an existing user 
+	 * Could be used in cases when a new user was added but
+	 * admin forgot to check the "add new user hours" when user was created.
 	 *
 	 * @param unknown_type $userId
 	 * @param unknown_type $yearId
@@ -802,9 +873,13 @@ class Helper
 	{
 		$years = new Years($this->sqlDataBase);
 		$rules = new Rules($this->sqlDataBase);
-		$queryAddedHours = "SELECT ah.user_id, pp.year_info_id FROM added_hours ah, pay_period pp WHERE pp.pay_period_id=ah.pay_period_id AND added_hours_id=".$addedHoursId;
-		//$echo("addedhours query = $queryAddedHours<BR>");
-                $addedHours = $this->sqlDataBase->query($queryAddedHours);
+		$queryAddedHours = "SELECT ah.user_id, pp.year_info_id "
+                        . "FROM added_hours ah, pay_period pp "
+                        . "WHERE pp.pay_period_id=ah.pay_period_id "
+                        . "AND added_hours_id=:addedHoursId";
+                $params = array("addedHoursId"=>$addedHoursId);
+
+                $addedHours = $this->sqlDataBase->get_query_result($queryAddedHours, $params);
 
 		if($loggedUser->getUserPermId()==ADMIN && isset($addedHours))
 		{
@@ -879,7 +954,7 @@ class Helper
 					$leaveToApprove->setStatusId(WAITING_APPROVAL);
 					$leaveToApprove->UpdateDb();
 					$queryAddAuthenKey = "INSERT INTO authen_key (confirm_key,leave_id,status_id,date_created,supervisor_id)VALUES(\"".$confirmCode."\",".$leaveToApprove->getLeaveId().",".APPROVED.",NOW(),".$loggedUser->getSupervisorId().")";
-					//echo("request query = ".$queryAddAuthenKey."<BR>");
+
                                         $this->sqlDataBase->insertQuery($queryAddAuthenKey);
 					$message .= "<tr class=\"success_row\"><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Requested</td></tr>";
 
@@ -1173,16 +1248,11 @@ class Helper
  * 
  */
 function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
-    //echo("UPDATE HOURS:<BR>");
-    //echo("uin = $userUin <BR>");
+
     global $bannerUrl;
     global $senderAppId;
     $apiURL = $bannerUrl;
-    
-    //echo(" setting VacHours = $vacHours<BR>");
-    //echo(" setting SickHours = $sickHours<BR>");
-    //echo("date = $date<BR>");
-    //return;
+
     if($userUin == 0) {
         return "";
     }
@@ -1220,28 +1290,6 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
        }
        return $result;    
 }
-
-/* Gets a user UIN from the IGB People Database
- * @param $netId the user's UIUC netId
- */
-    function getUserUIN($netId) {
-        global $peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password;
-
-        $peopleDB = new SQLDataBase($peopledb_host, $peopledb_database, $peopledb_user, $peopledb_password);
-        $query="SELECT uin from users where netid='".$netId."'";
-        
-        try {
-            $uin = $peopleDB->query($query);
-            //print_r($uin);
-        } catch(Exception $e) {
-            return 0;
-        }
-            if(isset($uin)) {
-                return $uin[0]['uin'];
-            } else {
-                return 0;
-            }
-    }
     
     /* Get user info from Banner
      * 

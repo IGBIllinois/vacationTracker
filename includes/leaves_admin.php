@@ -48,11 +48,11 @@ echo $message;
 if($leaveId > -1)
 {
 	echo "<form action=\"index.php?view=adminLeaves\" method=\"post\"><input class=\"ui-state-default ui-corner-all\" type=\"submit\" value=\"back\" name=\"back\"></form>";
-	include "includes/edit_leave.php";
+	require_once "includes/edit_leave.php";
 }
 else
 {
-	include "includes/leave_type_list.php";
+	require_once "includes/leave_type_list.php";
 }
 ?>
 </td>

@@ -12,7 +12,7 @@ function __autoload($class_name) {
 }
 
 
-include "includes/config.php";
+require_once "includes/config.php";
 
 //Initialize database
 $sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);

@@ -8,14 +8,6 @@
  */
 class Leave
 {
-	/*
-	const NEW_LEAVE = 1;
-	const APPROVED = 2;
-	const WAITING_APPROVAL = 3;
-	const DELETED = 4;
-	const NOT_APPROVED = 5;
-	*/
-
 	private $sqlDataBase;
 	private $leaveId;
 	private $date;
@@ -50,8 +42,19 @@ class Leave
 	public function LoadLeave($leaveId)
 	{
 		$this->leaveId = $leaveId;
-		$queryLeaveInfo = "SELECT date,time,leave_hours, leave_type_id, leave_type_id_special,user_id,description, submit_date, status_id, year_info_id FROM leave_info WHERE leave_id = ".$leaveId;
-		$leaveInfo = $this->sqlDataBase->query($queryLeaveInfo);
+		$queryLeaveInfo = "SELECT date,"
+                        . "time,"
+                        . "leave_hours, "
+                        . "leave_type_id, "
+                        . "leave_type_id_special,"
+                        . "user_id,description, "
+                        . "submit_date, "
+                        . "status_id, "
+                        . "year_info_id "
+                        . "FROM leave_info "
+                        . "WHERE leave_id = :leaveId";
+                $params = array("leaveId"=>$leaveId);
+		$leaveInfo = $this->sqlDataBase->get_query_result($queryLeaveInfo, $params);
 		$this->date = $leaveInfo[0]['date'];
 		$this->time = $leaveInfo[0]['time'];
 		$this->leaveTypeId = $leaveInfo[0]['leave_type_id'];
@@ -99,9 +102,41 @@ class Leave
 	 */
 	private function WriteLeave()
 	{
-		$queryInsertLeave = "INSERT INTO leave_info (date,time,leave_type_id,leave_type_id_special, user_id,description, submit_date, status_id, leave_hours,year_info_id)VALUES(\"".$this->date."\",".$this->time.",".$this->leaveTypeId.",".$this->leaveTypeSpecialId.",".$this->userId.",\"".$this->description."\",NOW(),".$this->statusId.",".$this->hours.",".$this->yearId.")";
+		$queryInsertLeave = "INSERT INTO leave_info ("
+                        . "date,"
+                        . "time,"
+                        . "leave_type_id,"
+                        . "leave_type_id_special, "
+                        . "user_id,"
+                        . "description, "
+                        . "submit_date, "
+                        . "status_id, "
+                        . "leave_hours,"
+                        . "year_info_id)"
+                        .  "VALUES ("
+                        .":date, "
+                        .":time, "
+                        .":leave_type_id, "
+                        .":leave_type_id_special, "
+                        .":user_id, "
+                        .":description, "
+                        ." NOW(), "
+                        .":status_id, "
+                        .":leave_hours, "
+                        .":year_info_id )";
+                
+                $params = array("date"=>$this->date,
+                        "time"=>$this->time,
+                        "leave_type_id"=>$this->leaveTypeId,
+                        "leave_type_id_special"=>$this->leaveTypeSpecialId,
+                        "user_id"=>$this->userId,
+                        "description"=>$this->description,
+                        "status_id"=>$this->statusId,
+                        "leave_hours"=>$this->hours,
+                        "year_info_id"=>$this->yearId);
 
-                $leaveId = $this->sqlDataBase->insertQuery($queryInsertLeave);
+                //$leaveId = $this->sqlDataBase->insertQuery($queryInsertLeave);
+                $leaveId = $this->sqlDataBase->get_insert_result($queryInsertLeave, $params);
                 $this->leaveId = $leaveId;
 
 	}
@@ -123,10 +158,31 @@ class Leave
 	 */
 	public function UpdateDb()
 	{
-		$this->description = mysqli_real_escape_string($this->sqlDataBase->getLink(), $this->description);
-		$queryUpdateLeave = "UPDATE leave_info SET date = \"".$this->date."\", time = ".$this->time.", leave_type_id = \"".$this->leaveTypeId."\", user_id = \"".$this->userId."\", description = \"".$this->description."\", status_id=".$this->statusId.", leave_type_id_special=".$this->leaveTypeSpecialId.", leave_hours = ".$this->hours.", year_info_id=".$this->yearId." WHERE leave_id = ".$this->leaveId;
-		error_log($queryUpdateLeave,0);
-		$this->sqlDataBase->nonSelectQuery($queryUpdateLeave);
+		//$this->description = mysqli_real_escape_string($this->sqlDataBase->getLink(), $this->description);
+		$queryUpdateLeave = "UPDATE leave_info SET "
+                        . "date = :date, "
+                        . "time = :time, "
+                        . "leave_type_id = :leave_type_id, "
+                        . "user_id = :user_id, "
+                        . "description = :description, "
+                        . "status_id= :status_id, "
+                        . "leave_type_id_special= :leave_type_id_special, "
+                        . "leave_hours = :leave_hours, "
+                        . "year_info_id= :year_info_id "
+                        . "WHERE leave_id = :leave_id";
+
+                $params = array("date"=>$this->date,
+                                "time"=>$this->time,
+                                "leave_type_id"=>$this->leaveTypeId,
+                                "user_id"=>$this->userId,
+                                "description"=>$this->description,
+                                "status_id"=>$this->statusId, 
+                                "leave_type_id_special"=>$this->leaveTypeSpecialId,
+                                "leave_hours"=>$this->hours,
+                                "year_info_id"=>$this->yearId,
+                                "leave_id"=>$this->leaveId);
+
+                $this->sqlDataBase->get_update_result($queryUpdateLeave, $params);
 	}
 
 	/**
@@ -135,7 +191,8 @@ class Leave
 	 */
 	public function Delete()
 	{
-		$queryDeleteLeave = "DELETE FROM leave_info WHERE leave_id=".$this->leaveId;
+		$queryDeleteLeave = "DELETE FROM leave_info WHERE leave_id = :leaveId";
+                $deleteParams = array("leave_id"=>$this->leaveId);
 		$this->sqlDataBase->nonSelectQuery($queryDeleteLeave);
 		$queryDeleteLeaveConfirmation = "DELETE FROM authen_key WHERE leave_id=".$this->leaveId;
 		$this->sqlDataBase->nonSelectQuery($queryDeleteLeaveConfirmation);

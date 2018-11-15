@@ -18,12 +18,12 @@ $years = new Years($sqlDataBase);
 <tr>
         <td valign="top">
         <?php
-	include "includes/create_year.php";
+	require_once "includes/create_year.php";
         ?>
         </td>
         <td class="content_bg" valign="top">
         <?php
-	include "includes/list_years.php";
+	require_once "includes/list_years.php";
         ?>
         </td>
 </tr>

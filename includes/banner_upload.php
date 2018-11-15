@@ -13,6 +13,9 @@ $year = Date('Y');
 $year_type = "Appointment";
 $helperClass = new Helper($sqlDataBase);
 
+if($debug) {
+    echo "Test banner URL = $bannerUrl<BR>";
+}
 if(isset($_POST['update'])) {
 
     try {
@@ -34,7 +37,6 @@ if(isset($_POST['update'])) {
 
     $date = $mmdd.$year;
     $today = date("m/d/Y");
-    //$lastMonth = date("m/d/Y", strtotime("- 1 month"));
     
     if(($bannerUrl == "https://webservices-dev.admin.uillinois.edu/employeeWS/employeeLeaveBalance") && ($date > $today)) {
         // set date to today, just for testing purposes.
@@ -58,7 +60,6 @@ if(isset($_POST['update'])) {
 
             $sickHours += $takenSickHours;
 
-            
             $vacHours += $takenVacHours;
         }
         $helperClass->apiUpdateUserHours($uin, $vacHours, $sickHours, $date);
@@ -152,13 +153,11 @@ if(!isset($_GET['user_id'])) {
 echo("<h2 style='font-style:normal; text-align:left'>$year_type Year: " . $pay_period_text . " " . $year . "</h2>");
 echo("<form action=#>"
         ."<input type=hidden name=view value=bannerUpload>".
-        // "Go to <select name='year_type'><option value='appointment'>Appointment</option>
-        //    <option value='fiscal'".(($year_type=='Fiscal') ? " SELECTED " : "") .">Fiscal</option></select>
         "    
             Pay Period: <select name='pay_period'><option value='1' ". (($pay_period==1) ? " SELECTED " : "").">8/16 - 5/15</option><option value='2' ". (($pay_period==2) ? " SELECTED " : "").">5/16 - 8/15</select>
             Year: <input type=string name='year' value='".$year."'><button type='submit'>Submit</button>
                 </form>");
-//echo("Banner URL = $bannerUrl<BR>");
+
 echo("<form action='#' method=POST name='update'>");
 echo("<input type=hidden name=view value=bannerUpload>");
 echo("<input type=hidden name=update value=update>");
@@ -184,7 +183,7 @@ echo("<input type=hidden name=year value=$year>");
                                             "<th>Vacation Hours Taken".(($pay_period == 2) ? "<BR>(Hours will be added)" : "") ."</th>
                                             <th>Sick Hours Taken".(($pay_period == 2) ? "<BR>(Hours will be added)" : "") ."</th>".
                                             "<th>Edit</th>");
-                                //}
+
                                 ?>
                             
                             
@@ -194,8 +193,21 @@ echo("<input type=hidden name=year value=$year>");
 <?php
 
 
-$queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as type, up.name as perm, u.enabled FROM users u, user_type ut, user_perm up WHERE up.user_perm_id = u.user_perm_id AND ut.user_type_id = u.user_type_id AND enabled=1 and banner_include=1 ORDER BY u.last_name ASC";
-					$users = $sqlDataBase->query($queryUsers);
+$queryUsers = "SELECT u.user_id, "
+        . "u.first_name, "
+        . "u.last_name, "
+        . "u.netid, "
+        . "ut.name as type, "
+        . "up.name as perm, "
+        . "u.enabled FROM users u, "
+        . "user_type ut, "
+        . "user_perm up "
+        . "WHERE up.user_perm_id = u.user_perm_id "
+        . "AND ut.user_type_id = u.user_type_id "
+        . "AND enabled=1 "
+        . "and banner_include=1 ORDER BY u.last_name ASC";
+					//$users = $sqlDataBase->query($queryUsers);
+                                       $users = $sqlDataBase->get_query_result($queryUsers, null);
                                         
                                         
 					if($users)
@@ -208,8 +220,7 @@ $queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as 
                                                     try{
                                                     $curr_user = new User($sqlDataBase);
                                                     $curr_user->LoadUser($userInfo['user_id']);
-                                                    //echo("id=$id <BR>");
-                                                    //
+
                                                     // See Helper->DrawLeaveHoursAvailable for hour calculation
                                                     
                                                     if($pay_period == 1) {
@@ -221,20 +232,11 @@ $queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as 
                                                         $startDate = $year. "-05-16";
                                                         $endDate = $year. "-08-15";
                                                     }
-                                                    //echo("Year id = $yearId<BR>");
-                                                    //echo("pay period id = $thisPayPeriodId<BR>");
+
                                                     $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($userInfo['user_id'],$yearId, $startDate, $endDate);
+
+                                                    $uin = $curr_user->getUIN();
                                                     
-                                                    //echo("LEAVES:<BR:");
-                                                    //print_r($leavesAvailable);
-                                                    //echo("<BR><BR>");
-                                                    if($curr_user->getUIN() == 0) {
-                                                        $uin = $helperClass->getUserUIN($userInfo['netid']);
-                                                        $curr_user->setUIN($uin);
-                                                        $curr_user->UpdateDb();
-                                                    } else {
-                                                        $uin = $curr_user->getUIN();
-                                                    }
                                                     echo("<input type='hidden' name=uin".$i." value=".$uin.">");
                                                     $userXML= $helperClass->apiGetUserInfo($uin);
 
@@ -244,8 +246,9 @@ $queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as 
 
                                                     } catch(Exception $e) {
                                                         
-                                                        //echo("Error:");
-                                                        //echo($e->getTraceAsString());
+                                                        echo("Error:");
+                                                        echo($e->getTraceAsString());
+                                                        
                                                         continue;
                                                     }
                                                     $current_vacation_hours = 0;
@@ -341,7 +344,7 @@ echo("</form>");
 <?php 
 } else {
     // List single user for editing
-//echo("Banner URL = $bannerUrl<BR>");
+
 $user_id = $_GET['user_id'];
 
 echo("<U><h2 style='font-style:normal; text-align:left'> Edit user info </H2></U>");
@@ -395,20 +398,37 @@ echo("<form action=#>"
 <?php
 
 
-$queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as type, up.name as perm, u.enabled FROM users u, user_type ut, user_perm up WHERE up.user_perm_id = u.user_perm_id AND ut.user_type_id = u.user_type_id AND enabled=1 and u.user_id='".$user_id."' ORDER BY u.netid ASC";
+$queryUser = "SELECT u.user_id, "
+        . "u.first_name, "
+        . "u.last_name, "
+        . "u.netid, "
+        . "ut.name as type, "
+        . "up.name as perm, "
+        . "u.enabled "
+        . "FROM users u, "
+        . "user_type ut,"
+        . " user_perm up "
+        . "WHERE "
+        . "up.user_perm_id = u.user_perm_id "
+        . "AND ut.user_type_id = u.user_type_id "
+        . "AND enabled=1 and u.user_id= :user_id "
+        . "ORDER BY u.netid ASC";
+
+                                        $params = array("user_id"=>$user_id);
 					echo("<input type='hidden' name='numRecords' value=1>");
-                                        $userInfo = $sqlDataBase->query($queryUser);
+                                        //$userInfo = $sqlDataBase->query($queryUser);
+                                        $userInfo = $sqlDatabase->get_query_result($queryUser, $params);
                                         $userInfo = $userInfo[0];
-                                        $curr_user_id = $userInfo[0]['user_id'];
+                                        $curr_user_id = $userInfo['user_id'];
                                         $curr_user = new User($sqlDataBase);
-                                        $curr_user->LoadUser(curr_user_id);
-                                        //print_r($userInfo);
+                                        $curr_user->LoadUser($curr_user_id);
+
 					if($userInfo)
 					{
 						$i=0;
 
                                                     // See Helper->DrawLeaveHoursAvailable for hour calculation
-                                                        if($pay_period == 1) {
+                                                    if($pay_period == 1) {
                                                         // Pay period 1 = 8/16-5/15
                                                         $startDate = ($year - 1 ). "-08-16";
                                                         $endDate = $year. "-05-15";
@@ -417,9 +437,9 @@ $queryUser = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as t
                                                         $startDate = $year. "-05-16";
                                                         $endDate = $year. "-08-15";
                                                     }
-                                                    $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($userInfo['user_id'],$yearId, $startDate, $endDate);
+                                                    $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($curr_user_id,$yearId, $startDate, $endDate);
 
-                                                    $uin = $helperClass->getUserUIN($userInfo['netid']);
+                                                    $uin = $curr_user->getUIN();
                                                     echo("<input type='hidden' name=uin".$i." value=".$uin.">");
                                                     $userXML= $helperClass->apiGetUserInfo($uin);
                                                     

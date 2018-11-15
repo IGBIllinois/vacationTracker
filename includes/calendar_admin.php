@@ -50,11 +50,11 @@ else
 	</tr>
 	<tr>
 		<td valign="top"><?php
-		include "includes/calendar_edit_day.php";
+		require_once "includes/calendar_edit_day.php";
 		?>
 		</td>
 		<td class="content_bg" valign="top"><?php
-		include "special_days_list.php";
+		require_once "special_days_list.php";
 		?>
 		</td>
 	</tr>

@@ -134,8 +134,8 @@ if(isset($_POST['sharedUsers']))
 <form name="calendar" id="calendar" action="index.php?view=calendar"
 	method="post">
 	<?php
-	include "includes/create_leave_popup.php";
-	include "includes/edit_leave_popup.php";
+	require_once "includes/create_leave_popup.php";
+	require_once "includes/edit_leave_popup.php";
 	?>
 	<table class="content" height="100%">
 		<tr>
@@ -167,7 +167,8 @@ if(isset($_POST['sharedUsers']))
 					</tr>
 					<?php
 					$queryLeaveTypes = "SELECT name, calendar_color FROM leave_type";
-					$leaveTypes = $sqlDataBase->query($queryLeaveTypes);
+					//$leaveTypes = $sqlDataBase->query($queryLeaveTypes);
+                                        $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, null);
 					foreach($leaveTypes as $id=>$leaveType)
 					{
 						echo "<tr><td><div id=\"leave_color_box\" style=\"background-color:#".$leaveType['calendar_color']."\"></div>
