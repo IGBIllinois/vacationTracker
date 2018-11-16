@@ -1,5 +1,7 @@
-/includes/config.php
+/config/config.php
+/config/config.php.original
 .swp
 /nbproject/
 /vendor/
 composer.lock
+/html/vendor
