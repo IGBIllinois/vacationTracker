@@ -2,7 +2,7 @@
 
 //include_once "main.inc.php";
 function my_autoloader($class_name) {
-require_once '../../classes/' . $class_name . '.php';
+require_once '../../libs/' . $class_name . '.php';
 }
 spl_autoload_register('my_autoloader');
 
@@ -10,7 +10,7 @@ spl_autoload_register('my_autoloader');
 require_once '../../vendor/autoload.php';
 
 //Load configuration file
-require_once "../../config/config.php";
+require_once "../../conf/config.php";
 $sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
 
 $type = "xlsx";

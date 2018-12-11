@@ -13,16 +13,14 @@ date_default_timezone_set("America/Chicago");
 session_start();
 //Load the classes automatically without having to include them
 function my_autoloader($class_name) {
-	require_once '../classes/' . $class_name . '.php';
+	require_once '../libs/' . $class_name . '.php';
 }
 spl_autoload_register('my_autoloader');
-
 
 require_once '../vendor/autoload.php';
 
 //Load configuration file
-require_once "../config/config.php";
-
+require_once "../conf/config.php";
 
 
 //Initialize database 
