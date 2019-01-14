@@ -51,14 +51,12 @@ if(isset($_GET['action']))
 <tbody>
 <?php
 
-$querySpecialDays = "SELECT description,color,blocked,month,day,year,week_day,name,id,priority FROM calendar_special_days WHERE user_id=".$editSpecialDay->getUserId();
-
-$specialDays = $sqlDataBase->query($querySpecialDays);
+$specialDays = SpecialDay::getDaysForUser($sqlDataBase, $editSpecialDay->getUserId());
 if($specialDays)
 {
-	foreach($specialDays as $id=>$specialDay)
+	foreach($specialDays as $specialDay)
 	{
-		if($specialDay['id']==$dayId)
+		if($specialDay->getDayId()==$dayId)
 		{
 			$colStyle="selected_col";
 		}
@@ -67,15 +65,15 @@ if($specialDays)
 			$colStyle="";
 		}
 		
-		echo "<tr><td class=\"".$colStyle."\">".$specialDay['name']."</td>";
-		echo "<td class=\"".$colStyle."\">".(($specialDay['month']==0)?"All":Date("M",mktime(0,0,0,$specialDay['month'],1,2010)))."</td>";
-		echo "<td class=\"".$colStyle."\">".(($specialDay['day']==0)?"All":$specialDay['day'].Date("S",mktime(0,0,0,8,$specialDay['day'],2010)))."</td>";
-		echo "<td class=\"".$colStyle."\">".(($specialDay['year']==0)?"All":$specialDay['year'])."</td>";
-		echo "<td class=\"".$colStyle."\">".(($specialDay['week_day']=="0")?"All":Date("l",mktime(0,0,0,8,$specialDay['week_day'],2010)))."</td>";
-		echo "<td class=\"".$colStyle."\">".$specialDay['priority']."</td>";
-		echo "<td class=\"".$colStyle."\">".(($specialDay['blocked'])?"blocked":"usable")."</td>";
-		echo "<td class=\"".$colStyle."\"><center><div id=\"day_color_box\" style=\"background-color:#".$specialDay['color']."\"></div></center></td>";
-		echo "<td class=\"".$colStyle."\"><a href=\"index.php?view=adminCalendar&id=".$specialDay['id']."\">Edit</a> | <a href=\"index.php?view=adminCalendar&action=del&id=".$specialDay['id']."\">Delete</a></td></tr>";
+		echo "<tr><td class=\"".$colStyle."\">".$specialDay->getName()."</td>";
+		echo "<td class=\"".$colStyle."\">".(($specialDay->getMonth()==0)?"All":Date("M",mktime(0,0,0,$specialDay->getMonth(),1,2010)))."</td>";
+		echo "<td class=\"".$colStyle."\">".(($specialDay->getDay()==0)?"All":$specialDay->getDay().Date("S",mktime(0,0,0,8,$specialDay->getDay(),2010)))."</td>";
+		echo "<td class=\"".$colStyle."\">".(($specialDay->getYear()==0)?"All":$specialDay->getYear())."</td>";
+		echo "<td class=\"".$colStyle."\">".(($specialDay->getWeekDay()=="0")?"All":Date("l",mktime(0,0,0,8,$specialDay->getWeekDay(),2010)))."</td>";
+		echo "<td class=\"".$colStyle."\">".$specialDay->getPriority()."</td>";
+		echo "<td class=\"".$colStyle."\">".(($specialDay->getBlocked())?"blocked":"usable")."</td>";
+		echo "<td class=\"".$colStyle."\"><center><div id=\"day_color_box\" style=\"background-color:#".$specialDay->getColor()."\"></div></center></td>";
+		echo "<td class=\"".$colStyle."\"><a href=\"index.php?view=adminCalendar&id=".$specialDay->getDayId()."\">Edit</a> | <a href=\"index.php?view=adminCalendar&action=del&id=".$specialDay->getDayId()."\">Delete</a></td></tr>";
 	}
 }
 
