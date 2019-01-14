@@ -33,8 +33,18 @@ class Years
 	 */
 	public function GetYearId($day,$month,$year, $yearTypeId)
 	{
-		$queryDateYearId = "SELECT year_info_id FROM year_info WHERE start_date <= \"".$year."-".$month."-".$day."\" AND end_date >= \"".$year."-".$month."-".$day."\" AND year_type_id=".$yearTypeId;
-                $yearId = $this->sqlDataBase->singleQuery($queryDateYearId);
+		//$queryDateYearId = "SELECT year_info_id FROM year_info WHERE start_date <= \"".$year."-".$month."-".$day."\" AND end_date >= \"".$year."-".$month."-".$day."\" AND year_type_id=".$yearTypeId;
+		$queryDateYearId = "SELECT year_info_id FROM year_info "
+                        . "WHERE start_date <= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
+                        . "AND end_date >= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
+                        . "AND year_type_id=:yearTypeId";
+
+                $params = array("year"=>$year,
+                                "month"=>$month,
+                                "day"=>$day,
+                                "yearTypeId"=>$yearTypeId);
+   
+                $yearId = $this->sqlDataBase->singleQuery($queryDateYearId, $params);
 
 		if($yearId)
 		{
@@ -56,9 +66,15 @@ class Years
 	 */
 	public function GetPayPeriodId($day,$month,$year,$yearId)
 	{
-		$queryPayPeriodId = "SELECT pay_period_id FROM pay_period WHERE start_date <= \"".$year."-".$month."-".$day."\" AND end_date >= \"".$year."-".$month."-".$day."\" AND year_info_id=".$yearId;
-		//echo("pay period query = $queryPayPeriodId<BR>");
-                $payPeriodId = $this->sqlDataBase->singleQuery($queryPayPeriodId);
+		$queryPayPeriodId = "SELECT pay_period_id FROM pay_period "
+                        . "WHERE start_date <= :year-:month-:day "
+                        . "AND end_date >= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
+                        . "AND year_info_id=:yearId";
+                $params = array("year"=>$year,
+                                "month"=>$month,
+                                "day"=>$day,
+                                "yearId"=>$yearId);
+                $payPeriodId = $this->sqlDataBase->singleQuery($queryPayPeriodId, $params);
 
 		if($payPeriodId)
 		{
@@ -77,8 +93,9 @@ class Years
 	 */
 	public function NextYearId($yearId)
 	{
-		$queryNextYearId = "SELECT year_info_id FROM year_info WHERE prev_year_id = ".$yearId;
-		$nextYearId = $this->sqlDataBase->singleQuery($queryNextYearId);
+		$queryNextYearId = "SELECT year_info_id FROM year_info WHERE prev_year_id = :yearId";
+                $params = array("yearId"=>$yearId);
+		$nextYearId = $this->sqlDataBase->singleQuery($queryNextYearId, $params);
 		if($nextYearId)
 		{
 			return $nextYearId;
@@ -97,8 +114,9 @@ class Years
 	 */
 	public function PrevYearId($yearId)
 	{
-		$queryPrevYearId = "SELECT year_info_id FROM year_info WHERE next_year_id = ".$yearId;
-		$prevYearId = $this->sqlDataBase->singleQuery($queryPrevYearId);
+		$queryPrevYearId = "SELECT year_info_id FROM year_info WHERE next_year_id = :yearId";
+                $params = array("yearId"=>$yearId);
+		$prevYearId = $this->sqlDataBase->singleQuery($queryPrevYearId, $params);
 		if($prevYearId)
 		{
 			return $prevYearId;
@@ -116,12 +134,12 @@ class Years
 	 */
 	public function GetLastYearId($yearTypeId)
 	{
-		$queryLastYearId = "SELECT year_info_id FROM year_info WHERE next_year_id=0 AND year_type_id=".$yearTypeId;
-		$lastYearId = $this->sqlDataBase->singleQuery($queryLastYearId);
+		$queryLastYearId = "SELECT year_info_id FROM year_info WHERE next_year_id=0 AND year_type_id=:yearTypeId";
+                $params = array("yearTypeId"=>$yearTypeId);
+		$lastYearId = $this->sqlDataBase->singleQuery($queryLastYearId, $params);
 
 		if($lastYearId)
 		{
-                        //echo ("Last Year id = $lastYearId<BR>");
 			return $lastYearId;
 		}
 		else
@@ -138,8 +156,9 @@ class Years
 	 */
 	public function GetFirstYearId($yearTypeId)
 	{
-		$queryFirstYearId = "SELECT year_info_id FROM year_info WHERE prev_year_id=0 AND year_type_id=".$yearTypeId;
-		$firstYearId = $this->sqlDataBase->singleQuery($queryFirstYearId);
+		$queryFirstYearId = "SELECT year_info_id FROM year_info WHERE prev_year_id=0 AND year_type_id=:yearTypeId";
+                $params = array("yearTypeId"=>$yearTypeId);
+		$firstYearId = $this->sqlDataBase->singleQuery($queryFirstYearId, $params);
 
 		if($firstYearId)
 		{
@@ -158,8 +177,9 @@ class Years
 	 */
 	public function GetYearDates($yearId)
 	{
-		$queryYearDates = "SELECT start_date,end_date FROM year_info WHERE year_info_id=".$yearId;
-		$yearDates = $this->sqlDataBase->query($queryYearDates);
+		$queryYearDates = "SELECT start_date,end_date FROM year_info WHERE year_info_id=:yearId";
+                $params = array("yearId"=>$yearId);
+		$yearDates = $this->sqlDataBase->get_query_result($queryYearDates, $params);
 		if(isset($yearDates))
 		{
 			return $yearDates;
@@ -177,8 +197,9 @@ class Years
 	 */
 	public function getYearsIds($yearTypeId)
 	{
-		$queryYearsIds = "SELECT year_info_id FROM year_info WHERE year_type_id=".$yearTypeId;
-		$yearsIds = $this->sqlDataBase->query($queryYearsIds);
+		$queryYearsIds = "SELECT year_info_id FROM year_info WHERE year_type_id=:yearTypeId";
+                $params = array("yearTypeId"=>$yearTypeId);
+		$yearsIds = $this->sqlDataBase->get_query_result($queryYearsIds, $params);
 		if(isset($yearsIds))
 		{
 			return $yearsIds;
@@ -197,8 +218,9 @@ class Years
 	 */
 	public function isLocked($yearId)
 	{
-		$queryIfLocked = "SELECT locked FROM year_info WHERE year_info_id = ".$yearId;
-		$locked = $this->sqlDataBase->singleQuery($queryIfLocked);
+		$queryIfLocked = "SELECT locked FROM year_info WHERE year_info_id = :yearId";
+                $params = array("yearId"=>$yearId);
+		$locked = $this->sqlDataBase->singleQuery($queryIfLocked, $params);
 		return $locked;
 	}
 
@@ -211,9 +233,10 @@ class Years
 	 */
 	public function isAllLocked($day,$month,$year)
 	{
-		$date = $year."-".$month."-".$day;
-		$queryLockedYears = "SELECT COUNT(*) as locked_year FROM year_info WHERE start_date <= \"".$date."\" AND end_date >= \"".$date."\" AND locked = 1 LIMIT 1";
-		$locked = $this->sqlDataBase->singleQuery($queryLockedYears);
+		$date = "(SELECT CONCAT(:year, '-', :month, '-', :day))";
+		$queryLockedYears = "SELECT COUNT(*) as locked_year FROM year_info WHERE start_date <= $date AND end_date >= $date AND locked = 1 LIMIT 1";
+                $params = array("day"=>$day, "month"=>$month, "year"=>$year);
+		$locked = $this->sqlDataBase->singleQuery($queryLockedYears, $params);
 
 		return $locked;
 	}
@@ -225,8 +248,9 @@ class Years
 	 */
 	public function GetYearTypeId($yearId)
 	{
-		$queryYearTypeId = "SELECT year_type_id FROM year_info WHERE year_info_id=".$yearId;
-		$yearTypeId = $this->sqlDataBase->singleQuery($queryYearTypeId);
+		$queryYearTypeId = "SELECT year_type_id FROM year_info WHERE year_info_id=:yearId";
+                $params = array("yearId"=>$yearId);
+		$yearTypeId = $this->sqlDataBase->singleQuery($queryYearTypeId, $params);
 		if($yearTypeId)
 		{
 			return $yearTypeId;
@@ -245,9 +269,10 @@ class Years
 	 */
 	public function GetYearTypeInfo($yearTypeId)
 	{
-		$queryYearTypeInfo = "SELECT name,description,start_date,end_date,num_periods FROM year_type WHERE year_type_id=".$yearTypeId;
+		$queryYearTypeInfo = "SELECT name,description,start_date,end_date,num_periods FROM year_type WHERE year_type_id=:yearTypeId";
+                $params = array("yearTypeId"=>$yearTypeId);
 
-		$yearTypeInfo = $this->sqlDataBase->query($queryYearTypeInfo);
+		$yearTypeInfo = $this->sqlDataBase->get_query_result($queryYearTypeInfo, $params);
 
 		if(isset($yearTypeInfo))
 		{
@@ -269,9 +294,10 @@ class Years
 	 */
 	public function Exists($day,$month,$year)
 	{
-		$date = $year."-".$month."-".$day;
-		$queryYearExists = "SELECT COUNT(*) as year_exists FROM year_info WHERE start_date <= \"".$date."\" AND end_date >= \"".$date."\" LIMIT 1";
-		$exists = $this->sqlDataBase->singleQuery($queryYearExists);
+		$date = "(SELECT CONCAT(:year, '-', :month, '-', :day))";
+		$queryYearExists = "SELECT COUNT(*) as year_exists FROM year_info WHERE start_date <= $date AND end_date >= $date LIMIT 1";
+                $params = array("day"=>$day, "month"=>$month, "year"=>$year);
+		$exists = $this->sqlDataBase->singleQuery($queryYearExists, $params);
 
 		return $exists;
 	}
@@ -287,12 +313,13 @@ class Years
 	{
 		$queryConflicts = "SELECT *
 				FROM year_info 
-				WHERE ( (start_date <= \"".$dateStart."\" AND end_date >= \"".$dateStart."\") OR
-				(start_date <= \"".$dateEnd."\" AND end_date >= \"".$dateEnd."\") OR
-				(start_date >= \"".$dateStart."\" AND end_date <= \"".$dateEnd."\") ) AND 
-				year_type_id=".$yearTypeId;
+				WHERE ( (start_date <= :dateStart AND end_date >= :dateStart) OR
+				(start_date <= :dateEnd AND end_date >= :dateEnd) OR
+				(start_date >= :dateStart AND end_date <= :dateEnd) ) AND 
+				year_type_id=:yearTypeId";
 
-		if($this->sqlDataBase->query($queryConflicts))
+                $params = array("dateStart"=>$dateStart, "dateEnd"=>$dateEnd, "yearTypeId"=>$yearTypeId);
+		if($this->sqlDataBase->get_query_result($queryConflicts, $params))
 		{
 			return false;
 		}
@@ -317,8 +344,15 @@ class Years
 	 */
 	public function CreateYearType($dateStart,$dateEnd,$name,$description,$numPeriods)
 	{
-		$queryCreateYearType = "INSERT INTO year_type (name,description,start_date,end_date,num_periods)VALUES(\"".$name."\",\"".$description."\",\"".$dateStart."\",\"".$dateEnd."\",".$numPeriods.")";
-		$yearTypeId = $this->sqlDataBase->insertQuery($queryCreateYearType);
+		$queryCreateYearType = "INSERT INTO year_type "
+                        . "(name,description,start_date,end_date,num_periods)"
+                        . "VALUES(:name, :description, :dateStart, :dateEnd, :numPeriods)";
+                $params = array("name"=>$name, 
+                    "description"=>$description, 
+                    "dateStart"=>$dateStart, 
+                    "dateEnd"=>$dateEnd, 
+                    "numPeriods"=>$numPeriods);
+		$yearTypeId = $this->sqlDataBase->get_insert_result($queryCreateYearType, $params);
 
 		if($this->CreateYear(0,0,$yearTypeId,0))
 		{
@@ -344,7 +378,6 @@ class Years
 	{
             $createYearStartTime = time();
 		$yearId = 0;
-			//echo "CREATEYEAR START <BR>";
 		$prevYearDates = $this->GetYearDates($prevYear);
 		$nextYearDates = $this->GetYearDates($nextYear);
 		$yearTypeInfo = $this->GetYearTypeInfo($yearTypeId);
@@ -359,7 +392,6 @@ class Years
 				$dateEnd = ($endYear+1)."-".$endMonth."-".$endDay;
 				$nextYear=0;
 
-
 			}
 			elseif(($nextYearDates))
 			{
@@ -369,7 +401,7 @@ class Years
 				$dateStart = ($startYear-1)."-".$startMonth."-".$startDay;
 				$dateEnd = ($endYear-1)."-".$endMonth."-".$endDay;
 				$prevYear=0;
-			}
+                                			}
 			else
 			{
 				$dateStart = $yearTypeInfo[0]['start_date'];
@@ -385,7 +417,6 @@ class Years
 
                         $createYearEndTime = time();
                         $totalTime = ($createYearEndTime - $createYearStartTime)/60;
-                        //echo("CreateYear time  = $totalTime");
                         
 			return $yearId;
 				
@@ -394,7 +425,6 @@ class Years
 		{
                     $createYearEndTime = time();
                         $totalTime = ($createYearEndTime - $createYearStartTime)/60;
-                        //echo("CreateYear time  = $totalTime");
 			return 0;
 		}
 
@@ -404,7 +434,7 @@ class Years
         
         public static function GetYearTypes($sqlDataBase) {
             $queryYearTypesInfo = "SELECT * FROM year_type";
-            $yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
+            $yearTypesInfo = $sqlDataBase->get_query_result($queryYearTypesInfo);
             return $yearTypesInfo;
         }
         
@@ -425,26 +455,53 @@ class Years
 		$usedHours = 0;
 		$addedHours = 0;
 
-		$queryCreateYear = "INSERT INTO year_info (start_date,end_date,locked,year_type_id,next_year_id,prev_year_id)VALUES(\"".$dateStart."\",\"".$dateEnd."\",".$locked.",".$yearTypeId.",".$nextYear.",".$prevYear.")";
-                $yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
+		$queryCreateYear = "INSERT INTO year_info "
+                        . "(start_date,"
+                        . "end_date,"
+                        . "locked,"
+                        . "year_type_id,"
+                        . "next_year_id,"
+                        . "prev_year_id)"
+                        . "VALUES(:dateStart,"
+                                . ":dateEnd,"
+                                . ":locked,"
+                                . ":yearTypeId,"
+                                . ":nextYear,"
+                                . ":prevYear)";
+                
+                $params = array("dateStart"=>$dateStart,
+                                "dateEnd"=>$dateEnd,
+                                "locked"=>$locked,
+                                "yearTypeId"=>$yearTypeId,
+                                "nextYear"=>$nextYear,
+                                "prevYear"=>$prevYear);
+                //$yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
+                $yearId = $this->sqlDataBase->get_insert_result($queryCreateYear, $params);
                 
 
 		if($prevYear)
 		{
-			$updatePrevYear = "UPDATE year_info SET next_year_id=".$yearId." WHERE year_info_id=".$prevYear;
-			$this->sqlDataBase->nonSelectQuery($updatePrevYear);
-		}
+			$updatePrevYear = "UPDATE year_info SET next_year_id=:yearId WHERE year_info_id=:prevYear";
+                        $prevParams = array("yearId"=>$yearId, "prevYear"=>$prevYear);
+                        
+
+                        $this->sqlDataBase->get_update_result($updatePrevYear, $prevParams);
+                }
 		if($nextYear)
 		{
-			$updateNextYear = "UPDATE year_info SET prev_year_id=".$yearId." WHERE year_info_id=".$nextYear;
-			$this->sqlDataBase->nonSelectQuery($updateNextYear);
+			$updateNextYear = "UPDATE year_info SET prev_year_id=:yearId WHERE year_info_id=:nextYear";
+                        $nextParams = array("yearId"=>$yearId, "nextYear"=>$nextYear);
+
+                        $this->sqlDataBase->get_update_result($updateNextYear, $nextParams);
 		}
 
 		$queryUserIds = "SELECT user_id FROM users";
-		$userIds = $this->sqlDataBase->query($queryUserIds);
+		$userIds = $this->sqlDataBase->get_query_result($queryUserIds);
 
-		$queryLeaveTypes = "SELECT leave_type_id,roll_over,default_value,hidden FROM leave_type WHERE year_type_id=".$yearTypeId;
-		$leaveTypes = $this->sqlDataBase->query($queryLeaveTypes);
+		$queryLeaveTypes = "SELECT leave_type_id,roll_over,default_value,hidden FROM leave_type WHERE year_type_id=:yearTypeId";
+                $typeParams = array("yearTypeId"=>$yearTypeId);
+
+                $leaveTypes = $this->sqlDataBase->get_query_result($queryLeaveTypes, $typeParams);
 
 		if(isset($leaveTypes))
 		{
@@ -454,16 +511,35 @@ class Years
 				$user = new User($this->sqlDataBase);
 				$user->LoadUser($userId['user_id']);
 
-				$queryInsertUserLeaveInfo = "INSERT INTO leave_user_info (user_id,leave_type_id,used_hours,hidden,initial_hours,added_hours,year_info_id)VALUES";
-
+				$queryInsertUserLeaveInfo = "INSERT INTO leave_user_info "
+                                        . "(user_id,"
+                                        . "leave_type_id,"
+                                        . "used_hours,"
+                                        . "hidden,"
+                                        . "initial_hours,"
+                                        . "added_hours,"
+                                        . "year_info_id) VALUES ";
+                                $params = array();
 				foreach($leaveTypes as $id_l=>$leaveType)
 				{
-					$queryInsertUserLeaveInfo .= "(".$userId['user_id'].",".$leaveType['leave_type_id'].",$usedHours,".$leaveType['hidden'].",".(($user->getPercent()/100)*$leaveType['default_value']).",".$addedHours.",".$yearId."),";
+                                    // user data is same for each entry in this query, leave type data changes
+                                    $leaveType_id = ":leaveType_".$leaveType['leave_type_id'];
+                                    $leaveType_hidden_id = ":leaveType_hidden_".$leaveType['leave_type_id'];
+                                    $initial_hours_id = ":initial_hours_".$leaveType['leave_type_id'];
+                                    $queryInsertUserLeaveInfo .= "(:user_id, $leaveType_id, :usedHours, $leaveType_hidden_id, $initial_hours_id, :added_hours, :year_info_id),";
+    
+                                    $params["user_id"] = $userId['user_id'];
+                                        $params[$leaveType_id] = $leaveType['leave_type_id'];
+                                        $params["usedHours"] = $usedHours;
+                                        $params[$leaveType_hidden_id] = $leaveType['hidden'];
+                                        $params[$initial_hours_id] = (($user->getPercent()/100)*$leaveType['default_value']);
+                                        $params["added_hours"] = $addedHours;
+                                        $params["year_info_id"] = $yearId;
 				}
 				//remove last comma from sql string
 				$queryInsertUserLeaveInfo = substr($queryInsertUserLeaveInfo,0,-1);
-				$leaveUserInfoId = $this->sqlDataBase->insertQuery($queryInsertUserLeaveInfo);
 
+				$leaveUserInfoId = $this->sqlDataBase->insertQuery($queryInsertUserLeaveInfo);
                                 
                                 $helper->RunRulesYearType($userId['user_id'], $yearTypeId, false);
 

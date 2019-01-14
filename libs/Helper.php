@@ -44,22 +44,7 @@ class Helper
 	public function DrawLeavesTableRows($userId, $statusId,$yearId, $limit=0)
 	{
 		$tableString = "";
-                /*
-		$queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
-				FROM (leave_info li)
-				JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
-				JOIN status s ON li.status_id = s.status_id
-				LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-				WHERE li.user_id =".$userId." AND li.status_id=".$statusId." AND li.year_info_id=".$yearId."
-				ORDER BY li.date DESC";
-		if($limit>0)
-		{
-			$queryLeaves = $queryLeaves." LIMIT ".$limit;
-		}
 
-		$leaves = $this->sqlDataBase->query($queryLeaves);
-                 * 
-                 */
                 
                 $queryLeaves = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, li.description, lt.name, s.name as statusName, li.leave_type_id_special, lts.name as special_name
 				FROM (leave_info li)
@@ -360,24 +345,6 @@ class Helper
 		return $tableString;
 	}
 
-	/**
-	 * Check if a leave exists in the database by its ID
-	 *
-	 * @param unknown_type $leaveId
-	 */
-	public function LeaveExists($leaveId)
-	{
-		$queryLeave = "SELECT COUNT(*) FROM leave WHERE leave_id = ".$leaveId;
-		$this->sqlDataBase->query($queryLeave);
-		if($queryLeave)
-		{
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
 
 	/**
 	 * Create a leave
@@ -654,11 +621,11 @@ class Helper
 
 		if(is_numeric($hoursToAdd) && $yearId>0 && $leaveTypeId>0 && $payPeriodId>0 && $yearType >0)
 		{
-			//$queryPayPeriodRange = "SELECT start_date,end_date FROM pay_period WHERE pay_period_id=".$payPeriodId;
+
                         $queryPayPeriodRange = "SELECT start_date,end_date FROM pay_period WHERE pay_period_id=:payPeriodId";
                         $params = array("payPeriodId"=>$payPeriodId);
                         $payPeriodRange = $this->sqlDataBase->get_query_result($queryPayPeriodRange, $params);
-			//$payPeriodRange = $this->sqlDataBase->query($queryPayPeriodRange);
+
 			$payPeriodEndDateEpoch = strtotime($payPeriodRange[0]['end_date']);
 			$payPeriodStartDateEpoch = strtotime($payPeriodRange[0]['start_date']);
 			$payPeriodTimeSec = $payPeriodEndDateEpoch - $payPeriodStartDateEpoch;
@@ -718,7 +685,6 @@ class Helper
                                             "hoursAddBegin"=>$hoursAddBegin,
                                             "year_type_id"=>$user->getUserTypeId());
 
-                                        //$this->sqlDataBase->insertQuery($queryAddUserHours);
                                         $this->sqlDataBase->get_query_result($queryAddUserHours, $params);
 				}
 				elseif($userStartDateEpoch >= $payPeriodEndDateEpoch)
@@ -761,7 +727,7 @@ class Helper
                                             "hoursAddBegin"=>$hoursAddBegin,
                                             "user_type_id"=>$user->getUserTypeId()
                                             );
-                                        //$this->sqlDataBase->insertQuery($queryAddUserHours);
+                                        
                                         $this->sqlDataBase->get_insert_result($queryAddUserHours, $params);
 
 					if($userInfo['user_id'])
@@ -812,18 +778,33 @@ class Helper
 	}
 
 	/**
-	 * Add hours to a new user automatically according to his start date.
+	 * Add hours to a new user automatically according to their start date.
 	 *
 	 * @param unknown_type $userId
 	 * @param unknown_type $startDate
 	 */
 	public function AddNewUserHours($userId,$startDate)
 	{
-		$queryNewUserAddedHours = "SELECT ah.pay_period_id, ah.leave_type_id, ah.hours, ah.description, ah.year_info_id, ah.begining_of_pay_period, pp.start_date, pp.end_date, pp.pay_period_id FROM added_hours ah, pay_period pp WHERE user_id=0 AND pp.pay_period_id=ah.pay_period_id WHERE pp.end_date>=\"".$startDate."\"";
-		$newUserAddedHours = $this->sqlDataBase->query($queryNewUserAddedHours);
+		$queryNewUserAddedHours = "SELECT ah.pay_period_id, "
+                        . "ah.leave_type_id, "
+                        . "ah.hours, "
+                        . "ah.description, "
+                        . "ah.year_info_id, "
+                        . "ah.begining_of_"
+                        . "pay_period, "
+                        . "pp.start_date, "
+                        . "pp.end_date, "
+                        . "pp.pay_period_id "
+                        . "FROM added_hours ah, pay_period pp "
+                        . "WHERE user_id=0 "
+                        . "AND pp.pay_period_id=ah.pay_period_id "
+                        . "WHERE pp.end_date>=:startDate";
+                $params = array("startDate"=>$startDate);
+		$newUserAddedHours = $this->sqlDataBase->get_query_result($queryNewUserAddedHours, $params);
 
-		$queryUsersInfo = "SELECT percent, start_date, user_id FROM users WHERE user_id=".$userId;
-		$usersInfo = $this->sqlDataBase->query($queryUsersInfo);
+		$queryUsersInfo = "SELECT percent, start_date, user_id FROM users WHERE user_id=:user_id";
+                $user_params = array("user_id"=>$userId);
+		$usersInfo = $this->sqlDataBase->get_query_result($queryUsersInfo, $user_params);
 
 		foreach($newUserAddedHours as $id=> $newUserAddedHour)
 		{
@@ -840,28 +821,6 @@ class Helper
 		}
 	}
 
-	/**
-	 * Add new user hours to an existing user 
-	 * Could be used in cases when a new user was added but
-	 * admin forgot to check the "add new user hours" when user was created.
-	 *
-	 * @param unknown_type $userId
-	 * @param unknown_type $yearId
-	 */
-	public function AddExistingUser($userId,$yearId)
-	{
-		$queryNewUserAddedHours = "SELECT ah.pay_period_id, ah.leave_type_id, ah.hours, ah.description, ah.year_info_id, ah.begining_of_pay_period, pp.start_date, pp.end_date, pp.pay_period_id FROM added_hours ah, pay_period pp WHERE user_id=0 AND pp.pay_period_id=ah.pay_period_id WHERE pp.year_info_id=".$yearId;
-		$newUserAddedHours = $this->sqlDataBase->query($queryNewUserAddedHours);
-
-		$queryUsersInfo = "SELECT percent, start_date, user_id FROM users WHERE user_id=".$userId;
-		$usersInfo = $this->sqlDataBase->query($queryUsersInfo);
-
-		foreach($newUserAddedHours as $id=> $newUserAddedHour)
-		{
-			$hoursToAdd = $newUserAddedHours['ah.hours'];
-			$this->AddLeaveHours($newUserAddedHour['year_info_id'],$newUserAddedHour['leave_type_id'],$hoursToAdd, $newUserAddedHour['pay_period_id'], $usersInfo, $newUserAddedHour['description'], $newUserAddedHour['begining_of_pay_period'], 1);
-		}
-	}
 
 	/**
 	 * Delete hours which were added to a user's available hours.
@@ -883,8 +842,9 @@ class Helper
 
 		if($loggedUser->getUserPermId()==ADMIN && isset($addedHours))
 		{
-			$queryDeleteAddedHours = "DELETE FROM added_hours WHERE added_hours_id=".$addedHoursId;
-			$this->sqlDataBase->nonSelectQuery($queryDeleteAddedHours);
+			$queryDeleteAddedHours = "DELETE FROM added_hours WHERE added_hours_id=:addedHoursId";
+                        $params = array("addedHoursId"=>$addedHoursId);
+			$this->sqlDataBase->get_update_result($queryDeleteAddedHours, $params);
 			if($addedHours[0]['user_id'])
 			{
 				$this->RunRules($addedHours[0]['user_id'],$addedHours[0]['year_info_id'],true);
@@ -907,11 +867,18 @@ class Helper
 	 */
 	public function LeaveConflict($date,$leaveTypeId,$userId)
 	{
-		$queryLeaveConflicts = "SELECT leave_id FROM leave_info WHERE user_id=".$userId." AND date=\"".$date."\" AND leave_type_id=".$leaveTypeId;
+		$queryLeaveConflicts = "SELECT leave_id FROM leave_info "
+                        . "WHERE user_id=:userId "
+                        . "AND date=:date "
+                        . "AND leave_type_id=:leaveTypeId";
+                
+                $params = array("userId"=>$userId,
+                                "date"=>$date,
+                                "leaveTypeId"=>$leaveTypeId);
 
-		$conflictingLeave = $this->sqlDataBase->query($queryLeaveConflicts);
+		$conflictingLeave = $this->sqlDataBase->get_query_result($queryLeaveConflicts, $params);
 
-		if(isset($conflictingLeave))
+		if(isset($conflictingLeave) && count($conflictingLeave) > 0)
 		{
 			return $conflictingLeave[0]['leave_id'];
 		}
@@ -953,9 +920,31 @@ class Helper
 					$leaveUserId = $leaveToApprove->getUserId();
 					$leaveToApprove->setStatusId(WAITING_APPROVAL);
 					$leaveToApprove->UpdateDb();
-					$queryAddAuthenKey = "INSERT INTO authen_key (confirm_key,leave_id,status_id,date_created,supervisor_id)VALUES(\"".$confirmCode."\",".$leaveToApprove->getLeaveId().",".APPROVED.",NOW(),".$loggedUser->getSupervisorId().")";
+					$queryAddAuthenKey = "INSERT INTO authen_key ("
+                                                . "confirm_key,"
+                                                . "leave_id,"
+                                                . "status_id,"
+                                                . "date_created,"
+                                                . "supervisor_id,"
+                                                . "cookie_created,"
+                                                . "cookie)"
+                                                . "VALUES(".
+                                                    ":confirmKey, ".
+                                                    ":leave_id, ".
+                                                    ":status_id, ".
+                                                    "NOW(), ".
+                                                    ":supervisor_id," .
+                                                    "0," .
+                                                    "'')";
+                                        $params = array("confirmKey"=>$confirmCode,
+                                                        "leave_id"=>$leaveToApprove->getLeaveId(),
+                                                        "status_id"=>APPROVED,
+                                                        "supervisor_id"=>$loggedUser->getSupervisorId());
+                                            
+                                       // echo("addauthquery = $queryAddAuthenKey<BR>");
+                                        //print_r($params);
+                                        $this->sqlDataBase->get_insert_result($queryAddAuthenKey, $params);
 
-                                        $this->sqlDataBase->insertQuery($queryAddAuthenKey);
 					$message .= "<tr class=\"success_row\"><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Requested</td></tr>";
 
 				}

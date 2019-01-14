@@ -41,8 +41,9 @@ class LeaveType
 	 */
 	public function LoadLeaveType($typeId)
 	{
-		$queryLeaveType = "SELECT name, description, calendar_color, special, hidden, roll_over, max, default_value, year_type_id FROM leave_type WHERE leave_type_id=".$typeId;
-		$leaveType = $this->sqlDataBase->query($queryLeaveType);
+		$queryLeaveType = "SELECT name, description, calendar_color, special, hidden, roll_over, max, default_value, year_type_id FROM leave_type WHERE leave_type_id=:typeId";
+                $params = array("typeId"=>$typeId);
+		$leaveType = $this->sqlDataBase->get_query_result($queryLeaveType, $params);
 		$this->typeId = $typeId;
 		$this->name = $leaveType[0]['name'];
 		$this->color = $leaveType[0]['calendar_color'];
@@ -70,8 +71,8 @@ class LeaveType
 	 */
 	public function CreateLeaveType($name, $description, $color, $special, $hidden, $rollOver, $max, $defaultValue,$yearType)
 	{
-		$this->name = mysqli_real_escape_string($name);
-		$this->description = mysqli_real_escape_string($description);
+		$this->name = $name;
+		$this->description = $description;
 		$this->color = $color;
 		$this->special = $special;
 		$this->hidden = $hidden;
@@ -80,22 +81,76 @@ class LeaveType
 		$this->defaultValue = ($defaultValue)?$defaultValue:0;
 		$this->yearTypeId = $yearType;
 
-		$queryInsertLeaveType = "INSERT INTO leave_type (name,description,calendar_color, special, hidden, roll_over, max, default_value,year_type_id)VALUES(\"".$this->name."\",\"".$this->description."\",\"".$this->color."\", ".$this->special.", ".$this->hidden.", ".$this->rollOver.",".$this->max.",".$this->defaultValue.",".$this->yearTypeId.")";
-		$this->typeId = $this->sqlDataBase->insertQuery($queryInsertLeaveType);
+		$queryInsertLeaveType = "INSERT INTO leave_type ("
+                        . "name,"
+                        . "description,"
+                        . "calendar_color, "
+                        . "special, "
+                        . "hidden, "
+                        . "roll_over, "
+                        . "max, "
+                        . "default_value,y"
+                        . "ear_type_id)"
+                        . "VALUES(".
+                            ":name,".
+                            ":description,".
+                            ":color, ".
+                            ":special, ".
+                            ":hidden, ".
+                            ":rollOver,".
+                            ":max,".
+                            ":defaultValue,".
+                            ":yearTypeId)";
+                
+                $params = array("name"=>$this->name,
+                        "description"=>$this->description,
+                        "color"=>$this->color,
+                        "special"=>$this->special,
+                        "hidden"=>$this->hidden,
+                        "rollOver"=>$this->rollOver,
+                        "max"=>$this->max,
+                        "defaultValue"=>$this->defaultValue,
+                        "yearTypeId"=>$this->yearTypeId);
+                
+		$this->typeId = $this->sqlDataBase->get_insert_result($queryInsertLeaveType, $params);
 		if($this->typeId)
 		{
 			$queryAllUsers = "SELECT user_id FROM users";
-			$allUsers = $this->sqlDataBase->query($queryAllUsers);
+			$allUsers = $this->sqlDataBase->get_query_result($queryAllUsers);
 
-			$queryYears = "SELECT year_info_id FROM year_info WHERE year_type_id=".$this->yearTypeId;
-			$years = $this->sqlDataBase->query($queryYears);
+			$queryYears = "SELECT year_info_id FROM year_info WHERE year_type_id=:yearTypeId";
+                        $params = array("yearTypeId"=>$this->yearTypeId);
+                        
+			$years = $this->sqlDataBase->get_query_result($queryYears, $params);
 
 			foreach($allUsers as $id=>$user)
 			{
 				foreach($years as $id=>$year)
 				{
-					$queryInsertLeaveCount = "INSERT INTO leave_user_info (user_id,leave_type_id,used_hours,hidden, year_info_id)VALUES(".$user['user_id'].",".$this->typeId.",0, ".$this->hidden.", ".$year['year_info_id'].")";
-					$this->sqlDataBase->insertQuery($queryInsertLeaveCount);
+					$queryInsertLeaveCount = "INSERT INTO leave_user_info ("
+                                                . "user_id,"
+                                                . "leave_type_id,"
+                                                . "used_hours,"
+                                                . "hidden, "
+                                                . "year_info_id,"
+                                                . "initial_hours,"
+                                                . "added_hours)"
+                                                . "VALUES("
+                                                    . ":user_id,"
+                                                    . ":leave_type_id,"
+                                                    . "0, "
+                                                    . ":hidden, "
+                                                    . ":year_info_id,"
+                                                    . "0,"
+                                                    . "0)";
+                                        
+                                        $params = array("user_id"=>$user['user_id'],
+                                                        "leave_type_id"=>$this->typeId,
+                                                        "hidden"=>$this->hidden,
+                                                        "year_info_id"=>$year['year_info_id']);
+
+					$result = $this->sqlDataBase->get_insert_result($queryInsertLeaveCount, $params);
+
 				}
 			}
 			return $this->typeId;
@@ -112,8 +167,30 @@ class LeaveType
 	 */
 	public function UpdateDb()
 	{
-		$queryUpdateLeaveType = "UPDATE leave_type SET name=\"".$this->name."\", description=\"".$this->description."\", calendar_color=\"".$this->color."\",special=".$this->special.", hidden=".$this->hidden.", roll_over=".$this->rollOver.", max=".$this->max.", default_value=".$this->defaultValue.", year_type_id=".$this->yearTypeId." WHERE leave_type_id=".$this->typeId;
-		$this->sqlDataBase->nonSelectQuery($queryUpdateLeaveType);
+		$queryUpdateLeaveType = "UPDATE leave_type SET "
+                        . "name=:name, "
+                        . "description=:description, "
+                        . "calendar_color=:calendar_color,"
+                        . "special=:special, "
+                        . "hidden=:hidden, "
+                        . "roll_over=:roll_over, "
+                        . "max=:max, "
+                        . "default_value=:default_value, "
+                        . "year_type_id=:year_type_id "
+                        . " WHERE leave_type_id=:type_id";
+                
+                $params = array("name"=>$this->name,
+                        "description"=>$this->description,
+                        "calendar_color"=>$this->color,
+                        "special"=>$this->special,
+                        "hidden"=>$this->hidden,
+                        "roll_over"=>$this->rollOver,
+                        "max"=>$this->max,
+                        "default_value"=>$this->defaultValue,
+                        "year_type_id"=>$this->yearTypeId,
+                        "type_id"=>$this->typeId);
+
+		$this->sqlDataBase->get_update_result($queryUpdateLeaveType, $params);
 	}
 
 	//Getters and Setters ----------------------------------------------------------------------------------------------

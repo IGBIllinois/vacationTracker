@@ -92,43 +92,25 @@ class SQLDataBase {
 	//Used for SELECT queries
 	//returns an associative array of the select query results.
 	public function query($sql) {
-
                 $result = mysqli_query($this->link, $sql);
 
 		return $this->mysqlToArray($result);
 	}
 
-	//count_query()
-	//$sql - sql string to run on the database
-	//Used for SELECT queries
-	//returns number of rows in result
-	public function countQuery($sql) {
-		//$result = mysqli_query($sql,$this->link);
-                $result = mysqli_query($this->link, $sql);
-		return mysqli_num_rows($result);
-	}
 
-	//single_query()
+        //single_query()
 	//$sql - sql string to run on the database
 	//Used for SELECT queries
 	//returns single result value in first row
-	public function singleQuery($sql) {
-
-                $result = mysqli_query($this->link, $sql);
-
-		$row = mysqli_fetch_array($result,MYSQL_ASSOC);
-
-                if($row != null) {
-			foreach($row as $key=>$data) {
-				//there should be only one
-                                return $data;
-			}
-                }
-			
-		
-		//return @$dataArray;
-	}
-
+        public function singleQuery($query, $params = null) {
+            $result = $this->get_query_result($query, $params);
+            if(count($result) > 0) {
+                return $result[0][0];
+            } else {
+                return "";
+            }
+        }
+        
 	//getLink
 	//returns the mysql resource link
 	public function getLink() {
@@ -156,7 +138,7 @@ class SQLDataBase {
 	private function mysqlToArray($mysqlResult) {
 		$dataArray;
 		$i =0;
-		while($row = mysqli_fetch_array($mysqlResult,MYSQL_BOTH)){
+		while($row = mysqli_fetch_array($mysqlResult,MYSQLI_BOTH)){
                 
 			foreach($row as $key=>$data) {
 				$dataArray[$i][$key] = $data;
@@ -181,8 +163,17 @@ class SQLDataBase {
 		return $this->database;
 	}
         
-        public function get_query_result($query_string, $query_array) {
+        /** Gets the result of a MySQL query using PDO
+         * 
+         * @param string $query_string MySQL query string, with values replaced with placeholders like ":valueName"
+         * @param array $query_array Array of name/value pairs with as ("valueName"=>$value") where
+         *  "valueName" corresponds to the ":valueName" in the query
+         * @return array An array of MySQL data from the query
+         */
+        public function get_query_result($query_string, $query_array=null) {
             $statement = $this->getPDOlink()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
+            //echo("query_string = $query_string<BR>");
+            //print_r($query_array);
             $statement->execute($query_array);
             $result = $statement->fetchAll();
             return $result;
@@ -190,7 +181,14 @@ class SQLDataBase {
         }
 
 
-        public function get_update_result($query_string, $query_params) {
+        /** Gets the result of a MySQL update using PDO
+         * 
+         * @param string $query_string MySQL query string, with values replaced with placeholders like ":valueName"
+         * @param array $query_params Array of name/value pairs with as ("valueName"=>$value") where
+         *  "valueName" corresponds to the ":valueName" in the query
+         * @return array An array of MySQL data from the query
+         */
+        public function get_update_result($query_string, $query_params=null) {
             // Update queries should probably only update one record. This will ensure 
             // only one record gets updated in case of a malformed query.
             $query_string .= " LIMIT 1"; 
@@ -199,13 +197,27 @@ class SQLDataBase {
             return $result;
         }
 
-        public function get_insert_result($query_string, $query_array) {
+        /** Gets the result of a MySQL insert using PDO
+         * 
+         * @param string $query_string MySQL query string, with values replaced with placeholders like ":valueName"
+         * @param array $query_array Array of name/value pairs with as ("valueName"=>$value") where
+         *  "valueName" corresponds to the ":valueName" in the query
+         * @return int The id of the created entry
+         */
+        public function get_insert_result($query_string, $query_array=null) {
             $statement = $this->getPDOlink()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $stmt = $statement->execute($query_array);
             $result =  $this->getPDOlink()->lastInsertId();
             return $result;
         }
-
+        
+        /** Gets error information about the last operation performed by this database 
+         * 
+         * @return array Array of error information about the last operation performed by this database 
+         */
+        public function get_error_info() {
+            return $this->PDOlink->errorInfo();
+        }
 }
 
 ?>

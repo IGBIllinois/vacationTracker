@@ -62,21 +62,29 @@ class Auth
 	{
 		$queryAuthenCodeInfo = "SELECT date_created,supervisor_id,cookie_created
                                 FROM authen_key
-                                WHERE confirm_key=\"".$confirmKey."\"";
+                                WHERE confirm_key=:confirm_key";
 
-		$authenCodeInfo = $this->sqlDataBase->query($queryAuthenCodeInfo);
-                
+                $params = array("confirm_key"=>$confirmKey);
+
+                $authenCodeInfo = $this->sqlDataBase->get_query_result($queryAuthenCodeInfo, $params);
+
 		if(isset($authenCodeInfo))
 		{
-			if( abs(time()-strtotime($authenCodeInfo[0]['date_created'])) < ($tokenTimeOut*24*60*60) || (@$loggedUser->getUserId()==$authenCodeInfo[0]['supervisor_id']))
+			if( abs(time()-strtotime($authenCodeInfo[0]['date_created'])) < ($tokenTimeOut*24*60*60) || 
+                                (@$loggedUser->getUserId()==$authenCodeInfo[0]['supervisor_id']))
 			{
 				$computerIp = $_SERVER['REMOTE_ADDR'];
 
 				$cookieConfirmCode = md5(uniqid(rand()));
 				if(!$authenCodeInfo[0]['cookie_created'])
 				{
-					$queryUpdateUsedConfirmKey = "UPDATE authen_key SET cookie_created=1, cookie=\"".$cookieConfirmCode."\" WHERE confirm_key=\"".$confirmKey."\"";
-					$this->sqlDataBase->nonSelectQuery($queryUpdateUsedConfirmKey);
+                                        $queryUpdateUsedConfirmKey = "UPDATE authen_key SET "
+                                                . "cookie_created=1, "
+                                                . "cookie=:cookie"
+                                                . " WHERE confirm_key=:key";
+                                        $params = array("cookie"=>$cookieConfirmCode,
+                                                        "key"=>$confirmKey);
+					$this->sqlDataBase->get_update_result($queryUpdateUsedConfirmKey, $params);
 					setcookie("Igb_Vacation_Calendar_".$confirmKey,$cookieConfirmCode,time()+$tokenTimeOut*24*60*60);
 					return 1;
 				}
@@ -124,10 +132,16 @@ class Auth
 	{
 		if ($this->ssl == 1) {
 			$connect = ldap_connect("ldaps://" . $this->host,$this->port);
-			 
+
 		}
 		elseif ($this->ssl == 0) {
+                    try {
 			$connect = ldap_connect("ldap://" . $this->host,$this->port);
+                    }catch(Exception $e) {
+                        //echo("Error in ldap:<BR>");
+                        //echo($e->getTraceAsString());
+                    }
+                        
 			 
 		}
 		 
@@ -201,12 +215,17 @@ class Auth
 	 */
 	private function CheckUserIpAuthorized($ip,$userId)
 	{
-		$queryUserIdIp = "SELECT computer_id FROM user_computer WHERE user_id=".$userId." AND computer_ip=\"".$ip."\"";
-		$computerId = $this->sqlDataBase->singleQuery($queryUserIdIp);
+                $queryUserIdIp = "SELECT computer_id FROM user_computer WHERE user_id=:user_id AND computer_ip=:computer_ip";
+                $params = array("user_id"=>$userId, "computer_ip"=>$ip);
+
+		$computerId = $this->sqlDataBase->singleQuery($queryUserIdIp, $params);
+   
+                
 		if($computerId)
 		{
-			$queryUpdateComputerLastUsed = "UPDATE user_computer SET last_login=NOW() WHERE computer_id=".$computerId;
-			$this->sqlDataBase->nonSelectQuery($queryUpdateComputerLastUsed);
+			$queryUpdateComputerLastUsed = "UPDATE user_computer SET last_login=NOW() WHERE computer_id=:computer_id";
+                        $params = array("computer_id"=>$computerId);
+			$this->sqlDataBase->get_update_result($queryUpdateComputerLastUsed, $paramss);
 			return 1;
 		}
 		return 0;
@@ -223,8 +242,11 @@ class Auth
 		if(isset($_COOKIE[$cookieName]))
 		{
 			$cookieConfirmCode = $_COOKIE[$cookieName];
-			$queryConfirmKeyCookieMatch = "SELECT COUNT(*) FROM authen_key WHERE confirm_key=\"".$confirmKey."\" AND cookie=\"".$cookieConfirmCode."\"";
-			$confirmKeyCookieMatch = $this->sqlDataBase->singleQuery($queryConfirmKeyCookieMatch);
+                        $queryConfirmKeyCookieMatch = "SELECT COUNT(*) FROM authen_key as count WHERE confirm_key=:confirmKey AND cookie=:cookieCode";
+                        $params = array("confirmKey"=>$confirmKey, 
+                            "cookieCode"=>$cookieConfirmCode);
+                                                
+			$confirmKeyCookieMatch = $this->sqlDataBase->singleQuery($queryConfirmKeyCookieMatch, $params);
 			if($confirmKeyCookieMatch)
 			{
 				return 1;

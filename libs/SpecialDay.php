@@ -59,8 +59,22 @@ class SpecialDay
 		$this->weekDay = $weekDay;
 		$this->userId = $userId;
 
-		$queryInsertDay = "INSERT INTO calendar_special_days (description,color,blocked,month,day,year,priority,week_day,name,user_id)VALUES(\"".$this->description."\",\"".$this->color."\",".$this->blocked.",".$this->month.",".$this->day.",".$this->year.",".$this->priority.",".$this->weekDay.",\"".$this->name."\",".$this->userId.")";
-		$this->dayId = $this->sqlDataBase->insertQuery($queryInsertDay);
+		$queryInsertDay = "INSERT INTO calendar_special_days "
+                        . "(description,color,blocked,month,day,year,priority,week_day,name,user_id)"
+                        . "VALUES(:description, :color, :blocked, :month, :day, :year, :priority, :weekDay, :name, :userId)";
+		$params = array("description"=>$description,
+                                "color"=>$color,
+                                "blocked"=>$blocked,
+                                "month"=>$month,
+                                "day"=>$day,
+                                "year"=>$year,
+                                "priority"=>$priority,
+                                "weekDay"=>$weekDay,
+                                "name"=>$name,
+                                "userId"=>$userId);
+                    
+                
+                $this->dayId = $this->sqlDataBase->get_insert_result($queryInsertDay, $params);
 	}
 
 	/**
@@ -70,8 +84,9 @@ class SpecialDay
 	 */
 	public function LoadSpecialDay($dayId)
 	{
-		$querySelectDay = "SELECT description,color,blocked,month,day,year,priority,week_day,name,user_id FROM calendar_special_days WHERE id=".$dayId;
-		$selectDay = $this->sqlDataBase->query($querySelectDay);
+		$querySelectDay = "SELECT description,color,blocked,month,day,year,priority,week_day,name,user_id FROM calendar_special_days WHERE id=:dayId";
+                $params = array("dayId"=>$dayId);
+                $selectDay = $this->sqlDataBase->get_query_result($querySelectDay, $params);
 		$this->description = $selectDay[0]['description'];
 		$this->color = $selectDay[0]['color'];
 		$this->blocked = $selectDay[0]['blocked'];
@@ -91,8 +106,33 @@ class SpecialDay
 	 */
 	public function UpdateDb()
 	{
-		$queryUpdateDb = "UPDATE calendar_special_days SET description=\"".$this->description."\", color=\"".$this->color."\", blocked=".$this->blocked.", month=".$this->month.", day=".$this->day.", year=".$this->year.", priority=".$this->priority.", name=\"".$this->name."\", week_day=".$this->weekDay.", user_id=".$this->userId." WHERE id=".$this->dayId;
-		$this->sqlDataBase->nonSelectQuery($queryUpdateDb);
+		$queryUpdateDb = "UPDATE calendar_special_days SET "
+                        . "description=:description, "
+                        . "color=:color, "
+                        . "blocked=:blocked, "
+                        . "month=:month, "
+                        . "day=:day, "
+                        . "year=:year, "
+                        . "priority=:priority, "
+                        . "name=:name, "
+                        . "week_day=:weekDay, "
+                        . "user_id=:userId "
+                        . "WHERE id=:day_id";
+                
+                $params = array("description"=>$this->description,
+                                "color"=>$this->color,
+                                "blocked"=>$this->blocked,
+                                "month"=>$this->month,
+                                "day"=>$this->day,
+                                "year"=>$this->year,
+                                "priority"=>$this->priority,
+                                "weekDay"=>$this->weekDay,
+                                "name"=>$this->name,
+                                "userId"=>$this->userId,
+                                "day_id"=>$this->dayId
+                        );
+                
+		$this->sqlDataBase->get_update_result($queryUpdateDb, $params);
 	}
 
 	/**
@@ -101,9 +141,11 @@ class SpecialDay
 	 */
 	public function Delete()
 	{
-		$queryDeleteDay = "DELETE FROM calendar_special_days WHERE id=".$this->dayId;
-		$this->sqlDataBase->nonSelectQuery($queryDeleteDay);
+		$queryDeleteDay = "DELETE FROM calendar_special_days WHERE id= :day_id";
+                $params = array("day_id"=>$this->dayId);
+		$this->sqlDataBase->get_update_result($queryDeleteDay, $params);
 	}
+       
 
 	/**
 	 * Check if this special day exists on a particual day
@@ -114,7 +156,10 @@ class SpecialDay
 	 */
 	public function CheckDay($day, $month, $year)
 	{
-		if(($day==$this->day || $this->day==0) && ($month==$this->month || $this->month==0) && ($year==$this->year || $this->year==0) && ($this->weekDay==(Date("w",mktime(1,1,1,$month,$day,$year))+1) || $this->weekDay==0))
+		if(($day==$this->day || $this->day==0) && 
+                        ($month==$this->month || $this->month==0) && 
+                        ($year==$this->year || $this->year==0) && 
+                        ($this->weekDay==(Date("w",mktime(1,1,1,$month,$day,$year))+1) || $this->weekDay==0))
 		{
 			return true;
 		}
@@ -148,6 +193,22 @@ class SpecialDay
 	public function setWeekDay($x) { $this->weekDay = $x; }
 	public function setName($x) { $this->name = $x; }
 	public function setUserId($x) { $this->userId = $x; }
+        
+        
+        // Static Functions
+        public static function getDaysForUser($sqlDataBase, $userId) {
+            $querySpecialDays = "SELECT * FROM calendar_special_days WHERE user_id=:userId";
+            $params = array("userId"=>$userId);
+            $result = $sqlDataBase->get_query_result($querySpecialDays, $params);
+            $days = array();
+            foreach($result as $specialDay) {
+                $this_day = new SpecialDay($sqlDataBase);
+                $this_day->LoadSpecialDay($specialDay['id']);
+                $days[] = $this_day;
+            }
+            
+            return $days;
+        }
 }
 
 ?>

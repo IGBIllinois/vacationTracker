@@ -205,8 +205,10 @@ class Leave
 	 */
 	public function CheckConfirmToken($confirmToken)
 	{
-		$queryConfirmedToken = "SELECT COUNT(*) as leave_exists FROM authen_key WHERE leave_id=".$this->leaveId." AND confirm_key=\"".$confirmToken."\"";
-		$confirmedToken = $this->sqlDataBase->query($queryConfirmedToken);
+		$queryConfirmedToken = "SELECT COUNT(*) as leave_exists FROM authen_key WHERE leave_id=:leave_id AND confirm_key=:confirmToken";
+                $params = array("leave_id"=>$this->leaveId,
+                                "confirm_key"=>$confirmToken);
+		$confirmedToken = $this->sqlDataBase->get_query_result($queryConfirmedToken, $params);
 		if($confirmedToken[0]['leave_exists'])
 		{
 			return true;
@@ -229,11 +231,16 @@ class Leave
 	public function getLeaveTypeIdSpecial() { return $this->leaveTypeSpecialId; }
 	public function getHours() { return $this->hours; }
 	public function getYearId() { return $this->yearId; }
+        
 	public function getStatusString()
 	{
-		$queryStatusName = "SELECT name FROM status WHERE status_id=".$this->statusId;
-		$name =  $this->sqlDataBase->singleQuery($queryStatusName);
-		return $name;
+            $name = "";
+
+            $queryStatusName = "SELECT name FROM status WHERE status_id=:status_id";
+            $params = array("status_id"=>$this->statusId);
+            $name = $this->sqlDataBase->singleQuery($queryStatusName, $params);
+        
+            return $name;
 
 	}
 

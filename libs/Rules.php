@@ -118,14 +118,19 @@ class Rules
         
         	protected function LoadAddedHoursPayPeriod($yearId,$leaveTypeId,$userId, $startDate, $endDate)
 	{
-		$queryAddedLeaveSum = "SELECT SUM(hours) FROM added_hours WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
+		$queryAddedLeaveSum = "SELECT SUM(hours) FROM added_hours WHERE user_id=:user_id AND year_info_id=:year_info_id AND leave_type_id=:leave_type_id ";
 		//if($payPeriod)
 		//{
-			$queryAddedLeaveSum .=" AND date between '".$startDate."' and '".$endDate."'";
+			$queryAddedLeaveSum .=" AND date between :start_date and :end_date";
 		//}
 		$queryAddedLeaveSum .= " GROUP BY leave_type_id";
+                $params = array("user_id"=>$userId,
+                                "year_info_id"=>$yearId,
+                                "leave_type_id"=>$leaveTypeId,
+                                "start_date"=>$startDate,
+                                "end_date"=>$endDate);
                 //echo("queryAddedLeaveSum = $queryAddedLeaveSum <BR>");
-		$addedLeaveSum = $this->sqlDataBase->singleQuery($queryAddedLeaveSum);
+		$addedLeaveSum = $this->sqlDataBase->singleQuery($queryAddedLeaveSum, $params);
 		if($addedLeaveSum)
 		{
 			return $addedLeaveSum;
@@ -140,13 +145,23 @@ class Rules
 	{
 		//$queryCalcUsedHours = "SELECT used_hours FROM leave_user_info WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
                 //$queryCalcUsedHours = "SELECT SUM(used_hours) FROM leave_user_info where user_id='".$userId."' and date between '".$startDate."' AND '".$endDate."' and leave_type_id='".$leaveTypeId."'";
-		$queryCalcUsedHours = "SELECT SUM(leave_hours) FROM leave_info where user_id='".$userId."' and date between '".$startDate."' AND '".$endDate."' and leave_type_id='".$leaveTypeId."'";
+		$queryCalcUsedHours = "SELECT SUM(leave_hours) FROM leave_info where user_id='".$userId."' "
+                        . "and date between '".$startDate."' AND '".$endDate."' "
+                        . "and leave_type_id='".$leaveTypeId."'";
+                
+                $params = array("user_id"=>$userId,
+                                "startDate"=>$startDate,
+                                "endDate"=>$endDate,
+                                "leave_type_id"=>$leaveTypeId);
+                
                 if($leaveTypeId == 10) { // unique case for non-cumulative sick
                     $queryCalcUsedHours = "SELECT used_hours FROM leave_user_info WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
-                    
+                    $params = array("user_id"=>$userId,
+                                "year_info_id"=>$yearId,
+                                "leave_type_id"=>$leaveTypeId);
                 }
                 //echo("lcuhpp query = $queryCalcUsedHours<BR>");
-                $calcUsedHours = $this->sqlDataBase->singleQuery($queryCalcUsedHours);
+                $calcUsedHours = $this->sqlDataBase->singleQuery($queryCalcUsedHours, $params);
 		if($calcUsedHours)
 		{
 			return $calcUsedHours;
@@ -178,9 +193,16 @@ class Rules
 	 */
 	protected function LoadCalcUsedHours($yearId,$leaveTypeId,$userId)
 	{
-		$queryCalcUsedHours = "SELECT used_hours FROM leave_user_info WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
-
-		$calcUsedHours = $this->sqlDataBase->singleQuery($queryCalcUsedHours);
+		$queryCalcUsedHours = "SELECT used_hours FROM leave_user_info "
+                        . "WHERE user_id=:user_id "
+                        . "AND year_info_id=:year_info_id "
+                        . "AND leave_type_id=:leave_type_id";
+                
+                $params = array("user_id"=>$userId,
+                                "year_info_id"=>$yearId,
+                                "leave_type_id"=>$leaveTypeId);
+                
+		$calcUsedHours = $this->sqlDataBase->singleQuery($queryCalcUsedHours, $params);
 		if($calcUsedHours)
 		{
 			return $calcUsedHours;
@@ -202,10 +224,20 @@ class Rules
 	{
 		$queryLeaveSum = "SELECT SUM(leave_hours)
 					FROM leave_info 
-					WHERE year_info_id=".$yearId." AND user_id=".$userId." AND leave_type_id=".$leaveTypeId." AND status_id=".APPROVED." GROUP BY leave_type_id";
-		$leaveSum = $this->sqlDataBase->singleQuery($queryLeaveSum);
-                //echo("queryLeaveSum = $queryLeaveSum <BR>");
-		if($leaveSum)
+					WHERE year_info_id= :year_info_id "
+                        . " AND user_id= :user_id "
+                        . " AND leave_type_id= :leaveTypeId "
+                        . " AND status_id=:status_id "
+                        . " GROUP BY leave_type_id";
+                
+                $params = array("year_info_id"=>$yearId,
+                                "user_id"=>$userId,
+                                "leaveTypeId"=>$leaveTypeId,
+                                "status_id"=>APPROVED);
+                
+		$leaveSum = $this->sqlDataBase->singleQuery($queryLeaveSum, $params);
+
+                if($leaveSum)
 		{
 			return $leaveSum;
 		}
@@ -226,14 +258,23 @@ class Rules
 	 */
 	protected function LoadAddedHours($yearId,$leaveTypeId,$userId,$payPeriod=false)
 	{
-		$queryAddedLeaveSum = "SELECT SUM(hours) FROM added_hours WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
+		$queryAddedLeaveSum = "SELECT SUM(hours) FROM added_hours "
+                        . "WHERE user_id=".$userId." "
+                        . "AND year_info_id=".$yearId." "
+                        . "AND leave_type_id=".$leaveTypeId;
+                
+                $params = array("user_id"=>$userId,
+                                "year_info_id"=>$yearId,
+                                "leave_type_id"=>$leaveTypeId);
+                
 		if($payPeriod)
 		{
-			$queryAddedLeaveSum .=" AND (pay_period_id < ".$payPeriod." OR (pay_period_id=".$payPeriod." AND begining_of_pay_period))";
+			$queryAddedLeaveSum .=" AND (pay_period_id < :pay_period_id OR (pay_period_id=:pay_period_id AND begining_of_pay_period))";
+                        $params["pay_period_id"] = $payPeriod;
 		}
 		$queryAddedLeaveSum .= " GROUP BY leave_type_id";
-                //echo("queryAddedLeaveSum = $queryAddedLeaveSum <BR>");
-		$addedLeaveSum = $this->sqlDataBase->singleQuery($queryAddedLeaveSum);
+
+		$addedLeaveSum = $this->sqlDataBase->singleQuery($queryAddedLeaveSum, $params);
 		if($addedLeaveSum)
 		{
 			return $addedLeaveSum;
@@ -253,9 +294,16 @@ class Rules
 	 */
 	protected function LoadLeaveUserInfo($yearId,$leaveTypeId,$userId)
 	{
-		$queryLeaveUserInfo = "SELECT initial_hours, leave_user_info_id FROM leave_user_info WHERE user_id=".$userId." AND year_info_id=".$yearId." AND leave_type_id=".$leaveTypeId;
-                //echo("LoadLeaveUserInfo query = $queryLeaveUserInfo <BR>");
-		$leaveUserInfo = $this->sqlDataBase->query($queryLeaveUserInfo);
+		$queryLeaveUserInfo = "SELECT initial_hours, "
+                        . "leave_user_info_id "
+                        . "FROM leave_user_info "
+                        . "WHERE user_id=:userId "
+                        . "AND year_info_id=:yearId "
+                        . "AND leave_type_id=:leaveTypeId";
+                $params = array("userId"=>$userId,
+                                "yearId"=>$yearId,
+                                "leaveTypeId"=>$leaveTypeId);
+		$leaveUserInfo = $this->sqlDataBase->get_query_result($queryLeaveUserInfo, $params);
 		if($leaveUserInfo)
 		{
 			return $leaveUserInfo;
@@ -275,9 +323,23 @@ class Rules
 	{
 		$indexedLeaveTypes = array();
 
-		$queryLeaveTypes = "SELECT leave_type_id, roll_over, max, 0 as added_hours, 0 as used_hours, 0 as initial_hours,name,description,0 as est_added_hours, 0 as calc_used_hours, 0 as leave_user_info_id FROM leave_type WHERE year_type_id=".$yearTypeId;
+		$queryLeaveTypes = "SELECT leave_type_id, "
+                        . "roll_over,"
+                        . " max, "
+                        . "0 as added_hours, "
+                        . "0 as used_hours, "
+                        . "0 as initial_hours,"
+                        . "name,"
+                        . "description,"
+                        . "0 as est_added_hours, "
+                        . "0 as calc_used_hours, "
+                        . "0 as leave_user_info_id "
+                        . "FROM leave_type "
+                        . "WHERE year_type_id=:yearTypeId";
+                
+                $params = array("yearTypeId"=>$yearTypeId);
 
-                $leaveTypes = $this->sqlDataBase->query($queryLeaveTypes);
+                $leaveTypes = $this->sqlDataBase->get_query_result($queryLeaveTypes, $params);
 		if($leaveTypes)
 		{
 			foreach($leaveTypes as $id=>$leaveType)
@@ -299,8 +361,16 @@ class Rules
 	 */
 	protected function UpdateLeaveUserInfo($userId,$yearId,$usedHours,$initialHours,$leaveTypeId,$leaveUserInfoId)
 	{
-		$queryUpdateLeaveUserInfo = "UPDATE leave_user_info SET used_hours=".$usedHours.", initial_hours=".$initialHours." WHERE leave_user_info_id=".$leaveUserInfoId;
-                $this->sqlDataBase->nonSelectQuery($queryUpdateLeaveUserInfo);
+		$queryUpdateLeaveUserInfo = "UPDATE leave_user_info SET "
+                        . "used_hours=:used_hours, "
+                        . "initial_hours=:initial_hours "
+                        . "WHERE leave_user_info_id=:leave_user_info_id";
+                
+                $params = array("used_hours"=>$usedHours,
+                                "initial_hours"=>$initialHours,
+                                "leave_user_info_id"=>$leaveUserInfoId);
+                
+                $this->sqlDataBase->get_update_result($queryUpdateLeaveUserInfo, $params);
 	}
 }
 ?>
