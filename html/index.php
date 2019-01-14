@@ -14,7 +14,7 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 (isset($_GET['confirmtoken']) && (isset($_GET['autoapprove']) || isset($_GET['autonotapprove'])))  )
 {
 
-	$confirmKey = mysqli_real_escape_string($sqlDataBase->getLink(),$_GET['confirmtoken']);
+        $confirmKey = $_GET['confirmtoken'];
 	$authenticated = 0;
 	$loggedUser = new User($sqlDataBase);
 
@@ -42,15 +42,25 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 			switch($authen->getError())
 			{
 				case Auth::TOKEN_EXPIRED:
-					echo Helper::MessageBox("Token Expired","Automatic login confirmation token has expired please authenticate first.","error");
+					echo Helper::MessageBox("Token Expired",
+                                                "Automatic login confirmation token has expired please authenticate first.",
+                                                "error");
 					require_once "includes/login.php";
 					break;
 				case Auth::TOKEN_INVALID:
-					echo Helper::MessageBox("Confirmation key invalid","The confirmation key used in the URL is invalid. To access the main site please <a href=\"index.php\"><b>Click Here</b></a><br><br>Note: This could happen if the leaves requested for approval were deleted, or the confirmation token in the URL does not exist.","error");
+					echo Helper::MessageBox("Confirmation key invalid",
+                                                "The confirmation key used in the URL is invalid. ".
+                                                "To access the main site please <a href=\"index.php\"><b>Click Here</b></a><br><br>".
+                                                "Note: This could happen if the leaves requested for approval were deleted, or the confirmation token in the URL does not exist.",
+                                                "error");
 					break;
 				case Auth::NO_COOKIE:
 						
-					echo Helper::MessageBox("Cookie Expired","Please log in to view leaves.<br><br>Note: This could happen if you already used this link before from a different machine or your cookies were deleted recently.","error");
+					echo Helper::MessageBox("Cookie Expired",
+                                                "Please log in to view leaves.<br><br>".
+                                                "Note: This could happen if you already used this link before from a different machine ".
+                                                "or your cookies were deleted recently.",
+                                                "error");
 					require_once "includes/login.php";
 					break;
 			}
@@ -64,10 +74,13 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 }
 elseif($loggedUser->getUserId() > 0)
 {
-
 		require_once "includes/header.php";
 
-
+                if(isset($_GET['logout'])) 
+                {
+                        require_once "includes/login.php";
+                        return;
+                }
 		if(!isset($_GET['view']))
 		{
 			$_GET['view']="calendar";
@@ -93,10 +106,6 @@ elseif($loggedUser->getUserId() > 0)
 			elseif($_GET['view']=='tree')
 			{
 				require_once "includes/employee_tree.php";
-			}
-			elseif($_GET['view']=='report')
-			{
-				require_once "includes/report.php";
 			}
 			elseif($_GET['view']=='userInfo')
 			{
@@ -142,6 +151,7 @@ elseif($loggedUser->getUserId() > 0)
 				{
 					require_once "includes/add_leaves_admin.php";
 				}
+                                
 				else
 				{
 					require_once "includes/calendar_view.php";
