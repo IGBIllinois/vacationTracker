@@ -64,9 +64,6 @@ if(isset($_POST['yearType']))
 				<option value=0>None</option>
 				<?php
 
-				//$queryYearTypesInfo = "SElECT year_type_id,name FROM year_type";
-				//$yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
-
                                 $yearTypesInfo = Years::GetYearTypes($sqlDataBase);
 				if($yearTypesInfo)
 				{
@@ -90,8 +87,12 @@ if(isset($_POST['yearType']))
 			onchange="this.form.submit()">
 				<option vlue=0>None</option>
 				<?php
-				$queryYearsInfo = "SELECT start_date,end_date,year_info_id FROM year_info WHERE year_type_id=".$selectedYearTypeId." ORDER BY start_date";
-				$yearsInfo = $sqlDataBase->query($queryYearsInfo);
+				$queryYearsInfo = "SELECT start_date,end_date,year_info_id FROM year_info "
+                                        . "WHERE year_type_id=:year_type_id ORDER BY start_date";
+                                
+                                $params = array("year_type_id"=>$selectedYearTypeId);
+                                
+                                $yearsInfo = $sqlDataBase->get_query_result($queryYearsInfo, $params);
 
 				if($yearsInfo)
 				{
@@ -114,8 +115,9 @@ if(isset($_POST['yearType']))
 		<td class="form_field"><select name="payPeriod">
 				<option value=0>None</option>
 				<?php
-				$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=".$selectedYearId;
-				$payPeriod = $sqlDataBase->query($queryPayPeriod);
+				$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=:year_info_id";
+                                $params = array("year_info_id"=>$selectedYearId);
+                                $payPeriod = $sqlDataBase->get_query_result($queryPayPeriod, $params);
 
 				if($payPeriod)
 				{
@@ -138,7 +140,7 @@ if(isset($_POST['yearType']))
 		<td class="form_field"><select name="employeeType">
 		<?php
 		$queryEmployeeTypes = "SELECT user_type_id, name FROM user_type";
-		$employeeTypes = $sqlDataBase->query($queryEmployeeTypes);
+		$employeeTypes = $sqlDataBase->get_query_result($queryEmployeeTypes);
 		if($employeeTypes)
 		{
 			foreach($employeeTypes as $id=>$employeeType)
@@ -158,7 +160,7 @@ if(isset($_POST['yearType']))
 				<option value="-2" <?php echo ($selectedUser==-2)?"SELECTED":""; ?>>All</option>
 				<?php
 				$queryUsers = "SELECT user_id, netid FROM users WHERE enabled=".ENABLED." ORDER BY netid ASC";
-				$users = $sqlDataBase->query($queryUsers);
+				$users = $sqlDataBase->get_query_result($queryUsers);
 				if($users)
 				{
 					foreach($users as $id=>$userInfo)
@@ -180,8 +182,9 @@ if(isset($_POST['yearType']))
 		<td class="form_field"><select name="leaveType">
 				<option value=0>None</option>
 				<?php
-				$queryLeaveTypes = "SELECT leave_type_id, name FROM leave_type WHERE year_type_id=".$selectedYearTypeId;
-				$leaveTypes = $sqlDataBase->query($queryLeaveTypes);
+				$queryLeaveTypes = "SELECT leave_type_id, name FROM leave_type WHERE year_type_id=:year_type_id";
+                                $params = array("year_type_id"=>$selectedYearTypeId);
+                                $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
 
 				if($leaveTypes)
 				{

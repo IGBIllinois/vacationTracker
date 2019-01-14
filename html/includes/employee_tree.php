@@ -13,7 +13,7 @@
 		<td class="content_bg">
 		<?php 
 		$queryUsers = "SELECT user_id, first_name, last_name, supervisor_id, email FROM users";
-		$users = $sqlDataBase->query($queryUsers);
+		$users = $sqlDataBase->get_query_result($queryUsers);
 
 		$usersHash=array();
 

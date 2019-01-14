@@ -190,7 +190,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 		</td>
 		<td class="content_bg" valign="top"><?php echo $messageBox; 
 		$queryYearTypes = "SELECT year_type_id,name,description FROM year_type";
-		$yearTypes = $sqlDataBase->query($queryYearTypes)
+		$yearTypes = $sqlDataBase->get_query_result($queryYearTypes)
 		?>
 			<div id="yeartabs">
 				<ul>
@@ -250,6 +250,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 						{
 
 							$yearSelected = $years->GetYearId(Date('d'),Date('m'),Date('Y'),$yearType['year_type_id']);
+                                                       
 						}
                                                 
 						$yearInfo = $years->GetYearDates($yearSelected);
@@ -279,8 +280,23 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				<br><br>
 				<b>Leaves Request Management:</b>
 				<?php
-				$queryStatus = "SELECT s.status_id,s.name, COUNT(li.status_id) as num_leaves FROM status s LEFT JOIN leave_info li ON (li.status_id = s.status_id AND user_id=".$leavesShowUser." AND  li.year_info_id = ".$yearSelected.") WHERE s.status_id!=".DELETED." GROUP BY s.status_id";
-				$statusList = $sqlDataBase->query($queryStatus);
+				$queryStatus = "SELECT s.status_id,"
+                                        . "s.name, "
+                                        . "COUNT(li.status_id) as num_leaves "
+                                        . "FROM status s "
+                                        . "LEFT JOIN leave_info li ON "
+                                        . "(li.status_id = s.status_id "
+                                        . "AND user_id=:user_id "
+                                        . "AND  li.year_info_id = :year_id )"
+                                        . "WHERE s.status_id!=:status_id "
+                                        . "GROUP BY s.status_id";
+                                
+                                $params = array("user_id"=>$leavesShowUser,
+                                                "year_id"=>$yearSelected,
+                                                "status_id"=>DELETED);
+                                
+				$statusList = $sqlDataBase->get_query_result($queryStatus, $params);
+                                
 				?>
 				<div id="leavetabs-<?php echo $yearType['year_type_id']; ?>">
 					<ul>

@@ -57,8 +57,18 @@
 				<td id="createLeave">Leave Type</td>
 				<td id="createLeave"><SELECT name="leaveType">
 				<?php
-				$queryLeaveTypes = "SELECT distinct lt.leave_type_id, lt.name FROM leave_type lt, leave_user_info lui WHERE lt.leave_type_id=lui.leave_type_id AND lui.user_id=".$loggedUser->getUserId()." AND lt.special=0 AND lui.hidden=0";
-				$leaveTypes = $sqlDataBase->query($queryLeaveTypes);
+				$queryLeaveTypes = "SELECT distinct "
+                                        . "lt.leave_type_id, "
+                                        . "lt.name "
+                                        . "FROM leave_type lt, leave_user_info lui "
+                                        . "WHERE lt.leave_type_id=lui.leave_type_id "
+                                        . "AND lui.user_id=:user_id "
+                                        ." AND lt.special=0 AND lui.hidden=0";
+                                
+                                $params = array("user_id"=>$loggedUser->getUserId());
+                                
+				$leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
+
 				foreach($leaveTypes as $id => $assoc)
 				{
 					echo "<option value=".$assoc['leave_type_id'].">".$assoc['name']."</option>";
@@ -71,8 +81,17 @@
 				<td id="createLeave"><SELECT name="leaveTypeSpecial">
 						<option value=0></option>
 						<?php
-						$queryLeaveTypeSpecial = "SELECT distinct lt.leave_type_id, lt.name FROM leave_type lt, leave_user_info lui WHERE lt.leave_type_id=lui.leave_type_id AND lui.user_id=".$loggedUser->getUserId()." AND lt.special=1 AND lui.hidden=0";
-						$leaveTypeSpecial = $sqlDataBase->query($queryLeaveTypeSpecial);
+						$queryLeaveTypeSpecial = "SELECT distinct "
+                                                        . "lt.leave_type_id, "
+                                                        . "lt.name "
+                                                        . "FROM leave_type lt, leave_user_info lui "
+                                                        . "WHERE lt.leave_type_id=lui.leave_type_id "
+                                                        . "AND lui.user_id=:user_id "
+                                                        . "AND lt.special=1 AND lui.hidden=0";
+                                                
+                                                $params = array("user_id"=>$loggedUser->getUserId());
+                                                
+						$leaveTypeSpecial = $sqlDataBase->get_query_result($queryLeaveTypeSpecial, $params);
 						if($leaveTypeSpecial)
 						{
 							foreach($leaveTypeSpecial as $id => $assoc)

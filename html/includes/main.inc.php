@@ -6,14 +6,13 @@
  * and open the template in the editor.
  */
 
-error_reporting(E_ALL);
-#ini_set('display_errors', '1');
-#error_reporting(0);
+
 date_default_timezone_set("America/Chicago");
 session_start();
 //Load the classes automatically without having to include them
 function my_autoloader($class_name) {
-	require_once '../libs/' . $class_name . '.php';
+    
+    require_once '../libs/' . $class_name . '.php';
 }
 spl_autoload_register('my_autoloader');
 
@@ -22,7 +21,9 @@ require_once '../vendor/autoload.php';
 //Load configuration file
 require_once "../conf/config.php";
 
-
+if($debug) {
+error_reporting(E_ALL);
+}
 //Initialize database 
 $sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
 

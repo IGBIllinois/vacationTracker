@@ -29,7 +29,12 @@ if(isset($_POST['addLeaveHours']))
         {
                 $resetHours = 0;
         }
-        $message = $helper->AddLeaveHours($_POST['appointmentYear'],$_POST['payPeriod'], $_POST['employeeType'],$_POST['leaveType'], $_POST['hoursToAdd'],$_POST['hoursAddPayPeriod']);
+        $message = $helper->AddLeaveHours($_POST['appointmentYear'],
+                $_POST['payPeriod'], 
+                $_POST['employeeType'],
+                $_POST['leaveType'], 
+                $_POST['hoursToAdd'],
+                $_POST['hoursAddPayPeriod']);
 }
 
 ?>

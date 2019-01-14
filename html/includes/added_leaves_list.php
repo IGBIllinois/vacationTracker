@@ -49,26 +49,31 @@ else
 }
 
 $queryLeavesAddedGlobal = "SELECT ah.description, ah.hours, pp.start_date, pp.end_date, lt.name, ah.added_hours_id, ah.begining_of_pay_period FROM added_hours ah, pay_period pp, leave_type lt, year_info yi WHERE pp.pay_period_id=ah.pay_period_id AND lt.leave_type_id = ah.leave_type_id AND ah.year_info_id = yi.year_info_id AND ah.user_id=0";
-
+$params = array();
 if($selectedYearIdView)
 {
-	$queryLeavesAddedGlobal .=" AND pp.year_info_id = ".$selectedYearIdView;
+	$queryLeavesAddedGlobal .=" AND pp.year_info_id = :year_info_id ";
+        $params["year_info_id"]=$selectedYearIdView;
 }
 if($selectedPayPeriodIdView)
 {
-	$queryLeavesAddedGlobal .=" AND pp.pay_period_id = ".$selectedPayPeriodIdView;
+	$queryLeavesAddedGlobal .=" AND pp.pay_period_id = :pay_period_id ";
+        $params["pay_period_id"]=$selectedPayPeriodIdView;
 }
 if($selectedLeaveTypeIdView)
 {
-	$queryLeavesAddedGlobal .=" AND ah.leave_type_id = ".$selectedLeaveTypeIdView;
+	$queryLeavesAddedGlobal .=" AND ah.leave_type_id = :leave_type_id ";
+        $params["leave_type_id"]=$selectedLeaveTypeIdView;
+        
 }
 if($selectedYearTypeIdView)
 {
-	$queryLeavesAddedGlobal .=" AND yi.year_type_id = ".$selectedYearTypeIdView;
+	$queryLeavesAddedGlobal .=" AND yi.year_type_id = :year_type_id ";
+        $params["year_type_id"]=$selectedYearTypeIdView;
 }
 
 $queryLeavesAddedGlobal .= " ORDER BY pp.start_date DESC";
-$leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
+$leavesAddedGlobal = $sqlDataBase->get_query_result($queryLeavesAddedGlobal, $params);
 ?>
 
 <div id="addleaves_tabs">
@@ -98,7 +103,7 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 							<?php
 							$queryUsersToViewAddedLeaves = "SELECT user_id,netid FROM users ORDER BY netid";
 
-							$usersToViewAddedLeaves = $sqlDataBase->query($queryUsersToViewAddedLeaves);
+							$usersToViewAddedLeaves = $sqlDataBase->get_query_result($queryUsersToViewAddedLeaves);
 
 							foreach($usersToViewAddedLeaves as $id=>$userInfo)
 							{
@@ -123,7 +128,7 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 							<option value=0>All</option>
 							<?php
 							$queryYearTypesInfo = "SElECT year_type_id,name FROM year_type";
-							$yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
+							$yearTypesInfo = $sqlDataBase->get_query_result($queryYearTypesInfo);
 
 							if($yearTypesInfo)
 							{
@@ -147,8 +152,9 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 						onchange="this.form.submit()">
 							<option value=0>All</option>
 							<?php
-							$queryYearsInfo = "SELECT start_date,end_date,year_info_id FROM year_info WHERE year_type_id=".$selectedYearTypeIdView;
-							$yearsInfo = $sqlDataBase->query($queryYearsInfo);
+							$queryYearsInfo = "SELECT start_date,end_date,year_info_id FROM year_info WHERE year_type_id=:year_type_id";
+                                                        $params = array("year_type_id"=>$selectedYearTypeIdView);
+                                                        $yearsInfo = $sqlDataBase->get_query_result($queryYearsInfo, $params);
 
 							if($yearsInfo)
 							{
@@ -172,8 +178,9 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 						onchange="this.form.submit()">
 							<option value=0>All</option>
 							<?php
-							$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=".$selectedYearIdView;
-							$payPeriod = $sqlDataBase->query($queryPayPeriod);
+							$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=:year_info_id";
+                                                        $params = array("year_info_id"=>$selectedYearIdView);
+                                                        $payPeriod = $sqlDataBase->get_query_result($queryPayPeriod, $params);
 
 							if($payPeriod)
 							{
@@ -197,9 +204,9 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 						onchange="this.form.submit()">
 							<option value=0>All</option>
 							<?php
-							$queryLeaveTypes = "SELECT leave_type_id, name FROM leave_type WHERE year_type_id=".$selectedYearTypeIdView;
-							$leaveTypes = $sqlDataBase->query($queryLeaveTypes);
-
+							$queryLeaveTypes = "SELECT leave_type_id, name FROM leave_type WHERE year_type_id=:year_type_id";
+                                                        $params = array("year_type_id"=>$selectedYearTypeIdView);
+                                                        $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
 							if($leaveTypes)
 							{
 								foreach($leaveTypes as $id=>$leaveType)
@@ -293,7 +300,7 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 	}
 
 	$queryLeavesAdded .= " ORDER BY pp.start_date DESC";
-	$leavesAdded = $sqlDataBase->query($queryLeavesAdded);
+	$leavesAdded = $sqlDataBase->get_query_result($queryLeavesAdded, $params);
 
 
 	?>
@@ -312,7 +319,7 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 							<?php
 							$queryUsersToViewAddedLeaves = "SELECT user_id,netid FROM users ORDER BY netid";
 
-							$usersToViewAddedLeaves = $sqlDataBase->query($queryUsersToViewAddedLeaves);
+							$usersToViewAddedLeaves = $sqlDataBase->get_query_result($queryUsersToViewAddedLeaves);
 
 							foreach($usersToViewAddedLeaves as $id=>$userInfo)
 							{
@@ -334,7 +341,7 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 							<option value=0>All</option>
 							<?php
 							$queryYearTypesInfo = "SElECT year_type_id,name FROM year_type";
-							$yearTypesInfo = $sqlDataBase->query($queryYearTypesInfo);
+							$yearTypesInfo = $sqlDataBase->get_query_result($queryYearTypesInfo);
 
 							if($yearTypesInfo)
 							{
@@ -359,7 +366,8 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 							<option value=0>All</option>
 							<?php
 							$queryYearsInfo = "SELECT start_date,end_date,year_info_id FROM year_info WHERE year_type_id=".$selectedYearTypeIdView;
-							$yearsInfo = $sqlDataBase->query($queryYearsInfo);
+                                                        $params = array("year_type_id"=>$selectedYearTypeIdView);
+                                                        $yearsInfo = $sqlDataBase->get_query_result($queryYearsInfo, $params);
 
 							if($yearsInfo)
 							{
@@ -383,8 +391,9 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 						onchange="this.form.submit()">
 							<option value=0>All</option>
 							<?php
-							$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=".$selectedYearIdView;
-							$payPeriod = $sqlDataBase->query($queryPayPeriod);
+							$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=:year_info_id";
+                                                        $params = array("year_info_id"=>$selectedYearIdView);
+                                                        $payPeriod = $sqlDataBase->get_query_result($queryPayPeriod, $params);
 
 							if($payPeriod)
 							{
@@ -409,7 +418,8 @@ $leavesAddedGlobal = $sqlDataBase->query($queryLeavesAddedGlobal);
 							<option value=0>All</option>
 							<?php
 							$queryLeaveTypes = "SELECT leave_type_id, name FROM leave_type WHERE year_type_id=".$selectedYearTypeIdView;
-							$leaveTypes = $sqlDataBase->query($queryLeaveTypes);
+                                                        $params = array("year_type_id"=>$selectedYearIdView);
+                                                        $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
 
 							if($leaveTypes)
 							{

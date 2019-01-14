@@ -21,7 +21,7 @@ $sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword
 $objTree =  new GDRenderer(30,10,20,50,20,20,20);
 
 $queryUsers = "SELECT user_id, first_name, last_name, supervisor_id, email FROM users";
-$users = $sqlDataBase->query($queryUsers);
+$users = $sqlDataBase->get_query_result($queryUsers);
 //print_r($users);
 
 foreach($users as $id => $user)

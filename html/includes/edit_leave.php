@@ -15,7 +15,16 @@ if($leaveId>0)
 
 if(isset($_POST['createLeave']))
 {
-	echo $editLeaveType->CreateLeaveType($_POST['leaveName'],$_POST['leaveDescription'],$_POST['leaveColor'],(isset($_POST['special']))?1:0,(isset($_POST['hidden']))?1:0,(isset($_POST['rollOver']))?1:0,$_POST['max'],$_POST['defaultValue'],$_POST['yearType']);
+	$editLeaveType->CreateLeaveType(
+                $_POST['leaveName'],
+                $_POST['leaveDescription'],
+                $_POST['leaveColor'],
+                (isset($_POST['special']))?1:0,
+                (isset($_POST['hidden']))?1:0,
+                (isset($_POST['rollOver']))?1:0,
+                $_POST['max'],
+                $_POST['defaultValue'],
+                $_POST['yearType']);
 	$leaveId=$editLeaveType->getTypeId();
 }
 
@@ -24,7 +33,7 @@ if(isset($_POST['applyEditLeave']))
 	if($editLeaveType->getTypeId())
 	{
 		$editLeaveType->setName($_POST['leaveName']);
-		$editLeaveType->setDescription(mysqli_real_escape_string($sqlDataBase->getLink(),$_POST['leaveDescription']));
+		$editLeaveType->setDescription($_POST['leaveDescription']);
 		$editLeaveType->setColor($_POST['leaveColor']);
 		$editLeaveType->setSpecial((isset($_POST['special']))?1:0);
 		$editLeaveType->setHidden((isset($_POST['hidden']))?1:0);
@@ -41,8 +50,24 @@ if(isset($_POST['toShow']) && isset($_POST['hiddenLeaves']))
 	{	
 		foreach($leavesToShow as $leaveToShow)
 		{
-			$querySetLeaveToShow = "UPDATE leave_user_info SET hidden=0 WHERE user_id=".$leaveToShow." AND leave_type_id=".$editLeaveType->getTypeId();
-			$sqlDataBase->nonSelectQuery($querySetLeaveToShow);
+                    $queryLeaveTypeIds = "SELECT leave_user_info_id from leave_user_info where ".
+                            " user_id = :user_id AND ".
+                            " leave_type_id = :leave_type_id";
+                    $params = array("user_id"=>$leaveToShow,
+                                    "leave_type_id"=>$editLeaveType->getTypeId());
+                    
+                    $results = $sqlDataBase->get_query_result($queryLeaveTypeIds, $params);
+                    
+                    foreach($results as $result) {
+                        $id = $result[0];
+                        $id_params = array("id"=>$id);
+                    
+			$querySetLeaveToShow = "UPDATE leave_user_info "
+                                . "SET hidden=0 "
+                                . "WHERE leave_user_info_id=:id";
+
+			$sqlDataBase->get_update_result($querySetLeaveToShow, $id_params);
+                    }
 		}
 	}
 }
@@ -54,8 +79,24 @@ if(isset($_POST['toHidden']) && isset($_POST['showLeaves']))
         {
                 foreach($leavesToHidden as $leaveToHidden)
                 {
-                        $querySetLeaveToHidden = "UPDATE leave_user_info SET hidden=1 WHERE user_id=".$leaveToHidden." AND leave_type_id=".$editLeaveType->getTypeId();
-                        $sqlDataBase->nonSelectQuery($querySetLeaveToHidden);
+                        $queryLeaveTypeIds = "SELECT leave_user_info_id from leave_user_info where ".
+                            " user_id = :user_id AND ".
+                            " leave_type_id = :leave_type_id";
+                    $params = array("user_id"=>$leaveToHidden,
+                                    "leave_type_id"=>$editLeaveType->getTypeId());
+                    
+                    $results = $sqlDataBase->get_query_result($queryLeaveTypeIds, $params);
+                    
+                    foreach($results as $result) {
+                        $id = $result[0];
+                        $id_params = array("id"=>$id);
+                    
+			$querySetLeaveToHidden = "UPDATE leave_user_info "
+                                . "SET hidden=1 "
+                                . "WHERE leave_user_info_id=:id";
+
+			$sqlDataBase->get_update_result($querySetLeaveToHidden, $id_params);
+                    }
                 }
         }
 }
@@ -150,7 +191,7 @@ if(isset($_POST['toHidden']) && isset($_POST['showLeaves']))
 	<SELECT name="yearType" <?php echo (($leaveId > 0)?"disabled":"") ?> >
 	<?php
 	$queryYearTypes = "SELECT year_type_id, name FROM year_type";
-	$yearTypes = $sqlDataBase->query($queryYearTypes);
+	$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
 	
 	foreach($yearTypes as $id=>$yearType)
 	{
@@ -194,14 +235,26 @@ if($leaveId>0)
 ?>
 <form action="index.php?view=adminLeaves&id=<?php echo $editLeaveType->getTypeId(); ?>" method="POST">
 <table width="100%">
-<tr><td class="col_title" width="48%">Hidden</td><td width="20"></td><td class="col_title" width="48%">Showen</td></tr>
+<tr><td class="col_title" width="48%">Hidden</td><td width="20"></td><td class="col_title" width="48%">Shown</td></tr>
 <tr>
 	<td valign="top" class="content_bg">
 	<SELECT name="hiddenLeaves[]" class="leaves_user" size=15 multiple>
 	<?php
-	$queryHiddenLeaveTypes = "SELECT distinct lui.user_id, u.first_name, u.last_name FROM leave_user_info lui, users u WHERE u.user_id = lui.user_id AND lui.hidden=1 AND leave_type_id=".$editLeaveType->getTypeId()." ORDER BY u.first_name";
-	echo $queryHiddenLeaveTypes;
-	$hiddenLeaveTypes = $sqlDataBase->query($queryHiddenLeaveTypes);
+
+	$queryHiddenLeaveTypes = "SELECT distinct "
+                . "lui.user_id, "
+                . "u.first_name, "
+                . "u.last_name "
+                . "FROM leave_user_info lui, "
+                . "users u "
+                . "WHERE u.user_id = lui.user_id "
+                . "AND lui.hidden=1 "
+                . "AND leave_type_id=:leave_type_id "
+                ." ORDER BY u.last_name";
+        
+        $params = array("leave_type_id"=>$editLeaveType->getTypeId());
+
+	$hiddenLeaveTypes = $sqlDataBase->get_query_result($queryHiddenLeaveTypes, $params);
 	if($hiddenLeaveTypes)
 	{
 		foreach($hiddenLeaveTypes as $id=>$hiddenLeave)
@@ -219,8 +272,19 @@ if($leaveId>0)
 	<td valign="top" class="content_bg">
 	<SELECT name="showLeaves[]" class="leaves_user" size=15 multiple>
 	<?php
-        $queryShowenLeaveTypes = "SELECT distinct lui.user_id, u.first_name, u.last_name FROM leave_user_info lui, users u WHERE u.user_id = lui.user_id AND lui.hidden=0 AND leave_type_id=".$editLeaveType->getTypeId()." ORDER BY u.first_name";
-        $showenLeaveTypes = $sqlDataBase->query($queryShowenLeaveTypes);
+        $queryShowenLeaveTypes = "SELECT distinct "
+                . "lui.user_id, "
+                . "u.first_name, "
+                . "u.last_name "
+                . "FROM leave_user_info lui, users u "
+                . "WHERE u.user_id = lui.user_id "
+                . "AND lui.hidden=0 "
+                . "AND leave_type_id=:leave_type_id "
+                ." ORDER BY u.last_name";
+        
+        $params = array("leave_type_id"=>$editLeaveType->getTypeId());
+        
+        $showenLeaveTypes = $sqlDataBase->get_query_result($queryShowenLeaveTypes, $params);
 	if($showenLeaveTypes)
 	{
         	foreach($showenLeaveTypes as $id=>$showenLeave)

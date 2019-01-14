@@ -116,7 +116,7 @@ if(isset($_POST['addYear']))
                 <SELECT name="yearTypeToAddTo">
 		<?php
 		$queryYearTypes = "SELECT name,year_type_id FROM year_type";
-		$yearTypes = $sqlDataBase->query($queryYearTypes);
+		$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
 		
 		foreach($yearTypes as $id=>$yearTypeInfo)
 		{

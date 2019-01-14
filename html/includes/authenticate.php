@@ -11,9 +11,11 @@ if(isset($_POST['submitLogon']))
 	$helper = new Helper($sqlDataBase);
 	if($authen->AuthenticateLdap($_POST['loginname'],$_POST['loginpass'],""))
 	{
-		$queryCheckFirstTimeLogin="SELECT user_id FROM users WHERE enabled=1 AND netid=\"".$_POST['loginname']."\"";
-
-		if($sqlDataBase->countQuery($queryCheckFirstTimeLogin)==0)
+                $queryCheckFirstTimeLogin="SELECT user_id FROM users WHERE enabled=1 AND netid=:netid";
+                $params = array("netid"=>$_POST['loginname']);
+                $result = $sqlDataBase->get_query_result($queryCheckFirstTimeLogin, $params);
+                
+		if(count($result)==0)
 		{
 			$userInfo = $authen->GetUserInfo($_POST['loginname'],$_POST['loginpass']);
 			if($userInfo)
@@ -21,7 +23,9 @@ if(isset($_POST['submitLogon']))
 				echo $helper->MessageBox("Not Registered","You are not a registered user.\nTo register please talk to the business office.","error");
 			}
 		}
-        $userId = $sqlDataBase->singleQuery($queryCheckFirstTimeLogin);
+                $userId = $sqlDataBase->singleQuery($queryCheckFirstTimeLogin, $params);
+
+                
         $loggedUser->LoadUser($userId);
         $loggedUser->UpdateAuthKey();
 		$_SESSION['vacation_user_id']=$loggedUser->getUserId();

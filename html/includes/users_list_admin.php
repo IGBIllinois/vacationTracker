@@ -19,7 +19,7 @@ if(isset($_POST['search']))
 	}
 	else
 	{
-		$searchString = mysqli_real_escape_string($sqlDataBase->getLink(),$_POST['searchBox']);
+		$searchString = $_POST['searchBox'];
 	}
 }
 else
@@ -70,7 +70,20 @@ if(isset($_POST['createUser']))
 {
 	$editUser = new User($sqlDataBase);
 	list($month,$day,$year) = explode("/",$_POST['startDate']);
-	$editUser->CreateUser($_POST['firstName'], $_POST['lastName'], $_POST['userPerm'], $_POST['email'],$_POST['employeeType'],$_POST['netid'],$_POST['supervisor'],$year."-".$month."-".$day,((isset($_POST['autoApprove']))?1:0),$_POST['percent'],((isset($_POST['enabled']))?1:0) );
+	$editUser->CreateUser(
+                $_POST['firstName'], 
+                $_POST['lastName'], 
+                $_POST['userPerm'], 
+                $_POST['email'],
+                $_POST['employeeType'],
+                $_POST['netid'],
+                $_POST['supervisor'],
+                $year."-".$month."-".$day,
+                ((isset($_POST['autoApprove']))?1:0),
+                $_POST['percent'],
+                ((isset($_POST['enabled']))?1:0),
+                $_POST['uin'],
+                ((isset($_POST['banner_include']))?1:0));
 
 }
 
@@ -246,8 +259,26 @@ if(isset($_POST['createUser']))
                                         if(isset($_POST['disabled_users'])) {
                                             $additionalQuery = " and enabled=0 ";
                                         }
-					$queryUsers = "SELECT u.user_id, u.first_name, u.last_name, u.netid, ut.name as type, up.name as perm, u.enabled, u.banner_include FROM users u, user_type ut, user_perm up WHERE up.user_perm_id = u.user_perm_id AND ut.user_type_id = u.user_type_id AND (u.first_name LIKE \"".$searchString."\" OR u.last_name LIKE \"".$searchString."\" OR u.netid LIKE \"".$searchString."\") $additionalQuery ORDER BY u.last_name ASC";
-					$users = $sqlDataBase->query($queryUsers);
+					$queryUsers = "SELECT u.user_id, "
+                                                . "u.first_name, "
+                                                . "u.last_name, "
+                                                . "u.netid, "
+                                                . "ut.name as type, "
+                                                . "up.name as perm, "
+                                                . "u.enabled, "
+                                                . "u.banner_include "
+                                                . "FROM users u, user_type ut, user_perm up "
+                                                . "WHERE up.user_perm_id = u.user_perm_id "
+                                                . "AND ut.user_type_id = u.user_type_id "
+                                                . "AND (u.first_name LIKE :searchString "
+                                                . "OR u.last_name LIKE :searchString "
+                                                . "OR u.netid LIKE :searchString ) "
+                                                . " $additionalQuery "
+                                                . " ORDER BY u.last_name ASC";
+                                        
+                                        $params = array("searchString"=>"%".$searchString."%");
+
+                                        $users = $sqlDataBase->get_query_result($queryUsers, $params);
 					if($users)
 					{
 						foreach($users as $id=>$userInfo)

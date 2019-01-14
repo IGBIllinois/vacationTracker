@@ -35,8 +35,9 @@ if(isset($_POST['addLeaveHours']))
 	{
 		case 0:
 			//Add leave to all users including a template
-			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=".$_POST['employeeType']." AND enabled=".ENABLED;
-			$usersToAdd = $sqlDataBase->query($queryUsersToAdd);
+			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=:user_type_id AND enabled=".ENABLED;
+                        $params = array("user_type_id"=>$_POST['employeeType']);
+                        $usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);
 			array_push($usersToAdd,array("user_id"=>0,"percent"=>100,"start_date"=>"0000-00-00"));
 			break;
 		case -1:
@@ -45,15 +46,26 @@ if(isset($_POST['addLeaveHours']))
 			break;
 		case -2:
 			//Add to all current users without adding to template
-			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=".$_POST['employeeType']." AND enabled=".ENABLED;
-			$usersToAdd = $sqlDataBase->query($queryUsersToAdd);
+			//$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=".$_POST['employeeType']." AND enabled=".ENABLED;
+                        $queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=".$_POST['employeeType']." AND enabled=".ENABLED;
+                        $params = array("user_type_id"=>$_POST['employeeType']);
+                        $usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);
 			break;
 		default:
-			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_id=".$_POST['addToUser'];
-			$usersToAdd = $sqlDataBase->query($queryUsersToAdd);			
+                        $queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_id=:user_id";
+                        $params = array("user_id"=>$_POST['addToUser']);
+			$usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);			
 	}
 
-	$message = $helper->AddLeaveHours($_POST['year'],$_POST['leaveType'], $_POST['hoursToAdd'],$_POST['payPeriod'],$usersToAdd, $_POST['addLeavesDescription'],$_POST['hoursAddBegin'],$_POST['addToUser'],$_POST['yearType']);
+	$message = $helper->AddLeaveHours($_POST['year'],
+                $_POST['leaveType'], 
+                $_POST['hoursToAdd'],
+                $_POST['payPeriod'],
+                $usersToAdd, 
+                $_POST['addLeavesDescription'],
+                $_POST['hoursAddBegin'],
+                $_POST['addToUser'],
+                $_POST['yearType']);
 }
 /**
  * Add new leaves based on an existing template
@@ -64,23 +76,45 @@ if(isset($_POST['addNewLeavesToUser']))
 	{
 		$leavesToAdd = $_POST['addedLeavesCheckBox'];
 
-	
+                
 		if($_POST['userToViewAddedLeaves'])
 		{
-			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_id=".$_POST['userToViewAddedLeaves'];
+			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_id=:user_id";
+                        $params = array("user_id"=>$_POST['userToViewAddedLeaves']);
 		}
 		else
 		{
 			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users";
+                        $params = null;
 		}
-		$usersToAdd = $sqlDataBase->query($queryUsersToAdd);
+                $usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);
 		if($leavesToAdd)
 		{
 			foreach($leavesToAdd as $leaveToAddId)
 			{
-				$queryAddedLeaveInfo = "SELECT ah.hours, ah.user_type_id, ah.pay_period_id, ah.leave_type_id, ah.description, ah.year_info_id, ah.begining_of_pay_period, yi.year_type_id FROM added_hours ah, year_info yi WHERE yi.year_info_id = ah.year_info_id AND added_hours_id=".$leaveToAddId;
-				$addedLeaveInfo = $sqlDataBase->query($queryAddedLeaveInfo);
-				$message = $helper->AddLeaveHours($addedLeaveInfo[0]['year_info_id'],$addedLeaveInfo[0]['leave_type_id'], $addedLeaveInfo[0]['hours'],$addedLeaveInfo[0]['pay_period_id'],$usersToAdd, $addedLeaveInfo[0]['description'],$addedLeaveInfo[0]['begining_of_pay_period'],$_POST['userToViewAddedLeaves'],$addedLeaveInfo[0]['year_type_id']);
+				$queryAddedLeaveInfo = "SELECT ah.hours, "
+                                        . "ah.user_type_id, "
+                                        . "ah.pay_period_id, "
+                                        . "ah.leave_type_id, "
+                                        . "ah.description, "
+                                        . "ah.year_info_id, "
+                                        . "ah.begining_of_pay_period, "
+                                        . "yi.year_type_id "
+                                        . "FROM added_hours ah, "
+                                        . "year_info yi "
+                                        . "WHERE yi.year_info_id = ah.year_info_id "
+                                        . "AND added_hours_id=:added_hours_id";
+                                $params = array("added_hours_id"=>$leaveToAddId);
+				$addedLeaveInfo = $sqlDataBase->get_query_result($queryAddedLeaveInfo, $params);
+				$message = $helper->AddLeaveHours($addedLeaveInfo[0]['year_info_id'],
+                                        $addedLeaveInfo[0]['leave_type_id'], 
+                                        $addedLeaveInfo[0]['hours'],
+                                        $addedLeaveInfo[0]['pay_period_id'],
+                                        $usersToAdd, 
+                                        $addedLeaveInfo[0]['description'],
+                                        $addedLeaveInfo[0]['begining_of_pay_period'],
+                                        $_POST['userToViewAddedLeaves'],
+                                        $addedLeaveInfo[0]['year_type_id']);
 			} 
 		}
 	}

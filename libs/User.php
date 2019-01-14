@@ -92,8 +92,25 @@ class User
 	 * @param unknown_type $startDate
 	 * @param unknown_type $autoApprove
 	 * @param unknown_type $percent
+         * @param bool $enabled true if this user is enabled, else false
+         * @param string $uin University ID number
+         * @param bool $banner_include True if this user is to be included 
+         *              in Banner data. Defaults to true.
 	 */
-	public function CreateUser($firstName, $lastName, $userPermId, $userEmail, $userTypeId, $netid, $supervisorId,$startDate, $autoApprove,$percent,$enabled, $uin, $banner_include=1)
+	public function CreateUser(
+                $firstName, 
+                $lastName, 
+                $userPermId, 
+                $userEmail, 
+                $userTypeId, 
+                $netid, 
+                $supervisorId,
+                $startDate, 
+                $autoApprove,
+                $percent,
+                $enabled, 
+                $uin, 
+                $banner_include=1)
 	{
 		$this->firstName = $firstName;
 		$this->lastName = $lastName;
@@ -107,12 +124,63 @@ class User
 		$this->percent = $percent;
 		$this->enabled = $enabled;
                 $this->banner_include = $banner_include;
-		$queryInsertUser = "INSERT INTO users (netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, group_id,block_days, auth_key, uin)VALUES(\"".$this->netid."\",\"".$this->firstName."\",\"".$this->lastName."\",\"".$this->userTypeId."\",\"".$this->userPermId."\",\"".$this->userEmail."\",\"".$this->supervisorId."\",".$this->percent.",".$this->calendarFormat.", ".$this->autoApprove.",\"".$this->startDate."\",".$this->enabled.",".$this->banner_include.",0,0,0, '".$this->uin."')";
-		echo("queryInsertUser = $queryInsertUser<BR>");
-                $this->userId = $this->sqlDataBase->insertQuery($queryInsertUser);
+		$queryInsertUser = "INSERT INTO users ("
+                        . "netid,"
+                        . "first_name,"
+                        . "last_name,"
+                        . "user_type_id,"
+                        . "user_perm_id,"
+                        . "email,"
+                        . "supervisor_id, "
+                        . "percent, "
+                        . "calendar_format, "
+                        . "auto_approve, "
+                        . "start_date,"
+                        . "enabled, "
+                        . "banner_include, "
+                        . "group_id,"
+                        . "block_days, "
+                        . "auth_key, "
+                        . "uin)"
+                            . "VALUES("
+                            . ":netid,"
+                            . ":firstName,"
+                            . ":lastName,"
+                            . ":userTypeId,"
+                            . ":userPermId,"
+                            . ":userEmail,"
+                            . ":supervisorId,"
+                            . ":percent,"
+                            . ":calendarFormat,"
+                            . ":autoApprove,"
+                            . ":startDate,"
+                            . ":enabled,"
+                            . ":banner_include,"
+                            . "0,"
+                            . "0,"
+                            . "0,"
+                            . ":uin)";
+                
+                $params = array("netid"=>$this->netid,
+                                "firstName"=>$this->firstName,
+                                "lastName"=>$this->lastName,
+                                "userTypeId"=>$this->userTypeId,
+                                "userPermId"=>$this->userPermId,
+                                "userEmail"=>$this->userEmail,
+                                "supervisorId"=>$this->supervisorId,
+                                "percent"=>$this->percent,
+                                "calendarFormat"=>$this->calendarFormat,
+                                "autoApprove"=>$this->autoApprove,
+                                "startDate"=>$this->startDate,
+                                "enabled"=>$this->enabled,
+                                "banner_include"=>$this->banner_include,
+                                "uin"=>$this->uin
+                    );
+		
+                $this->userId = $this->sqlDataBase->get_insert_result($queryInsertUser, $params);
 
 		$queryLeaveTypeIds = "SELECT leave_type_id, hidden,year_type_id FROM leave_type";
-		$leaveTypeIds = $this->sqlDataBase->query($queryLeaveTypeIds);
+		$leaveTypeIds = $this->sqlDataBase->get_query_result($queryLeaveTypeIds);
 
 		$years = new Years($this->sqlDataBase);
 
@@ -120,7 +188,22 @@ class User
 		{
 			foreach($years->getYearsIds($leaveTypeId['year_type_id']) as $id=>$yearInfo)
 			{
-				$queryInsertUserLeaveType = "INSERT INTO leave_user_info (user_id,leave_type_id,used_hours,hidden, year_info_id, initial_hours, added_hours)VALUES(".$this->userId.",".$leaveTypeId['leave_type_id'].",0, ".$leaveTypeId['hidden'].",".$yearInfo['year_info_id'].", 0.0, 0.0)";
+				$queryInsertUserLeaveType = "INSERT INTO leave_user_info "
+                                        . "(user_id,"
+                                        . "leave_type_id,"
+                                        . "used_hours,"
+                                        . "hidden, "
+                                        . "year_info_id, "
+                                        . "initial_hours, "
+                                        . "added_hours)"
+                                        . "VALUES(".
+                                        $this->userId.",".
+                                        $leaveTypeId['leave_type_id'].
+                                        ",0, ".
+                                        $leaveTypeId['hidden'].","
+                                        .$yearInfo['year_info_id'].
+                                        ", 0.0," .
+                                        " 0.0)";
 				//echo("queryInsertUserLeaveType = $queryInsertUserLeaveType<BR>");
                                 $this->sqlDataBase->insertQuery($queryInsertUserLeaveType);
 			}
@@ -134,24 +217,58 @@ class User
 	 */
 	public function UpdateDb()
 	{
-		$queryUpdateUserDb = "UPDATE users SET first_name = \"".$this->firstName."\", last_name = \"".$this->lastName."\", user_perm_id = \"".$this->userPermId."\", email = \"".$this->userEmail."\", user_type_id = \"".$this->userTypeId."\", netid = \"".$this->netid."\", supervisor_id = \"".$this->supervisorId."\", percent=".$this->percent.", calendar_format=".$this->calendarFormat.", auto_approve=".$this->autoApprove.", start_date=\"".$this->startDate."\",enabled=".$this->enabled.",banner_include=".$this->banner_include.", uin='".$this->uin."' WHERE user_id=".$this->userId;
-		$this->sqlDataBase->nonSelectQuery($queryUpdateUserDb);
+		$queryUpdateUserDb = "UPDATE users SET "
+                        . "first_name = :first_name, "
+                        . "last_name = :last_name, "
+                        . "user_perm_id = :user_perm_id, "
+                        . "email = :email, "
+                        . "user_type_id = :user_type_id, "
+                        . "netid = :netid, "
+                        . "supervisor_id = :supervisor_id, "
+                        . "percent= :percent, "
+                        . "calendar_format= :calendar_format, "
+                        . "auto_approve = :auto_approve, "
+                        . "start_date =:start_date,"
+                        . "enabled= :enabled,"
+                        . "banner_include= :banner_include, "
+                        . "uin=:uin "
+                        . "WHERE user_id= :user_id";
+                
+                $params = array("first_name"=>$this->firstName,
+                                "last_name"=>$this->lastName,
+                                "user_perm_id"=>$this->userPermId,
+                                "email"=>$this->userEmail,
+                                "user_type_id"=>$this->userTypeId,
+                                "netid"=>$this->netid,
+                                "supervisor_id"=>$this->supervisorId,
+                                "percent"=>$this->percent,
+                                "calendar_format"=>$this->calendarFormat,
+                                "auto_approve"=>$this->autoApprove,
+                                "start_date"=>$this->startDate,
+                                "enabled"=>$this->enabled,
+                                "banner_include"=>$this->banner_include,
+                                "uin"=>$this->uin,
+                                "user_id"=>$this->userId);
+                
+		$this->sqlDataBase->get_update_result($queryUpdateUserDb, $params);
 
 	}
 
     public function UpdateAuthKey()
     {
-        $queryUpdateAuthKey = "UPDATE users SET auth_key=MD5(RAND()) WHERE user_id=".$this->userId;
-        $this->sqlDataBase->nonSelectQuery($queryUpdateAuthKey);
+        $queryUpdateAuthKey = "UPDATE users SET auth_key=MD5(RAND()) WHERE user_id=:user_id";
+        $params = array("user_id"=>$this->userId);
+        $this->sqlDataBase->get_update_result($queryUpdateAuthKey, $params);
 
         $this->authKey = $this->GetAuthKeyByUserId($this->userId);
     }
 
     public function GetAuthKeyByUserId($userId)
     {
-        $userId = mysqli_real_escape_string($this->sqlDataBase->getLink(), $userId);
-        $queryAuthKey = "SELECT auth_key FROM users WHERE user_id=".$userId;
-        $authKey = $this->sqlDataBase->singleQuery($queryAuthKey);
+
+        $queryAuthKey = "SELECT auth_key FROM users WHERE user_id=:userId";
+        $params = array("userId"=>$userId);
+        $authKey = $this->sqlDataBase->singleQuery($queryAuthKey, $params);
         return $authKey;
     }
 	/**
@@ -192,8 +309,9 @@ class User
 	 */
 	public function GetEmployees()
 	{
-		$queryEmployees = "SELECT user_id, first_name, last_name, email, netid FROM users WHERE supervisor_id = ".$this->userId." ORDER BY first_name";
-		$employees = $this->sqlDataBase->query($queryEmployees);
+		$queryEmployees = "SELECT user_id, first_name, last_name, email, netid FROM users WHERE supervisor_id = :supervisor_id ORDER BY first_name";
+                $params = array("supervisor_id"=>$this->userId);
+                $employees = $this->sqlDataBase->get_query_result($queryEmployees, $params);
 		return $employees;
 	}
 

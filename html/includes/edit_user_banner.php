@@ -29,7 +29,7 @@ if(isset($_GET['pay_period']) ) {
 
 $years = new Years($sqlDataBase);
 $queryYearTypes = "SELECT year_type_id,name,description FROM year_type";
-$yearTypes = $sqlDataBase->query($queryYearTypes);
+$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
 $appointment_year_id = $years->GetYearId($day,$month,$year,$yearTypes[0]['year_type_id']);
 $fiscal_year_id = $years->GetYearId($day,$month,$year,$yearTypes[1]['year_type_id']);
 
@@ -70,7 +70,9 @@ echo("<form action=#>"
         ."<input type=hidden name=view value=editUserBanner>"
         . "Go to <select name='year_type'><option value='appointment'>Appointment</option>
             <option value='fiscal'".(($year_type=='Fiscal') ? " SELECTED " : "") .">Fiscal</option></select><BR>
-            Pay Period: <select name='pay_period'><option value='1' ". (($pay_period==1) ? " SELECTED " : "").">8/16 - 5/15</option><option value='2' ". (($pay_period==2) ? " SELECTED " : "").">5/16 - 8/15</select>
+            Pay Period: <select name='pay_period'>"
+              . " <option value='1' ". (($pay_period==1) ? " SELECTED " : "").">8/16 - 5/15</option>"
+              . " <option value='2' ". (($pay_period==2) ? " SELECTED " : "").">5/16 - 8/15</option></select>
             Year: <input type=string name='year' value='".$year."'><button type='submit'>Submit</button>
                 </form>");
 ?>
@@ -120,71 +122,71 @@ $queryUser = "SELECT u.user_id, "
         . "AND enabled=1 and u.user_id = :user_id "
         . "ORDER BY u.netid ASC";
                                     
-                                    $params = array("user_id"=>$user_id);
-					//$userInfo = $sqlDataBase->query($queryUser);
-                                    $userInfo = $sqlDataBase->get_query_result($query, $params);
-                                        $userInfo = $userInfo[0];
-                                        $curr_user_id = $userInfo['user_id'];
-                                        $curr_user = new User($sqlDataBase);
-                                        $curr_user->LoadUser(curr_user_id);
+$params = array("user_id"=>$user_id);
 
-					if($userInfo)
-					{
+$userInfo = $sqlDataBase->get_query_result($query, $params);
+    $userInfo = $userInfo[0];
+    $curr_user_id = $userInfo['user_id'];
+    $curr_user = new User($sqlDataBase);
+    $curr_user->LoadUser(curr_user_id);
 
-                                                    // See Helper->DrawLeaveHoursAvailable for hour calculation
-                                                    
-                                                    $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($curr_user_id,$yearId,$thisPayPeriodId);
+    if($userInfo)
+    {
 
-                                                    $uin = $curr_user->getUIN();
-                                                    $userXML= $helperClass->apiGetUserInfo($uin);
-                                                    
-                                                    try {
-                                                    $xml = new SimpleXMLElement($userXML);
-                                                    } catch(Exception $e) {
-                                                        //echo("Error:");
-                                                        //echo($e->getTraceAsString());
-                                                    }
-                                                    $current_vacation_hours = 0;
-                                                    $current_sick_hours = 0;
-                                                    $current_floating_hours = 0;
-                                                    foreach($xml->children() as $leave) {
+                // See Helper->DrawLeaveHoursAvailable for hour calculation
 
-                                                        $code = $leave->Leave[0]->ValidLeaveTitle[0]->Code;
-                                                        if($code == "VACA") {
-                                                            $current_vacation_hours = $leave->Leave[0]->BeginBalance;
-                                                            $accrued_vacation_hours = $leave->Leave[0]->Accrued;
-                                                            $total_vacation_hours = $current_vacation_hours + $accrued_vacation_hours;
-                                                        } elseif($code == "SICK") {
-                                                            $current_sick_hours = $leave->Leave[0]->BeginBalance;
-                                                            $accrued_sick_hours = $leave->Leave[0]->Accrued;
-                                                            $total_sick_hours = $current_sick_hours + $accrued_sick_hours;
-                                                        } elseif($code == "FLHL") {
-                                                            $current_floating_hours = $leave->Leave[0]->BeginBalance;
-                                                            $accrued_floating_hours = $leave->Leave[0]->Accrued;
-                                                            $total_floating_hours = $current_floating_hours + $accrued_floating_hours;
-                                                        }
+                $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($curr_user_id,$yearId,$thisPayPeriodId);
 
-                                                    }
+                $uin = $curr_user->getUIN();
+                $userXML= $helperClass->apiGetUserInfo($uin);
 
-							echo "<tr>
-								<td>".$curr_user->getFirstName()."</td>
-								<td>".$curr_user->getLastName()."</td>
-                                                                <td>".$uin."</td>";
-                                                                
-                                                                if($year_type == 'Fiscal') {
-                                                                    echo("<td>". $total_floating_hours."</td>");
-                                                                    echo("<td><input type=text name='float_hours_used'>". $leavesAvailable[13]['calc_used_hours']."</input></td>");
-                                                                    
-                                                                } else {
-                                                                    echo ("<td>".$total_vacation_hours."</td>
-                                                                    <td>".$total_sick_hours."</td>".
-                                                                    "<td><input type=text name='vac_hours_used'>".$leavesAvailable[1]['calc_used_hours']."</input></td>
-                                                                    <td><input type=text name='sick_hours_used'>".$leavesAvailable[2]['calc_used_hours']."</input></td>");
-                                                                }
-                                                                
-								
-							echo("</tr>");
-						}
+                try {
+                $xml = new SimpleXMLElement($userXML);
+                } catch(Exception $e) {
+                    //echo("Error:");
+                    //echo($e->getTraceAsString());
+                }
+                $current_vacation_hours = 0;
+                $current_sick_hours = 0;
+                $current_floating_hours = 0;
+                foreach($xml->children() as $leave) {
+
+                    $code = $leave->Leave[0]->ValidLeaveTitle[0]->Code;
+                    if($code == "VACA") {
+                        $current_vacation_hours = $leave->Leave[0]->BeginBalance;
+                        $accrued_vacation_hours = $leave->Leave[0]->Accrued;
+                        $total_vacation_hours = $current_vacation_hours + $accrued_vacation_hours;
+                    } elseif($code == "SICK") {
+                        $current_sick_hours = $leave->Leave[0]->BeginBalance;
+                        $accrued_sick_hours = $leave->Leave[0]->Accrued;
+                        $total_sick_hours = $current_sick_hours + $accrued_sick_hours;
+                    } elseif($code == "FLHL") {
+                        $current_floating_hours = $leave->Leave[0]->BeginBalance;
+                        $accrued_floating_hours = $leave->Leave[0]->Accrued;
+                        $total_floating_hours = $current_floating_hours + $accrued_floating_hours;
+                    }
+
+                }
+
+                    echo "<tr>
+                            <td>".$curr_user->getFirstName()."</td>
+                            <td>".$curr_user->getLastName()."</td>
+                            <td>".$uin."</td>";
+
+                            if($year_type == 'Fiscal') {
+                                echo("<td>". $total_floating_hours."</td>");
+                                echo("<td><input type=text name='float_hours_used'>". $leavesAvailable[13]['calc_used_hours']."</input></td>");
+
+                            } else {
+                                echo ("<td>".$total_vacation_hours."</td>
+                                <td>".$total_sick_hours."</td>".
+                                "<td><input type=text name='vac_hours_used'>".$leavesAvailable[1]['calc_used_hours']."</input></td>
+                                <td><input type=text name='sick_hours_used'>".$leavesAvailable[2]['calc_used_hours']."</input></td>");
+                            }
+
+
+                    echo("</tr>");
+            }
 echo("</form>");					
 ?>
 <BR><a href="index.php?view=bannerUpload">Back to Banner Upload</a>
