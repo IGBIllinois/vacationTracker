@@ -103,7 +103,7 @@ class Ldap {
 	 * @param string $baseDN The base DN
 	 * @return ldap
 	 */
-	function ldap ($ldapServer, $ldapVersion=3) {
+	function __construct ($ldapServer, $ldapVersion=3) {
 		if (is_array($ldapServer)) {
 			$this->server = $ldapServer;
 		} else {
@@ -553,7 +553,7 @@ class ldapresult {
 	 * @param resource $result An active result resource
 	 * @return ldapresult
 	 */
-	function ldapresult($ldap,$result) {
+	function __construct($ldap,$result) {
 		$this->ldap = $ldap;
 		$this->result = $result;
 	}
@@ -701,7 +701,7 @@ class ldapresultentry {
 	 * @param resource $entry An active entry resource
 	 * @return ldapentry
 	 */
-	function ldapresultentry($connection,$entry) {
+	function __construct($connection,$entry) {
 		$this->connection = $connection;
 		$this->entry = $entry;
 	}
