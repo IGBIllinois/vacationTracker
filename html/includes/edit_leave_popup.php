@@ -96,7 +96,7 @@
                         . "lt.name "
                         . "FROM leave_type lt, leave_user_info lui "
                         . "WHERE lt.leave_type_id=lui.leave_type_id "
-                        . "AND lui.user_id=:user_id"
+                        . "AND lui.user_id=:user_id "
                         . "AND lt.special=1 AND lui.hidden=0";
                 $params = array("user_id"=>$loggedUser->getUserId());
                 
