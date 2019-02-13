@@ -994,35 +994,62 @@ class Helper
 			{
 				$leaveIds = array($leaveIds);
 			}
-			$message .= "<table width=\"100%\">";
-			$rules = new Rules($this->sqlDataBase);
-			foreach($leaveIds as $leaveSelected)
+                        // Separate by user
+                        $userLeaves = array(); // Array of array of user leaves. Key is the user id, value is list of leaves
+                        foreach($leaveIds as $leaveSelected)
 			{
 				$leaveToApprove = new Leave($this->sqlDataBase);
 				$leaveToApprove->LoadLeave($leaveSelected);
+                                $userid = $leaveToApprove->getUserId();
+                                if(array_key_exists($userid, $userLeaves)) {
+                                    $userLeaves[$userid][] = $leaveSelected;
+                                } else {
+                                    $userLeaves[$userid] = array($leaveSelected);
+                                }
+                        }
+                        
+                                
+			$message .= "<table width=\"100%\">";
+			$rules = new Rules($this->sqlDataBase);
+                        foreach($userLeaves as $userid=>$userLeaveList) {
+                            
+                            $leaveUserId = $userid;
+                            $user = new User($this->sqlDataBase);
 
-				//Check To Make sure that the logged in user is the supervisor of the user the leave belongs to
-				if($loggedUser->isEmployee($leaveToApprove->getUserId()) || ($loggedUser->getUserPermId()==ADMIN))
-				{
-					$leaveUserId = $leaveToApprove->getUserId();
-					$leaveToApprove->setStatusId(APPROVED);
-					$leaveToApprove->UpdateDb();
-					$this->RunRules($leaveToApprove->getUserId(),$leaveToApprove->getYearId());
-					$message .= "<tr class=\"success_row\"><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Approved</td></tr>";
-				}
-				else
-				{
-					$message .="<tr class=\"failed_row\"><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Permission Denied</td></tr>";
-				}
-			}
-			$message .= "</table>";
-			$replyApprovalMail =  new Email($this->sqlDataBase);
-			if($leaveUserId)
-			{
-				$replyApprovalMail->ReplyLeaveApprovalStatus($leaveIds,$leaveUserId);
-			}
+                            $user->LoadUser($leaveUserId);
+
+                            foreach($userLeaveList as $leaveSelected)
+                            {
+
+                                    $leaveToApprove = new Leave($this->sqlDataBase);
+                                    $leaveToApprove->LoadLeave($leaveSelected);
+
+                                    //Check To Make sure that the logged in user is the supervisor of the user the leave belongs to
+                                    if($loggedUser->isEmployee($leaveToApprove->getUserId()) || ($loggedUser->getUserPermId()==ADMIN))
+                                    {
+                                            $leaveUserId = $leaveToApprove->getUserId();
+                                            $leaveToApprove->setStatusId(APPROVED);
+                                            $leaveToApprove->UpdateDb();
+                                            $this->RunRules($leaveToApprove->getUserId(),$leaveToApprove->getYearId());
+                                            
+                                            $message .= "<tr class=\"success_row\"><td>".$user->getNetid()."</td><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Approved</td></tr>";
+                                    }
+                                    else
+                                    {
+                                            $message .="<tr class=\"failed_row\"><td>".$user->getNetid()."</td><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Permission Denied</td></tr>";
+                                    }
+                            }
+
+                            $replyApprovalMail =  new Email($this->sqlDataBase);
+                            if($leaveUserId)
+                            {
+                                    $replyApprovalMail->ReplyLeaveApprovalStatus($userLeaveList,$leaveUserId,$loggedUser);
+                            }
+                        }
+                        $message .= "</table>";
 			$messageBox = $this->MessageBox("Approve Leaves",$message);
 		}
+                
 		else
 		{
 			$messageBox = $this->MessageBox("Approve Leaves","No leaves were selected.","error");
@@ -1048,34 +1075,57 @@ class Helper
 			{
 				$leaveIds = array($leaveIds);
 			}
+                        // Separate by user
+                        $userLeaves = array(); // Array of array of user leaves. Key is the user id, value is list of leaves
+                        foreach($leaveIds as $leaveSelected)
+			{
+				$leaveToApprove = new Leave($this->sqlDataBase);
+				$leaveToApprove->LoadLeave($leaveSelected);
+                                $userid = $leaveToApprove->getUserId();
+                                if(array_key_exists($userid, $userLeaves)) {
+                                    $userLeaves[$userid][] = $leaveSelected;
+                                } else {
+                                    $userLeaves[$userid] = array($leaveSelected);
+                                }
+                        }
+                        
 			$message .= "<table width=\"100%\">";
 			$rules = new Rules($this->sqlDataBase);
-			foreach($leaveIds as $leaveSelected)
-			{
-				$leaveToNotApprove = new Leave($this->sqlDataBase);
-				$leaveToNotApprove->LoadLeave($leaveSelected);
+                        foreach($userLeaves as $userid=>$userLeaveList) {
+                            
+                            $leaveUserId = $userid;
+                            $user = new User($this->sqlDataBase);
+                            $user->LoadUser($leaveUserId);
+                            
+                            foreach($userLeaveList as $leaveSelected)
+                            {
+                                    $leaveToNotApprove = new Leave($this->sqlDataBase);
+                                    $leaveToNotApprove->LoadLeave($leaveSelected);
 
-				//Check To Make sure that the logged in user is the supervisor of the user the leave belongs to
-				if($loggedUser->isEmployee($leaveToNotApprove->getUserId()) || ($loggedUser->getUserPermId()==ADMIN))
-				{	
-					$leaveUserId = $leaveToNotApprove->getUserId();
-					$leaveToNotApprove->setStatusId(NOT_APPROVED);
-					$leaveToNotApprove->UpdateDb();
-					$this->RunRules($leaveToNotApprove->getUserId(),$leaveToNotApprove->getYearId());
-					$message .= "<tr class=\"success_row\"><td>".Date('m/d/Y',strtotime($leaveToNotApprove->getDate()))."</td><td>".$leaveToNotApprove->getHours()." Hours</td><td>Not Approved</td></tr>";
+                                    //Check To Make sure that the logged in user is the supervisor of the user the leave belongs to
+                                    if($loggedUser->isEmployee($leaveToNotApprove->getUserId()) || ($loggedUser->getUserPermId()==ADMIN))
+                                    {	
+                                            $leaveUserId = $leaveToNotApprove->getUserId();
+                                            $leaveToNotApprove->setStatusId(NOT_APPROVED);
+                                            $leaveToNotApprove->UpdateDb();
+                                            $this->RunRules($leaveToNotApprove->getUserId(),$leaveToNotApprove->getYearId());
+                                            $message .= "<tr class=\"success_row\"><td>".$user->getNetid()."</td><td>".Date('m/d/Y',strtotime($leaveToNotApprove->getDate()))."</td><td>".$leaveToNotApprove->getHours()." Hours</td><td>Not Approved</td></tr>";
 
-				}
-				else
-				{
-					$message .="<tr class=\"failed_row\"><td>".Date('m/d/Y',strtotime($leaveToNotApprove->getDate()))."</td><td>".$leaveToNotApprove->getHours()." Hours</td><td>Permission Denied</td></tr>";
-				}
-			}
-			$message .= "</table>";
-			$replyApprovalMail =  new Email($this->sqlDataBase);
-                        if($leaveUserId)
-                        {
-                                $replyApprovalMail->ReplyLeaveApprovalStatus($leaveIds,$leaveUserId);
+                                    }
+                                    else
+                                    {
+                                            $message .="<tr class=\"failed_row\"><td>".$user->getNetid()."</td><td>".Date('m/d/Y',strtotime($leaveToNotApprove->getDate()))."</td><td>".$leaveToNotApprove->getHours()." Hours</td><td>Permission Denied</td></tr>";
+                                    }
+                            }
+                            $replyApprovalMail =  new Email($this->sqlDataBase);
+                            if($leaveUserId)
+                            {
+                                    $replyApprovalMail->ReplyLeaveApprovalStatus($userLeaveList,$leaveUserId,$loggedUser);
+                            }
                         }
+                        
+			$message .= "</table>";
+			
 
 			$messageBox = $this->MessageBox("Do Not Approve Leaves",$message);
 		}
