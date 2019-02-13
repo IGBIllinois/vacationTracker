@@ -440,6 +440,11 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                         $user_email = $user->getUserEmail();
                                         
                                         $user_supervisor = $user->GetSupervisor();
+                                        if($user_supervisor == null) {
+                                            // if user has no supervisor, use current logged user/
+                                            // If they're here, the logged user is an Admin
+                                            $user_supervisor = $loggedUser;
+                                        }
                                         $user_supervisor_email = $user_supervisor->getUserEmail();
                                         if($debug) {
                                             $user_email = $loggedUser->getUserEmail();

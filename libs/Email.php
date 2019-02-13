@@ -49,6 +49,11 @@ class Email
 					"\n\nTo NOT approve these leaves please click the following link:\n".$this->CurrentPageURL()."&confirmtoken=".$confirmCode."&autonotapprove=1\n\n".
 					"Thank you";
 			$userSupervisor = $userInfo->GetSupervisor();
+
+                        if($userSupervisor == null) {
+                            // no supervisor to request from
+                            return false;
+                        }
 			$header= "From: ".$userInfo->getUserEmail()." ".PHP_EOL .
 				 "Reply-To: ".$userInfo->getUserEmail() ." " . PHP_EOL .
     				 'X-Mailer: PHP/' . phpversion();
@@ -67,16 +72,21 @@ class Email
          * 
          * @param Leave[] $leavesArray An array of Leave objects
          * @param int $userid ID of the user who has requested the Leaves
+         * @param User $loggedUser The User object of the currently logged in user
          * @return boolean True if the email was sent properly, else false
          */
-	public function ReplyLeaveApprovalStatus($leavesArray,$userid)
+	public function ReplyLeaveApprovalStatus($leavesArray,$userid,$loggedUser)
 	{
 		$leavesInfoString = "";
 
 		$userInfo = new User($this->sqlDataBase);
 		$userInfo->LoadUser($userid);
-		$userSupervisor = $userInfo->GetSupervisor();
+		
+                // the currently logged in user should be the supervisor 
+                // ( or an Admin who can approve  the leaves)
+                $userSupervisor = $loggedUser;
 
+                
 		$leaveInfo = new Leave($this->sqlDataBase);
 		$leaveTypeInfo = new LeaveType($this->sqlDataBase);
 		foreach($leavesArray as $leave)
@@ -180,8 +190,14 @@ class Email
             $user_email = $user->getUserEmail();
             
             $supervisor = new User($sqlDataBase);
-            $supervisor->LoadUser($user->getSupervisorId());
-            $supervisor_email = $supervisor->GetUserEmail();
+            if($user->getSupervisorId() != 0) {
+                $supervisor->LoadUser($user->getSupervisorId());
+                $supervisor_email = $supervisor->GetUserEmail();
+            } else {
+                // if user has no supervisor, user currently logged user
+                // (If they're sending a report, they should be an Admin)
+                $supervisor_email = $loggedUser->getUserEmail();
+            }
 
             
             
