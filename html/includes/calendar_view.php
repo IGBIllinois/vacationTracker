@@ -75,7 +75,8 @@ if(isset($_POST['ModifyLeavePopup']))
                 $_POST['editMinutes'],
                 $_POST['editLeaveType'],
                 $_POST['editLeaveTypeSpecial'],
-                $_POST['editDescription']);
+                $_POST['editDescription'],
+                $loggedUser);
 }
 
 if(isset($_POST['employeeids']))
