@@ -98,10 +98,17 @@ class SQLDataBase {
 	}
 
 
+        /** 
         //single_query()
 	//$sql - sql string to run on the database
 	//Used for SELECT queries
 	//returns single result value in first row
+         * 
+         * @param string $query SQL query string
+         * @param array $params array of parameters in name=>$value format. 
+         *    "name" corresponds to " :name " in the query.
+         * @return string
+         */
         public function singleQuery($query, $params = null) {
             $result = $this->get_query_result($query, $params);
             if(count($result) > 0) {
@@ -123,13 +130,7 @@ class SQLDataBase {
 		return $this->PDOlink;
 	}
 
-	public function fetchAssoc($sql)
-	{
-		//$result = mysqli_query($sql);
-            $result = mysqli_query($this->link, $sql);
-		$rows = mysqli_fetch_assoc($result);
-		return $rows;
-	}
+
 	/////////////////Private Functions///////////////////
 
 	//mysqlToArray
@@ -205,6 +206,7 @@ class SQLDataBase {
          * @return int The id of the created entry
          */
         public function get_insert_result($query_string, $query_array=null) {
+            set_time_limit ( 3000 );
             $statement = $this->getPDOlink()->prepare($query_string, array(PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY));
             $stmt = $statement->execute($query_array);
             $result =  $this->getPDOlink()->lastInsertId();
