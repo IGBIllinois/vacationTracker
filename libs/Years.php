@@ -475,7 +475,6 @@ class Years
                                 "yearTypeId"=>$yearTypeId,
                                 "nextYear"=>$nextYear,
                                 "prevYear"=>$prevYear);
-                //$yearId = $this->sqlDataBase->insertQuery($queryCreateYear);
                 $yearId = $this->sqlDataBase->get_insert_result($queryCreateYear, $params);
                 
 
@@ -526,7 +525,13 @@ class Years
                                     $leaveType_id = ":leaveType_".$leaveType['leave_type_id'];
                                     $leaveType_hidden_id = ":leaveType_hidden_".$leaveType['leave_type_id'];
                                     $initial_hours_id = ":initial_hours_".$leaveType['leave_type_id'];
-                                    $queryInsertUserLeaveInfo .= "(:user_id, $leaveType_id, :usedHours, $leaveType_hidden_id, $initial_hours_id, :added_hours, :year_info_id),";
+                                    $queryInsertUserLeaveInfo .= "(:user_id, "
+                                            . "$leaveType_id, "
+                                            . ":usedHours, "
+                                            . "$leaveType_hidden_id, "
+                                            . "$initial_hours_id, "
+                                            . ":added_hours, "
+                                            . ":year_info_id),";
     
                                     $params["user_id"] = $userId['user_id'];
                                         $params[$leaveType_id] = $leaveType['leave_type_id'];
@@ -539,7 +544,7 @@ class Years
 				//remove last comma from sql string
 				$queryInsertUserLeaveInfo = substr($queryInsertUserLeaveInfo,0,-1);
 
-				$leaveUserInfoId = $this->sqlDataBase->insertQuery($queryInsertUserLeaveInfo);
+				$leaveUserInfoId = $this->sqlDataBase->get_insert_result($queryInsertUserLeaveInfo, $params);
                                 
                                 $helper->RunRulesYearType($userId['user_id'], $yearTypeId, false);
 

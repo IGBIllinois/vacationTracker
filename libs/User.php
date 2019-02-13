@@ -8,11 +8,7 @@
  */
 class User
 {
-	/*
-	const ADMIN = 1;
-	const USER = 2;
-	const VIEWER =3;
-*/
+
 	private $sqlDataBase;
 	private $supervisorId;
 	private $firstName;
@@ -56,8 +52,27 @@ class User
 	public function LoadUser($userId)
 	{
 		$this->userId = $userId;
-		$queryUserInfo = "SELECT netid,first_name,last_name,user_type_id,user_perm_id,email,supervisor_id, percent, calendar_format, auto_approve, start_date,enabled, banner_include, auth_key, uin FROM users WHERE user_id=".$userId;
-		$userInfo = $this->sqlDataBase->query($queryUserInfo);
+		$queryUserInfo = "SELECT netid,"
+                        . "first_name,"
+                        . "last_name,"
+                        . "user_type_id,"
+                        . "user_perm_id,"
+                        . "email,"
+                        . "supervisor_id, "
+                        . "percent, "
+                        . "calendar_format, "
+                        . "auto_approve, "
+                        . "start_date,"
+                        . "enabled, "
+                        . "banner_include, "
+                        . "auth_key, "
+                        . "uin "
+                        . "FROM users "
+                        . "WHERE user_id=:user_id";
+                
+                $params = array("user_id"=>$userId);
+		$userInfo = $this->sqlDataBase->get_query_result($queryUserInfo, $params);
+
 		if(!isset($userInfo))
 		{
 			return false;
@@ -197,15 +212,19 @@ class User
                                         . "initial_hours, "
                                         . "added_hours)"
                                         . "VALUES(".
-                                        $this->userId.",".
-                                        $leaveTypeId['leave_type_id'].
-                                        ",0, ".
-                                        $leaveTypeId['hidden'].","
-                                        .$yearInfo['year_info_id'].
-                                        ", 0.0," .
+                                        ":user_id,".
+                                        ":leave_type_id, ".
+                                        "0, ".
+                                        ":hidden, ".
+                                        ":year_info_id, ".
+                                        " 0.0, " .
                                         " 0.0)";
 				//echo("queryInsertUserLeaveType = $queryInsertUserLeaveType<BR>");
-                                $this->sqlDataBase->insertQuery($queryInsertUserLeaveType);
+                                $params = array("user_id"=>$this->userId,
+                                                "leave_type_id"=>$leaveTypeId['leave_type_id'],
+                                                "hidden"=>$leaveTypeId['hidden'],
+                                                "year_info_id"=>$yearInfo['year_info_id']);
+                                $this->sqlDataBase->get_insert_result($queryInsertUserLeaveType, $params);
 			}
 		}
 
@@ -254,6 +273,9 @@ class User
 
 	}
 
+        /** Updated database authentication key for when a user logs in
+         * 
+         */
     public function UpdateAuthKey()
     {
         $queryUpdateAuthKey = "UPDATE users SET auth_key=MD5(RAND()) WHERE user_id=:user_id";
@@ -263,6 +285,9 @@ class User
         $this->authKey = $this->GetAuthKeyByUserId($this->userId);
     }
 
+    /** Gets the authentication key from the database for a user
+         * 
+         */
     public function GetAuthKeyByUserId($userId)
     {
 
@@ -278,8 +303,14 @@ class User
 	public function GetSupervisor()
 	{
 		$supervisor = new User($this->sqlDataBase);
-		$supervisor->LoadUser($this->supervisorId);
-		return $supervisor;
+                if($this->supervisorId != 0) {
+
+                    $supervisor->LoadUser($this->supervisorId);
+                    return $supervisor;
+                } else {
+
+                    return null;
+                }
 	}
 
 	/**
@@ -322,27 +353,39 @@ class User
 	public function GetAllUsers()
 	{
 		$queryAllUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users ORDER BY first_name";
-		$allUsers = $this->sqlDataBase->query($queryAllUsers);
+		$allUsers = $this->sqlDataBase->get_query_result($queryAllUsers);
 		return $allUsers;
 	}
 
+        /**
+	 * Return a list of all enabled users in the system
+	 * 
+	 */
 	public function GetAllEnabledUsers()
 	{
 		$queryAllEnabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled=".ENABLED." ORDER BY last_name";
-                $allEnabledUsers = $this->sqlDataBase->query($queryAllEnabledUsers);
+                $allEnabledUsers = $this->sqlDataBase->get_query_result($queryAllEnabledUsers);
                 return $allEnabledUsers;
 	}
 
+        /**
+	 * Return a list of all users who have been deactivated in the system
+	 * 
+	 */
 	public function GetAllDisabledUsers()
 	{
 		$queryAllDisabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled!=".ENABLED." ORDER BY last_name";
-        $allDisabledUsers = $this->sqlDataBase->query($queryAllDisabledUsers);
+        $allDisabledUsers = $this->sqlDataBase->get_query_result($queryAllDisabledUsers);
         return $allDisabledUsers;
 	}
         
+        /**
+	 * Return a list of all enabled users in the system whose data is to be modified in Banner
+	 * 
+	 */
         public function GetAllBannerUsers() {
             $queryAllBannerUsers = "SELECT user_id, first_name, last_name, email, netid enabled FROM users WHERE enabled=".ENABLED." and banner_include=1 ORDER BY last_name";
-            $allBannerUsers = $this->sqlDataBase->query($queryAllBannerUsers);
+            $allBannerUsers = $this->sqlDataBase->get_query_result($queryAllBannerUsers);
             return $allBannerUsers;
         }
         
@@ -350,7 +393,7 @@ class User
         /** Gets the vacation leaves for a user for a specified appointment year and pay period
          * 
          * @param string $type Type of Leave to get ("Vacation", "Sick", "Floating Holiday")
-         * @param int $appointment_year_id ID for the Appointment Year to get data from
+         * @param int $year_id ID for the Year to get data from
          * @param int $pay_period The Pay Period to get data from
          *          1 = 8/15 - 5/15
          *          2 = 5/15 - 8/15
@@ -391,9 +434,9 @@ class User
                    JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
                    JOIN status s ON li.status_id = s.status_id
                    LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-                   WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$year_id."
+                   WHERE li.user_id =:user_id AND li.status_id=:status_id AND li.year_info_id=:year_id 
                    AND lt.name != 'Sick'
-                   and date between '$start_date' and '$end_date' 
+                   and date between :start_date and :end_date
                    ORDER BY li.date DESC";
             } else if($type == "Sick") {
                 $query ="SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
@@ -407,9 +450,9 @@ class User
                         JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
                         JOIN status s ON li.status_id = s.status_id
                         LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-                        WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$year_id."
+                        WHERE li.user_id =:user_id AND li.status_id=:status_id AND li.year_info_id=:year_id
                         AND lt.name = 'Sick'
-                        and date between '$start_date' and '$end_date' 
+                        and date between :start_date and :end_date
                         ORDER BY li.date DESC";
             } else if($type == "Floating Holiday") {
                 $query = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
@@ -423,12 +466,18 @@ class User
                         JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
                         JOIN status s ON li.status_id = s.status_id
                         LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
-                        WHERE li.user_id =".$user_id." AND li.status_id=".$status_id." AND li.year_info_id=".$year_id.
-                        " AND li.date between '$start_date' and '$end_date'". 
+                        WHERE li.user_id =:user_id AND li.status_id=:status_id AND li.year_info_id=:year_id ".
+                        " AND li.date between :start_date and :end_date ". 
                         " ORDER BY li.date DESC";
             }
 
-            $results_array = $this->sqlDataBase->query($query);
+            $params = array("user_id"=>$user_id,
+                            "status_id"=>$status_id,
+                            "year_id"=>$year_id,
+                            "start_date"=>$start_date,
+                            "end_date"=>$end_date);
+            
+            $results_array = $this->sqlDataBase->get_query_result($query, $params);
 
             $results = array();
             if(count($results_array) > 0) {
