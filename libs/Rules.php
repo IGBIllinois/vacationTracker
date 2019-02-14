@@ -259,9 +259,9 @@ class Rules
 	protected function LoadAddedHours($yearId,$leaveTypeId,$userId,$payPeriod=false)
 	{
 		$queryAddedLeaveSum = "SELECT SUM(hours) FROM added_hours "
-                        . "WHERE user_id=".$userId." "
-                        . "AND year_info_id=".$yearId." "
-                        . "AND leave_type_id=".$leaveTypeId;
+                        . "WHERE user_id=:user_id "
+                        . "AND year_info_id=:year_info_id "
+                        . "AND leave_type_id=:leave_type_id";
                 
                 $params = array("user_id"=>$userId,
                                 "year_info_id"=>$yearId,
