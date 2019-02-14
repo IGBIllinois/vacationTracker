@@ -77,7 +77,7 @@ class Helper
 		$tableString.= "<th>Status</th>";
 		$tableString.= "</tr></thead><tbody>";
 
-		if(isset($leaves))
+		if(count($leaves) > 0)
 		{
 			foreach($leaves as $id => $leave)
 			{
