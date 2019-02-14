@@ -67,7 +67,7 @@ class Years
 	public function GetPayPeriodId($day,$month,$year,$yearId)
 	{
 		$queryPayPeriodId = "SELECT pay_period_id FROM pay_period "
-                        . "WHERE start_date <= :year-:month-:day "
+                        . "WHERE start_date <= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
                         . "AND end_date >= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
                         . "AND year_info_id=:yearId";
                 $params = array("year"=>$year,
