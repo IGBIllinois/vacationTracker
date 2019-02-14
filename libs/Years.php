@@ -568,7 +568,8 @@ class Years
 	{
 		$monthsPerYear = 12;
 		$monthsPerPeriod = $monthsPerYear / $numPeriods;
-		$queryCreatePayPeriod = "INSERT INTO pay_period (start_date,end_date,year_info_id)VALUES";
+		$queryCreatePayPeriod = "INSERT INTO pay_period (start_date,end_date,year_info_id) VALUES ";
+                $queryCreatePayPeriod .= "( :start_date, :end_date, :year_info_id)";
 
 		$startDay = Date("d",strtotime($dateStart));
 		$startMonth = Date("m",strtotime($dateStart));
@@ -582,7 +583,13 @@ class Years
 		{
 			while($monthItr < $monthsPerYear)
 			{
-				$queryCreatePayPeriod .="(\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear))."\",\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,0,$startYear))."\",".$yearId."),";
+                            $queryCreatePayPeriod = "INSERT INTO pay_period (start_date,end_date,year_info_id) VALUES ";
+                            $queryCreatePayPeriod .= "( :start_date, :end_date, :year_info_id)";
+                            $params = array("start_date"=>Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear)),
+                                            "end_date"=>Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,0,$startYear)),
+                                            "year_info_id"=>$yearId);
+                            $this->sqlDataBase->get_insert_result($queryCreatePayPeriod, $params);
+				//$queryCreatePayPeriod .="(\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear))."\",\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,0,$startYear))."\",".$yearId."),";
 				$monthItr = $monthsPerPeriod;
 			}
 		}
@@ -590,12 +597,18 @@ class Years
 		{
 			while($monthItr < $monthsPerYear)
 			{
-				$queryCreatePayPeriod .="(\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear))."\",\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,$endDay,$startYear))."\",".$yearId."),";
+                            $queryCreatePayPeriod = "INSERT INTO pay_period (start_date,end_date,year_info_id) VALUES ";
+                            $queryCreatePayPeriod .= "( :start_date, :end_date, :year_info_id)";
+                            $params = array("start_date"=>Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear)),
+                                            "end_date"=>Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,$endDay,$startYear)),
+                                            "year_info_id"=>$yearId);
+                            $this->sqlDataBase->get_insert_result($queryCreatePayPeriod, $params);
+				//$queryCreatePayPeriod .="(\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear))."\",\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,$endDay,$startYear))."\",".$yearId."),";
 				$monthItr+= $monthsPerPeriod;
 			}
 		}
-		$queryCreatePayPeriod = substr($queryCreatePayPeriod,0,-1);
-		$this->sqlDataBase->insertQuery($queryCreatePayPeriod);
+		//$queryCreatePayPeriod = substr($queryCreatePayPeriod,0,-1);
+		//$this->sqlDataBase->get_insert_result($queryCreatePayPeriod);
 	}
         
 }
