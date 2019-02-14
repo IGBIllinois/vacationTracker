@@ -28,11 +28,11 @@ if(isset($_POST['addYear']))
 {
 	if($_POST['addYearTo']=="new")
 	{
-		echo $years->CreateYear(0,$years->GetLastYearId($_POST['yearTypeToAddTo']),$_POST['yearTypeToAddTo'],0);
+		$yearid =  $years->CreateYear(0,$years->GetLastYearId($_POST['yearTypeToAddTo']),$_POST['yearTypeToAddTo'],0);
 	}	
 	elseif($_POST['addYearTo']=="old")
         {
-               echo $years->CreateYear($years->GetFirstYearId($_POST['yearTypeToAddTo']),0,$_POST['yearTypeToAddTo'],0);
+               $yearid =  $years->CreateYear($years->GetFirstYearId($_POST['yearTypeToAddTo']),0,$_POST['yearTypeToAddTo'],0);
         }
 	else
 	{
