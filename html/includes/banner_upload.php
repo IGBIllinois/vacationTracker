@@ -426,9 +426,10 @@ $queryUser = "SELECT u.user_id, "
         . "ORDER BY u.netid ASC";
 
             $params = array("user_id"=>$user_id);
+
             echo("<input type='hidden' name='numRecords' value=1>");
 
-            $userInfo = $sqlDatabase->get_query_result($queryUser, $params);
+            $userInfo = $sqlDataBase->get_query_result($queryUser, $params);
             $userInfo = $userInfo[0];
             $curr_user_id = $userInfo['user_id'];
             $curr_user = new User($sqlDataBase);
