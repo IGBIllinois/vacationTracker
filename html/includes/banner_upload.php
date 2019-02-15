@@ -213,6 +213,7 @@ $queryUsers = "SELECT u.user_id, "
      {
          $i = 0;
          $numRecords = count($users);
+         $errorMessages = "";
          echo("<input type='hidden' name='numRecords' value=".$numRecords.">");
              foreach($users as $id=>$userInfo)
              {
@@ -245,8 +246,9 @@ $queryUsers = "SELECT u.user_id, "
 
                  } catch(Exception $e) {
 
-                     echo("Error:");
-                     echo($e->getTraceAsString());
+                     //echo("Error:");
+                     //echo($e->getTraceAsString());
+                     $errorMessages .= "<tr class=\"failed_row\"><td>Error: User ".$curr_user->getNetid(). " has no UIN assigned.</td></tr>";
 
                      continue;
                  }
@@ -333,14 +335,20 @@ $queryUsers = "SELECT u.user_id, "
              }
      }
 echo("</table>");
+if($errorMessages != "") {
+    echo("<table>".$errorMessages."</table>");
+}
 echo("<input class='ui-state-default ui-corner-all' type='submit' name='update_all' value='Submit all data to Banner'>");
 echo("<input class='ui-state-default ui-corner-all' type='submit'  name='update_selected' value='Submit selected data to Banner' >");
 echo("</form>");
 ?>
 </tbody>
 </table>
+
+
     
 <?php 
+
 } else {
     // List single user for editing
 
@@ -426,6 +434,7 @@ $queryUser = "SELECT u.user_id, "
             $curr_user = new User($sqlDataBase);
             $curr_user->LoadUser($curr_user_id);
 
+            $errorMessages = "";
             if($userInfo)
             {
                     $i=0;
@@ -449,6 +458,7 @@ $queryUser = "SELECT u.user_id, "
                         try {
                         $xml = new SimpleXMLElement($userXML);
                         } catch(Exception $e) {
+                            $errorMessages .= "<tr class=\"failed_row\"><td>Error: User ".$curr_user->getNetid(). " has no UIN assigned.</td></tr>";
                             //echo("Error:");
                             //echo($e->getTraceAsString());
                         }
@@ -520,7 +530,9 @@ $queryUser = "SELECT u.user_id, "
                             echo("</tr>");
                     }
 echo("</table>");
-
+if($errorMessages != "") {
+    echo("<table>".$errorMessages."</table>");
+}
 echo("<input class='ui-state-default ui-corner-all' type='submit'  name='update_all' value='Submit data to Banner' >");
                                                 
 echo("</form>");					
@@ -528,7 +540,9 @@ echo("</form>");
 </tbody>
 </table>
 <BR>
+
 <?php
+
 echo("<a href=\"index.php?view=bannerUpload&pay_period=$pay_period&year_type=$year_type&year=$year\">Back to Banner Upload</a>");
 
   
