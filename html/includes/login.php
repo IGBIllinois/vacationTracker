@@ -6,13 +6,14 @@
  * @author Nevo Band
  */
 ?>
-<FORM ACTION="index.php
-    <?php echo (isset($_GET['view']))?"?view=".($_GET['view']):""; ?>
-      
-    <?php 
-        echo (isset($_GET['confirmtoken']))?"&confirmtoken=".($_GET['confirmtoken']):""; 
-    ?> 
- " METHOD="POST">
+
+<?php 
+    $url = 'index.php';
+    $url .= (isset($_GET['view']) ? ("?view=".($_GET['view'])) : "");
+    $url .= (isset($_GET['confirmtoken']) ? ("&confirmtoken=".($_GET['confirmtoken'])) : "")
+    ?>; 
+        
+<FORM ACTION='<?php echo($url)?>' METHOD="POST">
 <br><br>
 <center>
 <img src="css/images/vacation_logo.png">
