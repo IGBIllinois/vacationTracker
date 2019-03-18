@@ -38,7 +38,7 @@
                                 $employees = $loggedUser->GetEmployees();
                                 echo "<option value=".$loggedUser->getUserId().">".$loggedUser->getFirstName()." ".$loggedUser->getLastName()."</option>";
                         }
-                        if(isset($employees))
+                        if($loggedUser->GetUserPermId() == ADMIN || count($employees)>0)
                         {
                                 foreach($employees as $id => $employee)
                                 {

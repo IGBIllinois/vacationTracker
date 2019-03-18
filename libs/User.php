@@ -321,7 +321,7 @@ class User
 	public function isEmployee($userId)
 	{
 		$employeesList = $this->GetEmployees();
-		if(isset($employeesList))
+		if(count($employeesList)>0)
 		{
 			foreach($employeesList as $id=>$employee)
 			{

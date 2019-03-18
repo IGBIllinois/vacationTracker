@@ -338,7 +338,7 @@ if(isset($_POST['sharedUsers']))
 				value="Request Supervisor Approval"> 
                             <?php
 				$checkUserHasEmployees = $loggedUser->GetEmployees();
-				if(isset($checkUserHasEmployees))
+				if($loggedUser->GetUserPermId() == ADMIN || count($checkUserHasEmployees) > 0)
 				{
 					echo "<input class=\"ui-state-default ui-corner-all\" type=\"submit\" name=\"approve\" value=\"Approve Selected Leaves\"> ".
                                                 "<input class=\"ui-state-default ui-corner-all\" type=\"submit\" name=\"notApprove\" value=\"Do Not Approve Selected Leaves\">";

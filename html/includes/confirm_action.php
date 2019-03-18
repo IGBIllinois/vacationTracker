@@ -250,7 +250,7 @@ else
                     </td>
                     <td class="content_bg" valign="top"><?php echo $messageBox; ?> <?php
                     $checkUserHasEmployees = $loggedUser->GetEmployees();
-                    if(isset($checkUserHasEmployees))
+                    if($loggedUser->GetUserPermId() == ADMIN || count($checkUserHasEmployees)>0)
                     {
                             echo "<input class=\"ui-state-default ui-corner-all\" type=\"submit\" name=\"approve\" value=\"Approve Selected Leaves\"> "
                                 . "<input type=\"submit\" name=\"notApprove\" value=\"Do Not Approve Selected Leaves\"> "

@@ -6,7 +6,7 @@
  * 
  * @author Nevo Band
  */
-$employees = $loggedUser->GetEmployees();
+
 if(isset($_POST['employee']))
 {
 	$employeeId = $_POST['employee'];
@@ -43,7 +43,7 @@ else
 		<?php
 		echo "<option value=".$loggedUser->getUserId().">".$loggedUser->getFirstName()." ".$loggedUser->getLastName()."</option>";
 		$employees = $loggedUser->GetEmployees();
-		if(isset($employees))
+		if($loggedUser->GetUserPermId() == ADMIN || count($employees)>0)
 		{
         		foreach($employees as $id=>$employee)
         		{	
