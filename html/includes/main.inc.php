@@ -25,7 +25,7 @@ if($debug) {
 error_reporting(E_ALL);
 }
 //Initialize database 
-$sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
+$sqlDataBase= new SQLDataBase(SQLHOST,SQLDATABASE,SQLUSERNAME,SQLPASSWORD);
 
 //initialize ldap authentication object
 $authen=new Auth($sqlDataBase);
@@ -34,3 +34,8 @@ $loggedUser = new User($sqlDataBase);
 
 //Authenticate user with LDAP and existing account
 require_once "authenticate.php";
+
+// These lines allow a user to hit the Back button and return to a previously
+// submitted form
+ini_set('session.cache_limiter','public');
+session_cache_limiter(false);

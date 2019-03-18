@@ -36,9 +36,10 @@ define("AP_HOURS_BLOCK",4);
  Configuration for vacation tracker
  SQL authentication information
  */
-$sqlUserName="";
-$sqlPassword="";
-$sqlDataBase="";
+define("SQLHOST", "");
+define("SQLUSERNAME","");
+define("SQLPASSWORD","");
+define("SQLDATABASE","");
 
 /*
  LDAP settings

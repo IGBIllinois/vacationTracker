@@ -15,7 +15,7 @@ function __autoload($class_name) {
 require_once "conf/config.php";
 
 //Initialize database
-$sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
+$sqlDataBase= new SQLDataBase('localhost',SQLDATABASE,SQLUSERNAME,SQLPASSWORD);
 
 
 $objTree =  new GDRenderer(30,10,20,50,20,20,20);
