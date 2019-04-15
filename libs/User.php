@@ -73,7 +73,7 @@ class User
                 $params = array("user_id"=>$userId);
 		$userInfo = $this->sqlDataBase->get_query_result($queryUserInfo, $params);
 
-		if(!isset($userInfo))
+		if(!isset($userInfo) || count($userInfo) == 0)
 		{
 			return false;
 		}
