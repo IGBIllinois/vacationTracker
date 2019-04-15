@@ -2,7 +2,8 @@
 	"require": {
 		"phpoffice/phpexcel": "1.8.1",
                 "components/jquery": "2.1.0",
-		"components/jqueryui": "1.10.4"
+		"components/jqueryui": "1.10.4",
+                "mottie/tablesorter": "2.31.0"
        },
         "config": {
 		"component-dir": "html/vendor/components"
