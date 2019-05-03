@@ -3,7 +3,6 @@ Written by Nevo Band
 
 ## URL 
 https://www-app.igb.illinois.edu/vacation/
-https://www-app.igb.illinois.edu/vacation-test (testing version)
 
 ## Using Vacation Tracker 
 Vacation tracker was written to duplicate the HR leave policies of the University of Illinois
