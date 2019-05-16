@@ -1,7 +1,14 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-
+<?php
+    if(!isset($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == ""){
+        $redirect = "https://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'];
+        header("HTTP/1.1 301 Moved Permanently");
+        header("Location: $redirect");
+    }
+?>
 <HTML>
 <head>
+    <title>IGB Vacation Calendar</title>
 <link rel="stylesheet"
 	href="css/custom-theme/jquery-ui-1.8.6.custom.css">
 <link rel="stylesheet" type="text/css" href="css/speech_bubble.css" />
