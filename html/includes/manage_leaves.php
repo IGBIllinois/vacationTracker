@@ -274,7 +274,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				<table class="tabular">
 				<?php
                                 
-				echo $helperClass->DrawLeaveHoursAvailable($yearSelected,$leavesShowUser,false);
+				echo $helperClass->DrawLeaveHoursAvailable($yearSelected,$leavesShowUser);
 				?>
 				</table>
 				<br><br>
@@ -446,7 +446,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
                                             $user_supervisor = $loggedUser;
                                         }
                                         $user_supervisor_email = $user_supervisor->getUserEmail();
-                                        if($debug) {
+                                        if(DEBUG) {
                                             $user_email = $loggedUser->getUserEmail();
                                             $user_supervisor_email = $loggedUser->getUserEmail();
                                         }

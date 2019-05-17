@@ -9,7 +9,7 @@
  * @author Nevo Band
  *
  */
-$ldap = new Ldap($host." 389");
+$ldap = new Ldap(LDAP_HOST." 389");
 
 if(isset($_POST['search']))
 {

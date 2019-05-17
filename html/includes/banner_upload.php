@@ -12,8 +12,9 @@ $month = Date('m');
 $year = Date('Y');
 $year_type = "Appointment";
 $helperClass = new Helper($sqlDataBase);
-
-if($debug) {
+$bannerUrl = BANNER_URL;
+if(DEBUG) {
+    $bannerUrl = BANNER_URL_TEST;
     echo "Test banner URL = $bannerUrl<BR>";
 }
 if(isset($_POST['update'])) {
@@ -38,7 +39,7 @@ if(isset($_POST['update'])) {
     $date = $mmdd.$year;
     $today = date("m/d/Y");
     
-    if(($bannerUrl == "https://webservices-dev.admin.uillinois.edu/employeeWS/employeeLeaveBalance") && ($date > $today)) {
+    if((DEBUG) && ($date > $today)) {
         // set date to today, just for testing purposes.
         $date = $today;
     }
@@ -245,7 +246,6 @@ $queryUsers = "SELECT u.user_id, "
                  $xml = new SimpleXMLElement($userXML);
 
                  } catch(Exception $e) {
-
                      //echo("Error:");
                      //echo($e->getTraceAsString());
                      $errorMessages .= "<tr class=\"failed_row\"><td>Error: User ".$curr_user->getNetid(). " has no UIN assigned.</td></tr>";

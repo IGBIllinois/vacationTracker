@@ -9,7 +9,7 @@
 /*
  * Debug flag. If set to 1, certain testing statements and functions can be used
  */
-$debug = 0;
+define("DEBUG", 0);
 
 
 /*
@@ -44,22 +44,19 @@ define("SQLDATABASE","");
 /*
  LDAP settings
  */
-$host="ldap.server.edu"; //ldap server
-$peopleDN="ou=people,dc=department,dc=uiuc,dc=edu"; //people DN
-$groupDN="ou=group,dc=department,dc=uiuc,dc=edu"; //group DN
-$ssl="0";
-$port="389";
-$adminGroup="SomeLDAPGroup"; //Some group of admins in ldap
-$ldapNetIdParam="uid="; //Ldap Parameter to search for when searching user netid
-$searchTerms=array('uid','cn','mail'); //All parameters to search
+define("LDAP_HOST", ""); // ldap server
+define("LDAP_PEOPLE_DN", "");
+define("LDAP_GROUP_DN", "");
+define("LDAP_SSL", "");
+define("LDAP_PORT", "");
 
-// Banner info
-if($debug) {
-    $bannerUrl = "";
-} else {
-    $bannerUrl = "";
-}
-$senderAppId = "";
+define("SENDER_APP_ID" ,"");
+
+# Development URL for Banner
+define("BANNER_URL", ""); 
+
+# Development URL for Banner test site
+define("BANNER_URL_TEST","");
 
 /*
  Authentication

@@ -11,7 +11,7 @@ require_once '../../vendor/autoload.php';
 
 //Load configuration file
 require_once "../../conf/config.php";
-$sqlDataBase= new SQLDataBase('localhost',$sqlDataBase,$sqlUserName,$sqlPassword);
+$sqlDataBase= new SQLDataBase(SQLHOST,SQLDATABASE,SQLUSERNAME,SQLPASSWORD);
 
 $type = "xlsx";
 $filename = "vacation";
