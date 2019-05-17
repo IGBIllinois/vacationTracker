@@ -254,7 +254,10 @@ class Helper
 		{
 			$tableString .= "<tr><td colspan=8><center>No Leaves</center></td></tr>";
 		}
-                        if($pay_period == 2) {
+                
+                $tableString.="</tbody></table>";
+                
+            if($pay_period == 2) {
             //write yearly totals
             $userLeavesHoursAvailable = new Rules($this->sqlDataBase);
             $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userId,$appointment_year_id);
@@ -274,9 +277,10 @@ class Helper
             
             $tableString.=(("<BR>Vacation Hours Available:". $estimatedVacHours));
             $tableString.=(("<BR>Sick Hours Available:". $estimatedSickHours));
+            $tableString .="<BR><BR>";
         }
         
-		$tableString.="</tbody></table>";
+		
                 
                 return $tableString;
 	}
@@ -287,9 +291,10 @@ class Helper
 	 *
 	 * @param int $yearId ID for the Year to get data from
 	 * @param int $userId ID for the User to get data for
-	 * @param unknown_type $edit
+         * 
+         * @return String for the HTML Table displaying the User's hours available
 	 */
-	public function DrawLeaveHoursAvailable($yearId,$userId, $edit)
+	public function DrawLeaveHoursAvailable($yearId,$userId)
 	{
 		$tableString ="";
 		$currentDate = Date("Y-m-d");
@@ -347,18 +352,20 @@ class Helper
 
 
 	/**
-	 * Create a leave
+	 * Create a leave or leaves for a user
 	 *
-	 * @param unknown_type $userId
-	 * @param unknown_type $days
-	 * @param unknown_type $month
-	 * @param unknown_type $year
-	 * @param unknown_type $hours
-	 * @param unknown_type $minutes
-	 * @param unknown_type $leaveTypeId
-	 * @param unknown_type $specialLeaveId
-	 * @param unknown_type $description
-	 * @param User $loggedUser
+	 * @param int $userId ID of the user to create the leaves for
+	 * @param array[] $days Days to create leaves for
+	 * @param int $month Month to create leaves for
+	 * @param int $year Year to create leaves for
+	 * @param int $hours Number of hours per day
+	 * @param int $minutes Additional number of minutes per day
+	 * @param int $leaveTypeId Leave type ID
+	 * @param int $specialLeaveId Special leave type id
+	 * @param string $description Description for the leave
+	 * @param User $loggedUser Currently logged in user
+         * 
+         * @return string A return message
 	 */
 	public function CreateLeave($userId, $days,$month,$year, $hours, $minutes, $leaveTypeId, $specialLeaveId, $description, User $loggedUser)
 	{
@@ -439,10 +446,12 @@ class Helper
 	}
 
 	/**
-	 * Delete a leave
+	 * Delete a leave or leaves
 	 *
-	 * @param unknown_type $leaveIds
-	 * @param User $loggedUser
+	 * @param array[int] $leaveIds Array of leave IDs to delete
+	 * @param User $loggedUser Currently logged in User
+         * 
+         * @return string HTML for a Message Box with an output message
 	 */
 	public function DeleteLeave($leaveIds, User $loggedUser)
 	{
@@ -492,14 +501,14 @@ class Helper
 	/**
 	 * Modify a leave
 	 *
-	 * @param unknown_type $leaveId
-	 * @param unknown_type $userId
-	 * @param unknown_type $hours
-	 * @param unknown_type $minutes
-	 * @param unknown_type $leaveTypeId
-	 * @param unknown_type $specialLeaveId
-	 * @param unknown_type $description
-	 * @param User $loggedUser
+	 * @param int $leaveId ID of Leave to edit
+	 * @param int $userId User ID of Leave
+	 * @param int $hours New number of hours per day
+	 * @param int $minutes New number of additional minutes per day
+	 * @param int $leaveTypeId ID of new Leave Type
+	 * @param int $specialLeaveId ID of new Special Leave Type
+	 * @param string $description New description
+	 * @param User $loggedUser Currently logged in user
 	 */
 	public function ModifyLeave($leaveId, $userId, $hours, $minutes, $leaveTypeId, $specialLeaveId, $description, User $loggedUser)
 	{
@@ -573,8 +582,8 @@ class Helper
 	/**
 	 * Generate a pretty message box for error and informative messages
 	 *
-	 * @param unknown_type $title
-	 * @param unknown_type $message
+	 * @param string $title Title for the Message Box
+	 * @param string $message
 	 * @param unknown_type $type
 	 */
 	public static function MessageBox($title, $message,$type="info")
@@ -825,8 +834,8 @@ class Helper
 	/**
 	 * Delete hours which were added to a user's available hours.
 	 *
-	 * @param unknown_type $addedHoursId
-	 * @param User $loggedUser
+	 * @param int $addedHoursId ID of added_hours entry to delete
+	 * @param User $loggedUser Currently logged in user
 	 */
 	public function DeleteAddedHours($addedHoursId, User $loggedUser)
 	{
@@ -941,8 +950,6 @@ class Helper
                                                         "status_id"=>APPROVED,
                                                         "supervisor_id"=>$loggedUser->getSupervisorId());
                                             
-                                       // echo("addauthquery = $queryAddAuthenKey<BR>");
-                                        //print_r($params);
                                         $this->sqlDataBase->get_insert_result($queryAddAuthenKey, $params);
 
 					$message .= "<tr class=\"success_row\"><td>".Date('m/d/Y',strtotime($leaveToApprove->getDate()))."</td><td>".$leaveToApprove->getHours()." Hours</td><td>Requested</td></tr>";
@@ -1139,8 +1146,8 @@ class Helper
 	/**
 	 * Run rules for a user on a prticular year.
 	 *
-	 * @param unknown_type $userId
-	 * @param unknown_type $yearId
+	 * @param int $userId User ID
+	 * @param int $yearId Year ID
 	 */
 	public function RunRules($userId,$yearId,$force=false)
 	{
@@ -1204,7 +1211,14 @@ class Helper
 		return 0;
 	}
 
-	//The function returns the no. of business days between two dates and it skips the holidays
+	/**
+         * The function returns the no. of business days between two dates and it skips the holidays
+         * 
+         * @param string $startDate
+         * @param string $endDate
+         * @param array[string] $holidays Array of dates for holidays
+         * @return int The number of working days between the two dates (minus weekends and holidays)
+         */
 	public function getWorkingDays($startDate,$endDate,$holidays)
 	{
     		// do strtotime calculations just once
@@ -1288,17 +1302,19 @@ class Helper
  */
 function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
 
-    global $bannerUrl;
-    global $senderAppId;
-    $apiURL = $bannerUrl;
+    if(DEBUG) {
+        $apiURL = BANNER_URL_TEST;
+    } else {
+        $apiURL = BANNER_URL;
+    }
 
     if($userUin == 0) {
         return "";
     }
 
-       $fields = "senderAppId=".$senderAppId."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
+       $fields = "senderAppId=".SENDER_APP_ID."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
 
-       $fieldsArray = array('senderAppId'=>$senderAppId,
+       $fieldsArray = array('senderAppId'=>SENDER_APP_ID,
                        'institutionalId'=>$userUin,
                        'vacTaken'=>$vacHours,
                        'sickTaken'=>$sickHours,
@@ -1309,7 +1325,7 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
                        'validateOnlyFlag'=>'N' 
                );
         
-       $fullURL = $bannerUrl ."?". $fields;
+       $fullURL = $apiURL ."?". $fields;
 
        $result = $this->get_curl_result($fullURL, $fields, $fieldsArray);
        
@@ -1337,9 +1353,13 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
      * @return Array of Vacation Leave data from Banner
      */
     function apiGetUserInfo($userUin) {
-        global $bannerUrl;
-        global $senderAppId;
-        $apiURL = $bannerUrl . "?senderAppId=$senderAppId&institutionalId=$userUin";
+
+        if(DEBUG) {
+            $bannerUrl = BANNER_URL_TEST;
+        } else {
+            $bannerUrl = BANNER_URL;
+        }
+        $apiURL = $bannerUrl . "?senderAppId=".SENDER_APP_ID."&institutionalId=$userUin";
 
            $curl = curl_init();
            curl_setopt($curl, CURLOPT_URL, $apiURL);
@@ -1353,7 +1373,13 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
            return $result;       
     }
 	
-    
+    /** Gets the result from a CURL command
+     * 
+     * @param string $url URL to send a CURL command to
+     * @param string $fields String of URL encoded data (in the form "?field1=value1&field2=value2..."
+     * @param array $fields_array Array of field=>value data
+     * @return array Result from the curl_exec() command
+     */
     function get_curl_result($url, $fields, $fields_array=null) {
         
        $curl = curl_init();

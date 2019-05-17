@@ -144,8 +144,6 @@ class Email
          * 
          * @global SQLDataBase $sqlDataBase The SQLDataBase object
          * @global User $loggedUser The User currently logged in and sending the email
-         * @global bool $debug Debug flag, denoting if this is for testing or not. Will only send email to
-         *              the currently logged-in user if debug is true
          * @param int $user_id The id for the User to get vacation data for
          * @param int $status_id The status of the Vacation data (2 = APPROVED). See config.php for full list 
          * @param int $appointment_year_id ID of the Appointment Year
@@ -162,7 +160,6 @@ class Email
     
             global $sqlDataBase;
             global $loggedUser;
-            global $debug;
             
 
             $from = $loggedUser->GetUserEmail();
@@ -202,7 +199,7 @@ class Email
             
             
             
-            if($debug) {
+            if(DEBUG) {
                 
                 $user_email = $loggedUser->getUserEmail();
                 $supervisor_email = $loggedUser->getUserEmail();
@@ -234,7 +231,7 @@ class Email
             $titles = "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
             $emailText .= "Vacation Time\n\n";
             $emailText .= $titles;
-
+            $total_vac = 0;
                 $vacation_results = $user->GetVacationLeaves($appointment_year_id, $pay_period, $status_id);
                 foreach($vacation_results as $leave) {
                     $leaveType = new LeaveType($this->sqlDataBase);
@@ -247,14 +244,17 @@ class Email
                             gmdate('g\h i\m',$leave->GetTime()). "\t" .
                             $leave->getDescription(). "\t" .
                             $leave->GetStatusString(). "\n\n" ;
+                    
+                    $total_vac += $leave->GetHours();
                 }
             
             // Sick Leave
                 $emailText .= "Sick Leave\n\n";
 
                 $emailText .=  "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
+                $total_sick = 0;
                 
-                 $sick_results = $user->GetSickLeaves($appointment_year_id, $pay_period, $status_id);
+                $sick_results = $user->GetSickLeaves($appointment_year_id, $pay_period, $status_id);
                 foreach($sick_results as $leave) {
                     $leaveType = new LeaveType($this->sqlDataBase);
                     $leaveType->LoadLeaveType($leave->getLeaveTypeId());
@@ -266,11 +266,14 @@ class Email
                             gmdate('g\h i\m',$leave->GetTime()). "\t" .
                             $leave->getDescription(). "\t" .
                             $leave->GetStatusString(). "\n\n" ;
+                    
+                    $total_sick += $leave->GetHours();
                 }
                 
                 $emailText .= "Floating Holidays\n\n";
 
                 $emailText .= $titles;
+                $total_float = 0;
 
                 $floating_results = $user->GetFloatingHolidays($fiscal_year_id, $pay_period, $status_id);
                 foreach($floating_results as $leave) {
@@ -284,11 +287,42 @@ class Email
                             gmdate('g\h i\m',$leave->GetTime()). "\t" .
                             $leave->getDescription(). "\t" .
                             $leave->GetStatusString(). "\n\n" ;
+                    
+                    $total_float += $leave->GetHours();
                 }
+                
+                $emailText .= "\n\n".
+                    "Total Vacation Hours: ".$total_vac."\n".
+                    "Total Sick Hours: ".$total_sick."\n".
+                    "Total Floating Holiday Hours: ".$total_float."\n\n";
+                
+                if($pay_period == 2) {
+                    //write yearly totals
+                    $userLeavesHoursAvailable = new Rules($sqlDataBase);
+                    $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($user_id,$appointment_year_id);
+
+                    $totalVacHours = round(($leavesAvailable[1]['initial_hours']+$leavesAvailable[1]['added_hours']-$leavesAvailable[1]['calc_used_hours']),2);
+                    $estimatedVacHours = round(($leavesAvailable[1]['initial_hours']+$leavesAvailable[1]['est_added_hours']-$leavesAvailable[1]['calc_used_hours']),2);
+
+                    $totalSickHours = round(($leavesAvailable[2]['initial_hours']+$leavesAvailable[2]['added_hours']-$leavesAvailable[2]['calc_used_hours']),2);
+                    $estimatedSickHours = round(($leavesAvailable[2]['initial_hours']+$leavesAvailable[2]['est_added_hours']-$leavesAvailable[2]['calc_used_hours']),2);
+
+                    $data[] = (array());
+                    $total_vac_hours = $leavesAvailable[1]['calc_used_hours'];
+                    $total_sick_hours = $leavesAvailable[2]['calc_used_hours'];
+
+                    $emailText .= "Yearly Total Vacation Hours Taken: ". round($leavesAvailable[1]['calc_used_hours'],2)."\n";
+                    $emailText .= "Yearly Total Sick Hours Taken: ". round($leavesAvailable[2]['calc_used_hours'],2)."\n";
+
+                    $emailText .= "Vacation Hours Available: ". $estimatedVacHours."\n";
+                    $emailText .= "Sick Hours Available: ". $estimatedSickHours."\n";
+                } 
+
+                        
 
                 $subject = "Vacation/Sick Leave Usage for ".$user->GetNetid()." ( $start_date - $end_date )";
 
-                if($debug) {
+                if(DEBUG) {
                     $subject .= " TEST";
                 }
                 $header= "From: ".$from." ".PHP_EOL .
