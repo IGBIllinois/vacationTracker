@@ -101,13 +101,6 @@ CREATE TABLE `status` (
   PRIMARY KEY (`status_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
-CREATE TABLE `user_computer` (
-  `computer_id` int(11) NOT NULL AUTO_INCREMENT,
-  `computer_ip` varchar(15) NOT NULL,
-  `last_login` datetime NOT NULL,
-  `user_id` int(11) NOT NULL,
-  PRIMARY KEY (`computer_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
 
 CREATE TABLE `user_perm` (
   `user_perm_id` int(10) unsigned NOT NULL AUTO_INCREMENT,

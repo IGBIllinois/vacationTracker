@@ -208,30 +208,6 @@ class Auth
 	}
 
 	/**
-	 * Check whether or not the user is authorized to connect from his IP address
-	 * Enter description here ...
-	 * @param unknown_type $ip
-	 * @param unknown_type $userId
-	 */
-	private function CheckUserIpAuthorized($ip,$userId)
-	{
-                $queryUserIdIp = "SELECT computer_id FROM user_computer WHERE user_id=:user_id AND computer_ip=:computer_ip";
-                $params = array("user_id"=>$userId, "computer_ip"=>$ip);
-
-		$computerId = $this->sqlDataBase->singleQuery($queryUserIdIp, $params);
-   
-                
-		if($computerId)
-		{
-			$queryUpdateComputerLastUsed = "UPDATE user_computer SET last_login=NOW() WHERE computer_id=:computer_id";
-                        $params = array("computer_id"=>$computerId);
-			$this->sqlDataBase->get_update_result($queryUpdateComputerLastUsed, $paramss);
-			return 1;
-		}
-		return 0;
-	}
-
-	/**
 	 * Check if the user has a cookie which allows him to connect without a user name and password
 	 * 
 	 * @param unknown_type $confirmKey
