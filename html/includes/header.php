@@ -14,9 +14,7 @@
 <link rel="stylesheet" type="text/css" href="css/speech_bubble.css" />
 <link rel="stylesheet" type="text/css" href="css/vacationTracker.css" />
 <link rel="stylesheet" type="text/css" href="css/Spacetree.css" />
-<!--[if IE]>
-<link rel="stylesheet" type="text/css" href="css/vacationTrackerIE.css" />
-<![endif]-->
+
 
 
 <script type='text/javascript' language='javascript' src='vendor/components/jquery/jquery.js'></script>
