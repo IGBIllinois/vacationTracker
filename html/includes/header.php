@@ -8,14 +8,22 @@
 ?>
 <HTML>
 <head>
+
+    
     <title>IGB Vacation Calendar</title>
-<link rel="stylesheet"
-	href="css/custom-theme/jquery-ui-1.8.6.custom.css">
-<link rel="stylesheet" type="text/css" href="css/speech_bubble.css" />
+
 <link rel="stylesheet" type="text/css" href="css/vacationTracker.css" />
-<link rel="stylesheet" type="text/css" href="css/Spacetree.css" />
 
 
+<!-- Prevent FOUC (flash of unstyled content) - http://johnpolacek.com/2012/10/03/help-prevent-fouc/ -->
+<style type="text/css">
+    .no-fouc {display: none;}
+</style>
+
+<script type="text/javascript">
+    document.documentElement.className = 'no-fouc';
+   
+</script>
 
 <script type='text/javascript' language='javascript' src='vendor/components/jquery/jquery.js'></script>
 
@@ -45,5 +53,9 @@
 
 <script type='text/javascript' language='javascript' src='js/vacationTracker.js'></script>
 
+
+
 </head>
+
+
 <body>
