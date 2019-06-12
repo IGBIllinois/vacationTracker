@@ -15,15 +15,6 @@
 <link rel="stylesheet" type="text/css" href="css/vacationTracker.css" />
 
 
-<!-- Prevent FOUC (flash of unstyled content) - http://johnpolacek.com/2012/10/03/help-prevent-fouc/ -->
-<style type="text/css">
-    .no-fouc {display: none;}
-</style>
-
-<script type="text/javascript">
-    document.documentElement.className = 'no-fouc';
-   
-</script>
 
 <script type='text/javascript' language='javascript' src='vendor/components/jquery/jquery.js'></script>
 
