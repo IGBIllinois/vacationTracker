@@ -8,11 +8,18 @@ https://www-app.igb.illinois.edu/vacation/
 Vacation tracker was written to duplicate the HR leave policies of the University of Illinois
 
 ## Installation 
-1.  Create an alias in apache config file that points to the html folder, and restart Apache.  
+
+```
+cd /var/www/vacation/html
+sudo git clone https://github.com/IGB-UIUC/vacationTracker.git .
+```
+
+2.  Create an alias in apache config file that points to the html folder, and restart Apache.  
 ```
 Alias /vacation /var/www/vacation/html
 ```
-2.  In mysql, create the database, and then run sql/vacation.sql on the mysql server to create the database tables.
+
+3.  In mysql, create the database, and then run sql/vacation.sql on the mysql server to create the database tables.
 From mysql:
 ```
 CREATE TABLE TABLE_NAME;
@@ -21,17 +28,17 @@ From command prompt:
 ```
 mysql -u root -p TABLE_NAME < sql/vacation.sql
 ```
-3.  Create a user/password on the mysql server which has select/insert/delete/update permissions on the vacationTracker database.
+4.  Create a user/password on the mysql server which has select/insert/delete/update permissions on the vacationTracker database.
 ```
 CREATE USER 'vtuser'@'localhost' IDENTIFIED BY 'STRONG_PASSWORD';
 GRANT SELECT,INSERT,DELETE,UPDATE ON vacationTracker.* to 'vtuser'@'localhost';
 ```
-4.  Edit /conf/config.php to reflect your settings.
-5.  Run composer to install php dependencies
+5.  Edit /conf/config.php to reflect your settings.
+6.  Run composer to install php dependencies
 ```
 composer install
 ```
-6. Copy necessary javascript files to html folder
+7. Copy necessary javascript files to html folder
 ```
 cp vendor/components html/vendor
 cp vendor/mottie html/vendor
