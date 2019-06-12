@@ -9,6 +9,7 @@ Vacation tracker was written to duplicate the HR leave policies of the Universit
 
 ## Installation 
 
+1. Download the data from Github into the directory on the server
 ```
 cd /var/www/vacation/html
 sudo git clone https://github.com/IGB-UIUC/vacationTracker.git .
