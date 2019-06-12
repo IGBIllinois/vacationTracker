@@ -32,8 +32,7 @@ $adminNavigationArray = array(
 $userNavigationArray = array(
     'calendar'=>'Calendar',
     'create'=>'Manage Leaves',
-    'employees'=>'User Accounts',
-    'tree'=>'Department');
+    'employees'=>'User Accounts');
 
 $imagePath = "css/images/";
 
