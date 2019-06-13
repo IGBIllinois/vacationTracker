@@ -171,7 +171,7 @@ if(isset($_POST['createUser']))
 
 			if($ldap->bind())
 			{
-				if($sr = $ldap->searchSubtree($peopleDN, "uid=".$createUserId,array('uid','cn','mail')))
+				if($sr = $ldap->searchSubtree(LDAP_PEOPLE_DN, "uid=".$createUserId,array('uid','cn','mail')))
 				{
 					if($entry = $sr->firstEntry())
 					{
@@ -220,7 +220,7 @@ if(isset($_POST['createUser']))
 
 					if($ldap->bind())
 					{
-						if($sr = $ldap->searchSubtree($peopleDN, "(|(uid=*".$_POST['ldapSearchQuery']."*)(cn=*".$_POST['ldapSearchQuery']."*))",array('uid','cn')))
+						if($sr = $ldap->searchSubtree(LDAP_PEOPLE_DN, "(|(uid=*".$_POST['ldapSearchQuery']."*)(cn=*".$_POST['ldapSearchQuery']."*))",array('uid','cn')))
 						{
 							if($entry = $sr->firstEntry())
 							{
