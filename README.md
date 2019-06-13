@@ -23,7 +23,7 @@ Alias /vacation /var/www/vacation/html
 3.  In mysql, create the database, and then run sql/vacation.sql on the mysql server to create the database tables.
 From mysql:
 ```
-CREATE TABLE TABLE_NAME;
+CREATE DATABASE <databaseName>;
 ```
 From command prompt:
 ```
@@ -31,8 +31,8 @@ mysql -u root -p TABLE_NAME < sql/vacation.sql
 ```
 4.  Create a user/password on the mysql server which has select/insert/delete/update permissions on the vacationTracker database.
 ```
-CREATE USER 'vtuser'@'localhost' IDENTIFIED BY 'STRONG_PASSWORD';
-GRANT SELECT,INSERT,DELETE,UPDATE ON vacationTracker.* to 'vtuser'@'localhost';
+CREATE USER '<username>'@'localhost' IDENTIFIED BY '<password>';
+GRANT SELECT,INSERT,DELETE,UPDATE ON <databaseName>.* to '<username>'@'localhost';
 ```
 5.  Edit /conf/config.php to reflect your settings.
 6.  Run composer to install php dependencies
