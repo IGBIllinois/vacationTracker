@@ -1004,7 +1004,7 @@ table.hover_table tbody tr td.highlight {
 .ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button { font-family: Verdana,Arial,sans-serif; }
 .ui-widget-content { border: 1px solid #e3e9ff; background: #bbccff; color: #222222; }
 .ui-widget-content a { color: #222222; }
-.ui-widget-header { border: 1px solid #e3e9ff; background: #e3e9ff; color: #222222; font-weight: bold; }
+.ui-widget-header {  background: #e3e9ff; color: #222222; font-weight: bold; }
 .ui-widget-header a { color: #222222; }
 
 /* Interaction states
@@ -1482,7 +1482,6 @@ input.ui-button { padding: .4em 1em; }
     display/**/: block; /*sorry for IE5*/
     position: absolute; /*must have*/
     z-index: -1; /*must have*/
-    filter: mask(); /*must have*/
     top: -4px; /*must have*/
     left: -4px; /*must have*/
     width: 200px; /*must have*/

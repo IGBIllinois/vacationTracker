@@ -153,7 +153,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 <table class="content" cellspacing="0">
 	<tr>
 		<td class="page_title"></td>
-		<td class="page_title" style="align-text: right"></td>
+		<td class="page_title" style="text-align: right"></td>
 	</tr>
 	<tr>
 		<td valign="top" width="200">

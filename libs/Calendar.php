@@ -83,7 +83,7 @@ class Calendar
 			$specialDayBlocked = false;
 			foreach($specialDays as $specialDay)
 			{
-				$dayName .= "<div style=\"background-color:#".$specialDay->getColor().";height:15px;color:#000000;border-radius: 5px;-moz-border-radius: 10px;padding:2px;\">".$specialDay->getName()."</div>";
+				$dayName .= "<div style=\"background-color:#".$specialDay->getColor().";height:15px;color:#000000;border-radius: 5px;padding:2px;\">".$specialDay->getName()."</div>";
 				if($specialDay->getBlocked())
 				{
 					$specialDayBlocked = true;
