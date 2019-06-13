@@ -484,7 +484,7 @@ function checkAll(field)
 }
 
 function uncheckAll(field,calendar)
-{	
+{	if(field != null) {
 		numBoxes = field.length;
 
 		if(numBoxes)
@@ -506,6 +506,7 @@ function uncheckAll(field,calendar)
 				
 			}
 		}
+            }
 	
 }
 
@@ -883,13 +884,17 @@ function GetLeaveDay(id)
         $(document).ready(function () {
             mainWindow = document.body;
             mainWindow.scrollTop = $.cookie("mainWindowScroll") || 0;
-	    calendarsView = document.getElementById("view_calendar");
-            calendarsView.scrollTop = $.cookie("calendarViewsScroll") || 0;
+            if(calendarsView != null) {
+                calendarsView = document.getElementById("view_calendar");
+                calendarsView.scrollTop = $.cookie("calendarViewsScroll") || 0;
+            }
         });
         window.onbeforeunload = function () {
 
             $.cookie("mainWindowScroll", mainWindow.scrollTop, { expires: 7 });
-	    $.cookie("calendarViewsScroll", calendarsView.scrollTop, { expires: 7 });
+            if(calendarsView != null) {
+                $.cookie("calendarViewsScroll", calendarsView.scrollTop, { expires: 7 });
+            }
 	    
         }
         /* The jQuery cookie plugin */
