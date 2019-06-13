@@ -206,6 +206,33 @@ class Auth
 		}
 
 	}
+        
+        /** Gets information for an authentication code in the database
+         * 
+         * @param string $confirmKey The confirmation key
+         * @return array Array of database info
+         */
+        public function GetAuthenCodeInfo($confirmKey) {
+            $queryAuthenCodeInfo = "SELECT ak.status_id,"
+            . "ak.leave_id,"
+            . "ak.date_created,"
+            . "li.user_id,"
+            . "u.supervisor_id,"
+            . "u.netid, "
+            . "MONTH(li.date) as month,"
+            . " YEAR(li.date) as year "
+            . "FROM authen_key ak, leave_info li, users u "
+            . "WHERE ak.confirm_key=:confirmKey "
+            . "AND u.user_id=li.user_id "
+            . "AND li.leave_id=ak.leave_id";
+
+            $params = array("confirmKey"=>$confirmKey);
+
+            $authenCodeInfo = $this->sqlDataBase->get_query_result($queryAuthenCodeInfo, $params);
+
+            return $authenCodeInfo;
+
+        }
 
 	/**
 	 * Check if the user has a cookie which allows him to connect without a user name and password

@@ -254,5 +254,31 @@ class Leave
 	public function setLeaveTypeIdSpecial($x) { $this->leaveTypeSpecialId = $x; }
 	public function setHours($x) { $this->hours = $x; }
 	public function setYearId($x) { $this->yearId = $x; }
+        
+        // Static functions
+        /**
+         * Gets Added hours for a user
+         * 
+         * @param SqlDataBase $sqlDataBase The database object
+         * @param int $leaveToAddId ID of the leave to get added hours for
+         * 
+         * @return array An array of database information
+         */
+        public static function GetAddedHours($sqlDataBase, $leaveToAddId) {
+            $queryAddedLeaveInfo = "SELECT ah.hours, "
+                                        . "ah.user_type_id, "
+                                        . "ah.pay_period_id, "
+                                        . "ah.leave_type_id, "
+                                        . "ah.description, "
+                                        . "ah.year_info_id, "
+                                        . "ah.begining_of_pay_period, "
+                                        . "yi.year_type_id "
+                                        . "FROM added_hours ah, "
+                                        . "year_info yi "
+                                        . "WHERE yi.year_info_id = ah.year_info_id "
+                                        . "AND added_hours_id=:added_hours_id";
+                                $params = array("added_hours_id"=>$leaveToAddId);
+				$addedLeaveInfo = $sqlDataBase->get_query_result($queryAddedLeaveInfo, $params);
+        }
 }
 ?>

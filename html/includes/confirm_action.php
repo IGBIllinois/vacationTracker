@@ -1,4 +1,4 @@
-<script src="js/leave-selection.js" type="text/javascript"></script>
+
 <?php
 /**
  * UI confirm_action.php
@@ -17,22 +17,8 @@ $helper = new Helper($sqlDataBase);
 $messageBox = "";
 
 $confirmKey = $_GET['confirmtoken'];
-$queryAuthenCodeInfo = "SELECT ak.status_id,"
-        . "ak.leave_id,"
-        . "ak.date_created,"
-        . "li.user_id,"
-        . "u.supervisor_id,"
-        . "u.netid, "
-        . "MONTH(li.date) as month,"
-        . " YEAR(li.date) as year "
-        . "FROM authen_key ak, leave_info li, users u "
-        . "WHERE ak.confirm_key=:confirmKey "
-        . "AND u.user_id=li.user_id "
-        . "AND li.leave_id=ak.leave_id";
 
-$params = array("confirmKey"=>$confirmKey);
-
-$authenCodeInfo = $sqlDataBase->get_query_result($queryAuthenCodeInfo, $params);
+$authenCodeInfo = GetAuthenCodeInfo($confirmKey);
 
 if(isset($authenCodeInfo))
 {

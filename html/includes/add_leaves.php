@@ -85,27 +85,22 @@ if(isset($_POST['yearType']))
 		<td class="form_field">Year:</td>
 		<td class="form_field"><select name="year"
 			onchange="this.form.submit()">
-				<option vlue=0>None</option>
+				<option value=0>None</option>
 				<?php
-				$queryYearsInfo = "SELECT start_date,end_date,year_info_id FROM year_info "
-                                        . "WHERE year_type_id=:year_type_id ORDER BY start_date";
                                 
-                                $params = array("year_type_id"=>$selectedYearTypeId);
-                                
-                                $yearsInfo = $sqlDataBase->get_query_result($queryYearsInfo, $params);
+                                $yearsInfo = Years::GetYears($sqlDataBase, $selectedYearTypeId);
+                                    
+                                foreach($yearsInfo as $year)
+                                {
+                                    $id = $year->getId();
+                                        echo "<option value=".$year->getId();
+                                        if($selectedYearId==$year->getId())
+                                        {
+                                                echo " SELECTED";
+                                        }
+                                        echo ">".Date('M Y',strtotime($year->getStartDate()))." - ".Date('M Y',strtotime($year->getEndDate())) ."</option>";
+                                }
 
-				if($yearsInfo)
-				{
-					foreach($yearsInfo as $id=>$yearInfo)
-					{
-						echo "<option value=".$yearInfo['year_info_id'];
-						if($selectedYearId==$yearInfo['year_info_id'])
-						{
-							echo " SELECTED";
-						}
-						echo ">".Date('M Y',strtotime($yearInfo['start_date']))." - ".Date('M Y',strtotime($yearInfo['end_date'])) ."</option>";
-					}
-				}
 				?>
 		</select>
 		</td>
@@ -115,9 +110,9 @@ if(isset($_POST['yearType']))
 		<td class="form_field"><select name="payPeriod">
 				<option value=0>None</option>
 				<?php
-				$queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=:year_info_id";
-                                $params = array("year_info_id"=>$selectedYearId);
-                                $payPeriod = $sqlDataBase->get_query_result($queryPayPeriod, $params);
+                                
+                                $years = new Years($sqlDataBase, $selectedYearId);
+                                $payPeriod = $years->getPayPeriods();
 
 				if($payPeriod)
 				{
@@ -139,8 +134,8 @@ if(isset($_POST['yearType']))
 		<td class="form_field">Employee Type:</td>
 		<td class="form_field"><select name="employeeType">
 		<?php
-		$queryEmployeeTypes = "SELECT user_type_id, name FROM user_type";
-		$employeeTypes = $sqlDataBase->get_query_result($queryEmployeeTypes);
+		$employeeTypes = User::GetUserTypes($sqlDataBase);
+                
 		if($employeeTypes)
 		{
 			foreach($employeeTypes as $id=>$employeeType)
@@ -159,8 +154,8 @@ if(isset($_POST['yearType']))
 				<option value="-1" <?php echo ($selectedUser==-1)?"SELECTED":""; ?>>Template</option>
 				<option value="-2" <?php echo ($selectedUser==-2)?"SELECTED":""; ?>>All</option>
 				<?php
-				$queryUsers = "SELECT user_id, netid FROM users WHERE enabled=".ENABLED." ORDER BY netid ASC";
-				$users = $sqlDataBase->get_query_result($queryUsers);
+
+                                $users = $loggedUser->GetAllEnabledUsers();
 				if($users)
 				{
 					foreach($users as $id=>$userInfo)
@@ -182,22 +177,19 @@ if(isset($_POST['yearType']))
 		<td class="form_field"><select name="leaveType">
 				<option value=0>None</option>
 				<?php
-				$queryLeaveTypes = "SELECT leave_type_id, name FROM leave_type WHERE year_type_id=:year_type_id";
-                                $params = array("year_type_id"=>$selectedYearTypeId);
-                                $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
 
-				if($leaveTypes)
-				{
-					foreach($leaveTypes as $id=>$leaveType)
-					{
-						echo "<option value=".$leaveType['leave_type_id'];
-						if($selectedLeaveType == $leaveType['leave_type_id'])
-						{
-						echo " SELECTED";
-						}
-						echo ">".$leaveType['name']."</option>";
-					}
-				}
+                                $leaveTypes = LeaveType::GetLeaveTypes($sqlDataBase, $selectedYearTypeId);
+
+                                foreach($leaveTypes as $leaveType)
+                                {
+                                        echo "<option value=".$leaveType->GetTypeId();
+                                        if($selectedLeaveType == $leaveType->GetTypeId())
+                                        {
+                                        echo " SELECTED";
+                                        }
+                                        echo ">".$leaveType->GetName()."</option>";
+                                }
+
 				?>
 		</select>
 		</td>

@@ -12,18 +12,57 @@ class Years
 	private $sqlDataBase;
 	private $appointmentYearTypeId = 1;
 	private $fiscalYearTypeId = 2;
+        
+        private $year_info_id;
+        private $start_date;
+        private $end_date;
+        private $locked;
+        private $year_type_id;
+        private $prev_year_id;
+        private $next_year_id;
 
-	public function __construct(SQLDataBase $sqlDataBase)
+	public function __construct(SQLDataBase $sqlDataBase, $id=null)
 	{
 		$this->sqlDataBase = $sqlDataBase;
+                if($id != null) {
+                    $this->LoadData($id);
+                }
 	}
 
 	public function __destruct()
 	{
 
 	}
+        
+        public function getId() {
+            return $this->year_info_id;
+        }
+        
+        public function getStartDate() {
+            return $this->start_date;
+        }
+        
+        public function getEndDate() {
+            return $this->end_date;
+        }
+        
+        public function getLocked() {
+            return $this->locked;
+        }
+        
+        public function getYearType() {
+            return $this->year_type_id;
+        }
+        
+        public function getNextYearId() {
+            return $this->next_year_id;
+        }
+        
+        public function getPrevYearId() {
+            return $this->prev_year_id;
+        }
 
-	/**
+        /**
 	 * Returns a year's ID in the database based on the date given
 	 * 
 	 * @param unknown_type $day
@@ -56,6 +95,15 @@ class Years
 		}
 	}
 
+        /** Gets data for all pay periods for this Year
+         * 
+         */
+        public function getPayPeriods() {
+            $queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=:year_info_id";
+            $params = array("year_info_id"=>$this->year_info_id);
+            $payPeriod = $this->sqlDataBase->get_query_result($queryPayPeriod, $params);
+            return $payPeriod;
+        }
 	/**
 	 * Gets a pay period ID based on a yearID and a Date given
 	 * 
@@ -401,7 +449,7 @@ class Years
 				$dateStart = ($startYear-1)."-".$startMonth."-".$startDay;
 				$dateEnd = ($endYear-1)."-".$endMonth."-".$endDay;
 				$prevYear=0;
-                                			}
+                        }
 			else
 			{
 				$dateStart = $yearTypeInfo[0]['start_date'];
@@ -415,16 +463,11 @@ class Years
 			$yearTypeInfo = $this->GetYearTypeInfo($yearTypeId);
 			$this->CreatePayPeriod($dateStart,$dateEnd,$yearId,$yearTypeInfo['0']['num_periods']);
 
-                        $createYearEndTime = time();
-                        $totalTime = ($createYearEndTime - $createYearStartTime)/60;
-                        
 			return $yearId;
 				
 		}
 		else
 		{
-                    $createYearEndTime = time();
-                        $totalTime = ($createYearEndTime - $createYearStartTime)/60;
 			return 0;
 		}
 
@@ -432,10 +475,40 @@ class Years
         
         // Static functions
         
+        /**Returns an array of year type data in the database
+         * 
+         * @param SqlDataBase $sqlDataBase The database object
+         * 
+         * @return array An array of Year Type data
+         */
         public static function GetYearTypes($sqlDataBase) {
             $queryYearTypesInfo = "SELECT * FROM year_type";
             $yearTypesInfo = $sqlDataBase->get_query_result($queryYearTypesInfo);
             return $yearTypesInfo;
+        }
+        
+        /** Gets the years for a year type
+         * 
+         * @param SqlDataBase $sqlDataBase The database object
+         * @param int $selectedYearTypeId The year type id to get years for
+         * 
+         * @return array[Year] An array of Year objects of the specified type
+         * 
+         */
+        public static function GetYears($sqlDataBase, $selectedYearTypeId) {
+            $queryYearsInfo = "SELECT year_info_id FROM year_info "
+             . "WHERE year_type_id=:year_type_id ORDER BY start_date";
+                                
+            $params = array("year_type_id"=>$selectedYearTypeId);
+                                
+            $yearsInfo = $sqlDataBase->get_query_result($queryYearsInfo, $params);
+            
+            $years = array();
+            foreach($yearsInfo as $id=>$info) {
+                $year = new Years($sqlDataBase, $info['year_info_id']);
+                $years[] = $year;
+            }
+            return $years;
         }
         
         // Private functions
@@ -452,6 +525,9 @@ class Years
 	 */
 	private function YearInfoToDb($nextYear,$prevYear,$dateStart,$dateEnd,$locked,$yearTypeId)
 	{
+            
+            // TODO: Query takes too long
+            
 		$usedHours = 0;
 		$addedHours = 0;
 
@@ -477,7 +553,6 @@ class Years
                                 "prevYear"=>$prevYear);
                 $yearId = $this->sqlDataBase->get_insert_result($queryCreateYear, $params);
                 
-
 		if($prevYear)
 		{
 			$updatePrevYear = "UPDATE year_info SET next_year_id=:yearId WHERE year_info_id=:prevYear";
@@ -507,6 +582,7 @@ class Years
                     $helper = new Helper($this->sqlDataBase);
 			foreach($userIds as $id_u=>$userId)
 			{
+                            $starttime = time();
 				$user = new User($this->sqlDataBase);
 				$user->LoadUser($userId['user_id']);
 
@@ -550,8 +626,7 @@ class Years
 
 			}
 		}
-                
-                                        
+                      
 		return $yearId;
 	}
 
@@ -589,8 +664,7 @@ class Years
                                             "end_date"=>Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,0,$startYear)),
                                             "year_info_id"=>$yearId);
                             $this->sqlDataBase->get_insert_result($queryCreatePayPeriod, $params);
-				//$queryCreatePayPeriod .="(\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear))."\",\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,0,$startYear))."\",".$yearId."),";
-				$monthItr = $monthsPerPeriod;
+                            $monthItr = $monthsPerPeriod;
 			}
 		}
 		else
@@ -603,15 +677,29 @@ class Years
                                             "end_date"=>Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,$endDay,$startYear)),
                                             "year_info_id"=>$yearId);
                             $this->sqlDataBase->get_insert_result($queryCreatePayPeriod, $params);
-				//$queryCreatePayPeriod .="(\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr,$startDay,$startYear))."\",\"".Date("Y-m-d",mktime(0,0,0,$startMonth+$monthItr+$monthsPerPeriod,$endDay,$startYear))."\",".$yearId."),";
-				$monthItr+= $monthsPerPeriod;
+                            $monthItr+= $monthsPerPeriod;
 			}
 		}
-		//$queryCreatePayPeriod = substr($queryCreatePayPeriod,0,-1);
-		//$this->sqlDataBase->get_insert_result($queryCreatePayPeriod);
+
 	}
         
+        
+        private function LoadData($id) {
+            $query = "SELECT * from year_info where year_info_id = :id";
+            $params = array("id"=>$id);
+            $result = $this->sqlDataBase->get_query_result($query, $params);
+            if(count($result)>0) {
+                $result_data = $result[0];
+                $this->year_info_id = $id;
+                $this->start_date = $result_data['start_date'];
+                $this->end_date = $result_data['end_date'];
+                $this->locked = $result_data['locked'];
+                $this->year_type_id = $result_data['year_type_id'];
+                $this->prev_year_id = $result_data['prev_year_id'];
+                $this->next_year_id = $result_data['next_year_id']; 
+           }
+        }
+        
 }
-
 
 ?>

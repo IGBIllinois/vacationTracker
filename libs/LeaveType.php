@@ -215,6 +215,29 @@ class LeaveType
 	public function setMax($x) { $this->max = $x; }
 	public function setDefaultValue($x) { $this->defaultValue = $x; }
 	public function setYearTypeId($x) { $this->yearTypeId = $x; }
+        
+        // Static functions
+        
+        /** Gets the Leave Types in the database
+         * 
+         * @param SQLDataBase $sqlDataBase The database object
+         * @param int $yearType ID of the year type to get leave types for
+         * @return \LeaveType An array of LeaveType objects
+         */
+        public static function GetLeaveTypes($sqlDataBase, $yearType) {
+            $queryLeaveTypes = "SELECT leave_type_id FROM leave_type WHERE year_type_id=:year_type_id";
+            $params = array("year_type_id"=>$yearType);
+            $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
+            
+            $types = array();
+            foreach($leaveTypes as $leaveType) {
+                $new_type = new LeaveType($sqlDataBase);
+                $new_type->LoadLeaveType($leaveType['leave_type_id']);
+                $types[] = $new_type;
+                        
+            }
+            return $types;
+        }
 }
 
 ?>
