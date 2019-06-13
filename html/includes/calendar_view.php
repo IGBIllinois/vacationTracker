@@ -1,4 +1,4 @@
-<script src="js/leave-selection.js" type="text/javascript"></script>
+<script src="js/vacationTracker.js" type="text/javascript"></script>
 <?php
 /**
  * UI calendar_view.php
@@ -219,16 +219,10 @@ if(isset($_POST['sharedUsers']))
                                                             $sharedCalendars = $loggedUser->GetAllEnabledUsers();
                                                     }else
                                                     {
-                                                        $querySharedCalendars = "SELECT u.user_id, u.first_name, u.last_name
-                                                        FROM users u LEFT JOIN shared_calendars sc 
-                                                        ON u.user_id = sc.owner_id WHERE (sc.viewer_id = :viewer_id OR (u.supervisor_id=:viewer_id)) 
-                                                        and u.enabled=:enabled GROUP BY user_id";
+                                                        
 
-                                                        $params = array("viewer_id"=>$loggedUser->getUserId(),
-                                                                        "enabled"=>ENABLED);
-
-                                                        $sharedCalendars = $sqlDataBase->get_query_result($querySharedCalendars, $params);
-
+                                                        $sharedCalendars = $loggedUser->GetAllViewableUsers();
+                                                    
                                                             echo "<tr><td><input type=\"checkbox\" name=\"employeeids[]\" value=".
                                                                     $loggedUser->getUserId().
                                                                     " id=\"calendarchecbox_".
@@ -277,16 +271,8 @@ if(isset($_POST['sharedUsers']))
                                             <td class="form_field" valign="top" colspan=2>
                                                     <SELECT name="shareUser">
                                                     <?php
-                                                    $queryAllUnsharedUsers = "SELECT user_id, first_name, last_name FROM users "
-                                                            . "WHERE enabled=:enabled AND user_id NOT IN "
-                                                            . "(SELECT viewer_id FROM shared_calendars "
-                                                            . "WHERE owner_id=:owner_id) "
-                                                            . "ORDER BY first_name ASC";
 
-                                                    $params = array("enabled"=>ENABLED,
-                                                                    "owner_id"=>$loggedUser->getUserId());
-
-                                                    $allUnsharedUsers = $sqlDataBase->get_query_result($queryAllUnsharedUsers, $params);
+                                                    $allUnsharedUsers = $loggedUser->GetUnsharedUsers();
                                                     if(isset($allUnsharedUsers))
                                                     {
                                                             foreach($allUnsharedUsers as $id=>$user)
@@ -308,13 +294,9 @@ if(isset($_POST['sharedUsers']))
                                                 <div id="share_calendar">
                                                     <table width="100%">
                                                     <?php
-                                                    $querySharedUsers = "SELECT u.user_id, u.first_name, u.last_name "
-                                                            . "FROM users u, shared_calendars sc "
-                                                            . "WHERE u.user_id = sc.viewer_id "
-                                                            . "AND sc.owner_id=".$loggedUser->getUserId().
-                                                            " ORDER BY u.first_name ASC";
-                                                    $params = array("owner_id"=>$loggedUser->getUserId());
-                                                    $sharedUsers = $sqlDataBase->get_query_result($querySharedUsers, $params);
+
+                                                    
+                                                     $sharedUsers = $loggedUser->GetSharedUsers();
                                                     if(isset($sharedUsers))
                                                     {
                                                         foreach($sharedUsers as $id=>$sharedUser)

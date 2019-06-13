@@ -374,9 +374,9 @@ class User
 	 */
 	public function GetAllDisabledUsers()
 	{
-		$queryAllDisabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled!=".ENABLED." ORDER BY last_name";
-        $allDisabledUsers = $this->sqlDataBase->get_query_result($queryAllDisabledUsers);
-        return $allDisabledUsers;
+            $queryAllDisabledUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users WHERE enabled!=".ENABLED." ORDER BY last_name";
+            $allDisabledUsers = $this->sqlDataBase->get_query_result($queryAllDisabledUsers);
+            return $allDisabledUsers;
 	}
         
         /**
@@ -387,6 +387,53 @@ class User
             $queryAllBannerUsers = "SELECT user_id, first_name, last_name, email, netid enabled FROM users WHERE enabled=".ENABLED." and banner_include=1 ORDER BY last_name";
             $allBannerUsers = $this->sqlDataBase->get_query_result($queryAllBannerUsers);
             return $allBannerUsers;
+        }
+        
+        /** 
+         * 
+         * Return a list of all enabled users in the system who are viewable by this user
+         */
+        public function GetAllViewableUsers() {
+
+            $querySharedCalendars = "SELECT u.user_id, u.first_name, u.last_name
+                FROM users u LEFT JOIN shared_calendars sc 
+                ON u.user_id = sc.owner_id WHERE (sc.viewer_id = :viewer_id OR (u.supervisor_id=:viewer_id)) 
+                and u.enabled=:enabled GROUP BY user_id";
+
+            $params = array("viewer_id"=>$this->getUserId(),
+                            "enabled"=>ENABLED);
+
+            $viewableUsers = $this->sqlDataBase->get_query_result($querySharedCalendars, $params);
+            
+            return $viewableUsers;
+        }
+        
+        public function GetSharedUsers() {
+            $querySharedUsers = "SELECT u.user_id, u.first_name, u.last_name "
+                        . "FROM users u, shared_calendars sc "
+                        . "WHERE enabled=:enabled and u.user_id = sc.viewer_id "
+                        . "AND sc.owner_id=:owner_id ".
+                        " ORDER BY u.first_name ASC";
+                $params = array("enabled"=>ENABLED,
+                    "owner_id"=>$this->getUserId());
+                $sharedUsers = $this->sqlDataBase->get_query_result($querySharedUsers, $params);
+                
+                return $sharedUsers;
+        }
+        
+        public function GetUnsharedUsers() {
+            $queryAllUnsharedUsers = "SELECT user_id, first_name, last_name FROM users "
+                        . "WHERE enabled=:enabled AND user_id NOT IN "
+                        . "(SELECT viewer_id FROM shared_calendars "
+                        . "WHERE owner_id=:owner_id) "
+                        . "ORDER BY first_name ASC";
+
+                $params = array("enabled"=>ENABLED,
+                                "owner_id"=>$this->getUserId());
+
+                $allUnsharedUsers = $this->sqlDataBase->get_query_result($queryAllUnsharedUsers, $params);
+                
+                return $allUnsharedUsers;
         }
         
          
@@ -564,6 +611,58 @@ class User
 	public function setEnabled($x) { $this->enabled = $x; }
         public function setBannerInclude($x) { $this->banner_include = $x; }
         public function setUIN($x) { $this->uin = $x; }
+        
+        // Static functions
+        
+        public static function GetUserTypes($sqlDataBase) {
+            $queryEmployeeTypes = "SELECT user_type_id, name FROM user_type";
+            $employeeTypes = $sqlDataBase->get_query_result($queryEmployeeTypes);
+            return $employeeTypes;
+        }
+        
+        public static function GetUsers($sqlDataBase, $user_id, $employeeType=null, $enabled=null) {
+            $usersToAdd = array();
+            switch ($user_id)
+            {
+		case 0:
+                    if($employeeType == null) {
+                        $queryUsersToAdd = "SELECT user_id,percent,start_date FROM users";
+                        $params = null;
+                    } else {
+			//Add leave to all users including a template
+			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=:user_type_id ";
+                        $params = array("user_type_id"=>$employeeType);
+                    }
+                        if($enabled != null) {
+                            $queryUsersToAdd .= " AND enabled=:enabled ";
+                            $params["enabled"]=$enabled;
+                        }
+                        $usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);
+			array_push($usersToAdd,array("user_id"=>0,"percent"=>100,"start_date"=>"0000-00-00"));
+			break;
+		case -1:
+			//Add template
+			$usersToAdd = array(0=> array("user_id"=>0,"percent"=>100,"start_date"=>"0000-00-00"));
+			break;
+		case -2:
+			//Add to all current users without adding to template
+			//$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=".$_POST['employeeType']." AND enabled=".ENABLED;
+                        $queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_type_id=".$employeeType;
+                        $params = array("user_type_id"=>$employeeType);
+                        if($enabled != null) {
+                            $queryUsersToAdd .= " AND enabled=:enabled ";
+                            $params["enabled"]=$enabled;
+                        }
+                        $usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);
+			break;
+		default:
+                        $queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_id=:user_id";
+                        $params = array("user_id"=>$user_id);
+			$usersToAdd = $sqlDataBase->get_query_result($queryUsersToAdd, $params);			
+            }
+        
+            return $usersToAdd;
+        }
 
 }
 ?>
