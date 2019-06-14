@@ -1,4 +1,4 @@
-<script src="js/vacationTracker.js" type="text/javascript"></script>
+
 <?php
 /**
  * UI calendar_view.php
