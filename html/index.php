@@ -79,6 +79,7 @@ elseif($loggedUser->getUserId() > 0)
                 if(isset($_GET['logout'])) 
                 {
                         require_once "includes/login.php";
+                        require_once "includes/footer.php";
                         return;
                 }
 		if(!isset($_GET['view']))
