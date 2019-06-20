@@ -18,7 +18,8 @@ $messageBox = "";
 
 $confirmKey = $_GET['confirmtoken'];
 
-$authenCodeInfo = GetAuthenCodeInfo($confirmKey);
+$auth = new Auth($sqlDataBase);
+$authenCodeInfo = $auth->GetAuthenCodeInfo($confirmKey);
 
 if(isset($authenCodeInfo))
 {
