@@ -61,5 +61,5 @@ define("BANNER_URL_TEST","");
 /*
  Authentication
  */
-$tokenTimeOut = 7; //days
+define("TOKENTIMEOUT", 7); //days
 

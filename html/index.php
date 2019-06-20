@@ -19,7 +19,7 @@ if((isset($_GET['confirmtoken']) && (!isset($_SESSION['vacation_user_id']) && !i
 	$loggedUser = new User($sqlDataBase);
 
 	//Check if token and login are valid
-	if($authen->AuthenticateToken($confirmKey,$tokenTimeOut,$loggedUser) && !isset($_GET['logout']))
+	if($authen->AuthenticateToken($confirmKey,TOKENTIMEOUT,$loggedUser) && !isset($_GET['logout']))
 	{
 		require_once "includes/header.php";
 		//Check if user selecte to autoapprove all leaves for this token
