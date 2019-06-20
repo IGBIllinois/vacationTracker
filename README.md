@@ -27,7 +27,7 @@ CREATE DATABASE <databaseName>;
 ```
 From command prompt:
 ```
-mysql -u root -p TABLE_NAME < sql/vacation.sql
+mysql -u root -p <databaseName> < sql/vacation.sql
 ```
 4.  Create a user/password on the mysql server which has select/insert/delete/update permissions on the vacationTracker database.
 ```
