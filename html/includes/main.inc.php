@@ -8,6 +8,13 @@
 
 
 date_default_timezone_set("America/Chicago");
+
+// These lines allow a user to hit the Back button and return to a previously
+// submitted form
+ini_set('session.cache_limiter','public');
+session_cache_limiter(false);
+
+
 session_start();
 //Load the classes automatically without having to include them
 function my_autoloader($class_name) {
@@ -35,7 +42,4 @@ $loggedUser = new User($sqlDataBase);
 //Authenticate user with LDAP and existing account
 require_once "authenticate.php";
 
-// These lines allow a user to hit the Back button and return to a previously
-// submitted form
-ini_set('session.cache_limiter','public');
-session_cache_limiter(false);
+
