@@ -286,8 +286,12 @@ class User
     }
 
     /** Gets the authentication key from the database for a user
-         * 
-         */
+     * 
+     * @param int $userId The ID of the user
+     * 
+     * 
+    * 
+    */
     public function GetAuthKeyByUserId($userId)
     {
 
@@ -398,7 +402,7 @@ class User
             $querySharedCalendars = "SELECT u.user_id, u.first_name, u.last_name
                 FROM users u LEFT JOIN shared_calendars sc 
                 ON u.user_id = sc.owner_id WHERE (sc.viewer_id = :viewer_id OR (u.supervisor_id=:viewer_id)) 
-                and u.enabled=:enabled GROUP BY user_id";
+                and u.enabled=:enabled GROUP BY user_id ORDER BY u.last_name";
 
             $params = array("viewer_id"=>$this->getUserId(),
                             "enabled"=>ENABLED);
@@ -413,7 +417,7 @@ class User
                         . "FROM users u, shared_calendars sc "
                         . "WHERE enabled=:enabled and u.user_id = sc.viewer_id "
                         . "AND sc.owner_id=:owner_id ".
-                        " ORDER BY u.first_name ASC";
+                        " ORDER BY u.last_name ASC";
                 $params = array("enabled"=>ENABLED,
                     "owner_id"=>$this->getUserId());
                 $sharedUsers = $this->sqlDataBase->get_query_result($querySharedUsers, $params);
@@ -426,7 +430,7 @@ class User
                         . "WHERE enabled=:enabled AND user_id NOT IN "
                         . "(SELECT viewer_id FROM shared_calendars "
                         . "WHERE owner_id=:owner_id) "
-                        . "ORDER BY first_name ASC";
+                        . "ORDER BY last_name ASC";
 
                 $params = array("enabled"=>ENABLED,
                                 "owner_id"=>$this->getUserId());
@@ -608,10 +612,35 @@ class User
 	public function setCalendarFormat($x) { $this->calendarFormat = $x; }
 	public function setAutoApprove($x) { $this->autoApprove = $x; }
 	public function setStartDate($x) { $this->startDate = $x; }
-	public function setEnabled($x) { $this->enabled = $x; }
+	
         public function setBannerInclude($x) { $this->banner_include = $x; }
         public function setUIN($x) { $this->uin = $x; }
         
+        public function setEnabled($x) { 
+            $this->enabled = $x; 
+            
+            if($x == false) {
+                // also delete shared calendars
+                $query = "delete from shared_calendars where owner_id=:owner_id or viewer_id=:viewer_id";
+                $params = array("owner_id"=>$this->userId, "viewer_id"=>$this->userId);
+                $this->sqlDataBase->get_query_result($query, $params);
+                
+                // disable supervisor status
+                $this->supervisorId = 0;
+                
+                $employees = $this->GetEmployees();
+                foreach($employees as $employee) {
+                    $employee_user = new User($this->sqlDataBase, $employee['user_id']);
+                    $employee_user->setSupervisorId(0);
+                    $employee_user->UpdateDb();
+                }
+                
+            }
+            
+            
+        }
+        
+
         // Static functions
         
         public static function GetUserTypes($sqlDataBase) {
@@ -663,6 +692,7 @@ class User
         
             return $usersToAdd;
         }
+        
 
 }
 ?>
