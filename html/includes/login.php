@@ -21,7 +21,9 @@
 <table class="login">
 <tr><td><b>Username:</b></td><td><INPUT TYPE="TEXT" NAME="loginname"></td></tr>
 <tr><td><b>Password:</b></td><td><INPUT TYPE="PASSWORD" NAME="loginpass"></td></tr>
-<Tr><td colspan="2"><INPUT class="ui-state-default ui-corner-all" TYPE="submit" VALUE="Log In" name="submitLogon" style="width: 100px"></td></tr>
+<tr><td colspan="2"><INPUT class="ui-state-default ui-corner-all" TYPE="submit" VALUE="Log In" name="submitLogon" style="width: 100px">
+     &nbsp;&nbsp;<a style="font-weight:normal" href="<?php echo(FORGOT_PASS_LINK)?>" target="_blank">Forgot password?</a></td>
+</tr>
 </table>
 </div>
 </center>

@@ -63,3 +63,5 @@ define("BANNER_URL_TEST","");
  */
 define("TOKENTIMEOUT", 7); //days
 
+// change password link
+define("FORGOT_PASS_LINK", 'https://illinoisauth.igb.illinois.edu/password/');
