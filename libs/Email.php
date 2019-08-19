@@ -217,7 +217,7 @@ class Email
             $due_date = strtotime("+5 day", $due_date);
             $due_date = date("l, F d, Y", $due_date);
                     
-            $message = "Please find attached your Vacation & Sick leave usage for the period of $start_date-$end_date.\n
+            $message = "Please find attached your Vacation & Sick leave usage for the period of $start_date to $end_date.\n
 
             If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
             If you have any questions, just let me know.\n
