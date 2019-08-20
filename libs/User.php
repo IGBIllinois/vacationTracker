@@ -640,7 +640,211 @@ class User
             
         }
         
+        public function UpdateLocalBannerData() {
+            $uin = $this->uin;
+            echo("uin = $uin");
+            $helperClass = new Helper($this->sqlDataBase);
+                $userXML= $helperClass->apiGetUserInfo($uin);
+//print_r($userXML);
+                 $xml = "";
+                 try {
+                 $xml = new SimpleXMLElement($userXML);
+//print_r($xml);
+                 } catch(Exception $e) {
+                     //echo("Error:");
+                     //echo($e->getTraceAsString());
+                     $errorMessages .= "<tr class=\"failed_row\"><td>Error: User ".$this->getNetid(). " has no UIN assigned.</td></tr>";
+                     echo("Error, user not found in Banner<BR>");
+                     return;
+                 }
+                 $current_vacation_hours = 0;
+                 $current_sick_hours = 0;
+                 $current_floating_hours = 0;
+                 $current_nonc_sick_hours = 0;
+                 $total_vacation_hours = 0;
+                 $total_sick_hours = 0;
+                 $total_floating_hours = 0;
+                 $total_nonc_sick_hours = 0;
+                 $taken_vacation_hours = 0;
+                 $taken_sick_hours = 0;
+                 $taken_floating_hours = 0;
+                 $taken_nonc_sick_hours = 0;
+                 //print_r($xml);
+                 if(!empty($xml)) {
+                 foreach($xml->children() as $leave) {
 
+                     $code = $leave->Leave[0]->ValidLeaveTitle[0]->Code;
+                     if($code == "VACA") {
+                         $current_vacation_hours = $leave->Leave[0]->BeginBalance;
+                         $accrued_vacation_hours = $leave->Leave[0]->Accrued;
+
+                         $taken_vacation_hours = $leave->Leave[0]->Taken;
+                         //$total_vacation_hours = $current_vacation_hours + $accrued_vacation_hours;
+                         $total_vacation_hours = $leave->Leave[0]->AvailableBalance;
+
+                     } elseif($code == "SICK") {
+                         $current_sick_hours = $leave->Leave[0]->BeginBalance;
+                         $accrued_sick_hours = $leave->Leave[0]->Accrued;
+                         $taken_sick_hours = $leave->Leave[0]->Taken;
+                         //$total_sick_hours = $current_sick_hours + $accrued_sick_hours;
+                         $total_sick_hours = $leave->Leave[0]->AvailableBalance;
+
+                     }
+                     elseif($code == "SICN") {
+                         $current_nonc_sick_hours = $leave->Leave[0]->BeginBalance;
+                         $accrued_nonc_sick_hours = $leave->Leave[0]->Accrued;
+                         $taken_nonc_sick_hours = $leave->Leave[0]->Taken;
+                         //$total_sick_hours = $current_sick_hours + $accrued_sick_hours;
+                         $total_nonc_sick_hours = $leave->Leave[0]->AvailableBalance;
+                     }
+                     elseif($code == "FLHL") {
+                         $current_floating_hours = $leave->Leave[0]->BeginBalance;
+                         $accrued_floating_hours = $leave->Leave[0]->Accrued;
+                         $taken_floating_hours = $leave->Leave[0]->Taken;
+                         $total_floating_hours = $current_floating_hours + $accrued_floating_hours;
+                     }
+                 }
+                 
+                 $check_query = "SELECT id from banner_data where user_id=:user_id";
+                 $check_params = array("user_id"=>$this->userId);
+                 
+                 $result = $this->sqlDataBase->get_query_result($check_query, $check_params);
+                 $insert = true;
+                 if(count($result) > 0) {
+                     $insert = false;
+                 }
+                 
+                 /* Only needed:
+                 * $total_vacation_hours
+                   $total_sick_hours
+                   $taken_vacation_hours
+                   $taken_sick_hours
+                   $taken_nonc_sick_hours
+                  * 
+                  */
+                $params = array(
+                        //"current_vac_hours"=>$current_vacation_hours,
+                        //"accrued_vac_hours"=>$accrued_vacation_hours,
+                        "taken_vac_hours"=>$taken_vacation_hours,
+                        "total_vac_hours"=>$total_vacation_hours,
+
+                        //"current_sick_hours"=>$current_sick_hours,
+                        //"accrued_sick_hours"=>$accrued_sick_hours,
+                        "taken_sick_hours"=>$taken_sick_hours,
+                        "total_sick_hours"=>$total_sick_hours,
+
+                        //"current_sicn_hours"=>$current_nonc_sick_hours,
+                        //"accrued_sicn_hours"=>$accrued_nonc_sick_hours,
+                        "taken_sicn_hours"=>$taken_nonc_sick_hours,
+                        //"total_sicn_hours"=>$total_nonc_sick_hours,
+
+                        //"current_float_hours"=>$current_floating_hours,
+                        //"accrued_float_hours"=>$accrued_floating_hours,
+                        //"taken_float_hours"=>$taken_floating_hours,
+                        //"total_float_hours"=>$total_floating_hours,
+
+                        "user_id"=>$this->userId
+
+                );
+                                     
+                 if($insert == true) {
+                     
+                     $query = "INSERT INTO banner_data (".
+                             "user_id,"
+                             //"current_vacation_hours,"
+                             //. "accrued_vacation_hours,"
+                             . "taken_vacation_hours,"
+                             . "total_vacation_hours,"
+
+                             //. "current_sick_hours,"
+                             //. "accrued_sick_hours,"
+                             . "taken_sick_hours,"
+                             . "total_sick_hours,"
+
+                             //. "current_sicn_hours,"
+                             //. "accrued_sicn_hours,"
+                             . "taken_sicn_hours,"
+                             //. "total_sicn_hours,"
+
+                             //. "current_float_hours,"
+                             //. "accrued_float_hours,"
+                             //. "taken_float_hours,"
+                             //. "total_float_hours,"
+                             . "last_update)".
+                             " VALUES (".
+                             " :user_id, "
+                             //":current_vac_hours,"
+                             //. ":accrued_vac_hours,"
+                             . ":taken_vac_hours,"
+                             . ":total_vac_hours,"
+                     
+                             //.  ":current_sick_hours,"
+                             //. ":accrued_sick_hours,"
+                             . ":taken_sick_hours,"
+                             . ":total_sick_hours,"
+                             
+                             //.  ":current_sicn_hours,"
+                             //. ":accrued_sicn_hours,"
+                             . ":taken_sicn_hours,"
+                             //. ":total_sicn_hours,".
+                             
+                             //":current_float_hours,"
+                             //. ":accrued_float_hours,"
+                             //. ":taken_float_hours,"
+                             //. ":total_float_hours,"
+                             . "NOW())";
+                     //echo("query = $query<BR>params = <BR>");
+                     //print_r($params);
+                     $result = $this->sqlDataBase->get_insert_result($query, $params);
+                     //print_r($result);
+                 } else {
+                    $query = "UPDATE banner_data set ".
+                            //"current_vacation_hours = :current_vac_hours,".
+                            //"accrued_vacation_hours = :accrued_vac_hours,".
+                            "taken_vacation_hours = :taken_vac_hours, ".
+                            "total_vacation_hours = :total_vac_hours, ".
+
+                            //"current_sick_hours = :current_sick_hours,".
+                            //"accrued_sick_hours = :accrued_sick_hours,".
+                            "taken_sick_hours = :taken_sick_hours, ".
+                            "total_sick_hours = :total_sick_hours, ".
+
+                            //"current_sicn_hours = :current_sicn_hours,".
+                            //"accrued_sicn_hours = :accrued_sicn_hours,".
+                            "taken_sicn_hours = :taken_sicn_hours, ".
+                            //"total_sicn_hours = :total_sicn_hours, ".
+
+                            //"current_float_hours = :current_float_hours,".
+                            //"accrued_float_hours = :accrued_float_hours,".
+                            //"taken_float_hours = :taken_float_hours, ".
+                            //"total_float_hours = :total_float_hours, ".
+
+                            "last_update = NOW() where user_id = :user_id";
+echo("query = $query<BR>params =<BR>");
+                     print_r($params);
+                    $result = $this->sqlDataBase->get_update_result($query, $params);
+
+                 }
+
+                 
+                        
+                 }
+            
+        }
+        
+        public function GetLocalBannerData() {
+            $query = "SELECT * from banner_data where user_id = :user_id";
+            $params = array("user_id"=>$this->userId);
+            
+            $result = $this->sqlDataBase->get_query_result($query, $params);
+            if(count($result) > 0) {
+                return $result[0];
+            } else {
+                return null;
+            }
+                    
+        }
+        
         // Static functions
         
         public static function GetUserTypes($sqlDataBase) {

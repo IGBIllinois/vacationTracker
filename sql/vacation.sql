@@ -160,6 +160,28 @@ CREATE TABLE `year_type` (
   PRIMARY KEY (`year_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+CREATE TABLE `banner_data` (
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) DEFAULT NULL,
+  `current_vacation_hours` float DEFAULT NULL,
+  `accrued_vacation_hours` float DEFAULT NULL,
+  `taken_vacation_hours` varchar(20) DEFAULT NULL,
+  `total_vacation_hours` varchar(20) DEFAULT NULL,
+  `current_sick_hours` float DEFAULT NULL,
+  `accrued_sick_hours` float DEFAULT NULL,
+  `taken_sick_hours` varchar(20) DEFAULT NULL,
+  `total_sick_hours` varchar(20) DEFAULT NULL,
+  `current_sicn_hours` float DEFAULT NULL,
+  `accrued_sicn_hours` float DEFAULT NULL,
+  `taken_sicn_hours` varchar(20) DEFAULT NULL,
+  `total_sicn_hours` float DEFAULT NULL,
+  `current_float_hours` float DEFAULT NULL,
+  `accrued_float_hours` float DEFAULT NULL,
+  `taken_float_hours` float DEFAULT NULL,
+  `total_float_hours` float DEFAULT NULL,
+  `last_update` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8
 
 # Default UIUC leave types
 INSERT INTO leave_type (`leave_type_id`, `name`, description, calendar_color, special, hidden, roll_over, `max`, default_value, year_type_id) 

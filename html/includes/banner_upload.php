@@ -17,6 +17,8 @@ if(DEBUG) {
     $bannerUrl = BANNER_URL_TEST;
     echo "Test banner URL = $bannerUrl<BR>";
 }
+
+
 if(isset($_POST['update'])) {
 
     try {
@@ -92,12 +94,27 @@ if(isset($_POST['update'])) {
                 $helperClass->apiUpdateUserHours($uin, $vacHours, $sickHours, $date);
             }
     }
-    }
+    } 
+    
     } catch(Exception $e) {
         echo($e);
     }  
     
-}
+} else if(isset($_POST['update_db'])) {
+
+        $tmp_user = new User($sqlDataBase);
+        $users = $tmp_user->GetAllBannerUsers();
+        //print_r($users);
+        foreach($users as $curr_user_data) {
+            //print_r($curr_user_data);
+            //if($curr_user_data['user_id'] == 24) {
+            echo("UPDATING USER :".$curr_user_data['user_id']."<BR>");
+            $curr_user = new User($sqlDataBase);
+            $curr_user->LoadUser($curr_user_data['user_id']);
+            $curr_user->UpdateLocalBannerData();
+            //}
+        }
+    }
 
 
 if(isset($_GET['year'])) {
@@ -159,6 +176,12 @@ echo("<form action=#>"
             Year: <input type=string name='year' value='".$year."'><button type='submit'>Submit</button>
                 </form>");
 
+
+echo("<form action='#' method=POST>");
+echo("<input class='ui-state-default ui-corner-all' type='submit' name='update_db' value='Update local database from Banner'>");
+echo("</form>");
+
+
 echo("<form action='#' method=POST name='update'>");
 echo("<input type=hidden name=view value=bannerUpload>");
 echo("<input type=hidden name=update value=update>");
@@ -193,7 +216,7 @@ echo("<input type=hidden name=year value=$year>");
             <tbody>
 <?php
 
-
+/*
 $queryUsers = "SELECT u.user_id, "
         . "u.first_name, "
         . "u.last_name, "
@@ -209,7 +232,10 @@ $queryUsers = "SELECT u.user_id, "
         . "and banner_include=1 ORDER BY u.last_name ASC";
 
     $users = $sqlDataBase->get_query_result($queryUsers, null);
-
+ * 
+ */
+    $tmp_user = new User($sqlDataBase);
+    $users = $tmp_user->GetAllBannerUsers();
      if($users)
      {
          $i = 0;
@@ -221,6 +247,9 @@ $queryUsers = "SELECT u.user_id, "
                  try{
                  $curr_user = new User($sqlDataBase);
                  $curr_user->LoadUser($userInfo['user_id']);
+
+                 
+                 $local_banner_data = $curr_user->GetLocalBannerData();
 
                  // See Helper->DrawLeaveHoursAvailable for hour calculation
 
@@ -234,11 +263,32 @@ $queryUsers = "SELECT u.user_id, "
                      $endDate = $year. "-08-15";
                  }
 
+                
                  $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($userInfo['user_id'],$yearId, $startDate, $endDate);
 
                  $uin = $curr_user->getUIN();
 
                  echo("<input type='hidden' name=uin".$i." value=".$uin.">");
+                 
+                 if($local_banner_data != null ) {
+                     
+                    //print_r($local_banner_data);
+                    
+                    
+                    $taken_vacation_hours = "".$local_banner_data['taken_vacation_hours'];
+                    $total_vacation_hours = "".$local_banner_data['total_vacation_hours'];
+                    
+                    $taken_sick_hours = $local_banner_data['taken_sick_hours'];
+                    $total_sick_hours = $local_banner_data['total_sick_hours'];
+                    
+                    $taken_nonc_sick_hours = $local_banner_data['taken_sicn_hours'];
+                    
+                    $taken_floating_hours = $local_banner_data['taken_float_hours'];
+                    $total_floating_hours = $local_banner_data['total_float_hours'];
+
+                    
+                    
+                 } else {
                  $userXML= $helperClass->apiGetUserInfo($uin);
 
                  $xml = "";
@@ -303,7 +353,7 @@ $queryUsers = "SELECT u.user_id, "
                  } else {
                      //echo("xml is null");
                  }
-
+                 }
                      echo "<tr>
                          <td><input type=checkbox name=chk".$i." value=chk".$i."></td>
                              <td>".$uin."</td>
