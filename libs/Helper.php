@@ -627,7 +627,7 @@ class Helper
 	{
 		$leaveType = new LeaveType($this->sqlDataBase);
 		$leaveType->LoadLeaveType($leaveTypeId);
-
+                $success = 0;
 		if(is_numeric($hoursToAdd) && $yearId>0 && $leaveTypeId>0 && $payPeriodId>0 && $yearType >0)
 		{
 
@@ -682,28 +682,37 @@ class Helper
                                                 ":description,".
                                                 ":year_info_id, ".
                                                 ":hoursAddBegin, ".
-                                                ":year_type_id, ".
+                                                ":user_type_id, ".
                                                 "NOW())";
                                         
                                         $params = array("hours"=>$hoursToAddUser,
                                             "payPeriodId"=>$payPeriodId,
                                             "leaveTypeId"=>$leaveTypeId,
-                                            "user_id"=>$user->getUserId(),
+                                            "userId"=>$user->getUserId(),
                                             "description"=>$description,
-                                            "year_info_id",$yearId,
+                                            "year_info_id"=>$yearId,
                                             "hoursAddBegin"=>$hoursAddBegin,
-                                            "year_type_id"=>$user->getUserTypeId());
-
-                                        $this->sqlDataBase->get_query_result($queryAddUserHours, $params);
+                                            "user_type_id"=>$user->getUserTypeId());
+                                        //echo("add query = ".$queryAddUserHours);
+                                        //print_r($params);
+                                        $result = $this->sqlDataBase->get_insert_result($queryAddUserHours, $params);
+                                        //echo("<BR>result = $result<BR>");
+                                        if($result > 0) {
+                                            $success = 1;
+                                        }
 				}
 				elseif($userStartDateEpoch >= $payPeriodEndDateEpoch)
 				{
+                                    $showCalculation = "Pay period Start Date: ".$payPeriodRange[0]['start_date'] . 
+                                            ", User start date: ".$userInfo['start_date']. "<BR>";
+                                    //$showCalculation = "Date1: $userStartDateEpoch, Date2: $payPeriodEndDateEpoch<BR>";
+                                    $showCalculation .= "Cannot add hours to user before they started working.";
 					//Do nothing the user doesn't recieve vacation days if he wasn't working at the time
 
 				}
 				elseif($userStartDateEpoch <= $payPeriodStartDateEpoch || ($leaveType->getYearTypeId() == FISCAL_YEAR) )
 				{
-
+                                   
 					//Give full leave time since user worked prior to start to pay period
 
 					$queryAddUserHours = "INSERT INTO added_hours (
@@ -736,9 +745,11 @@ class Helper
                                             "hoursAddBegin"=>$hoursAddBegin,
                                             "user_type_id"=>$user->getUserTypeId()
                                             );
-                                        
-                                        $this->sqlDataBase->get_insert_result($queryAddUserHours, $params);
-
+                                        //echo("query = $query<BR>");
+                                        //print_r($params);
+                                        $result = $this->sqlDataBase->get_insert_result($queryAddUserHours, $params);
+                                        $success = $result;
+                                        $showCalculation  = $queryAddUserHours;
 					if($userInfo['user_id'])
 					{
 						$this->RunRules($userInfo['user_id'],$yearId,true);
@@ -749,12 +760,15 @@ class Helper
 			//Only show calculation for a single user change
 			if(count($users)>1)
 			{
-				$showCalculation="";
+				//$showCalculation="";
 			}
 			{
-				$showCalculation="<br><br>Hours added may vary based on employment percent.";
+				$showCalculation.="<br><br>Hours added may vary based on employment percent.";
 			}
-			return $this->MessageBox("Hours Added","<br>".$hoursToAddUser." Hours added to ".$leaveType->getName().".".$showCalculation,"info");
+                        if($success > 0) {
+                            $showCalculation = $hoursToAddUser." Hours added to ".$leaveType->getName().".".$showCalculation;
+                        }
+			return $this->MessageBox("Hours Added",$showCalculation,"info");
 		}
 		else
 		{
