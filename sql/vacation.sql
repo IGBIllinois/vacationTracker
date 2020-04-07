@@ -181,7 +181,7 @@ CREATE TABLE `banner_data` (
   `total_float_hours` float DEFAULT NULL,
   `last_update` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8;
 
 # Default UIUC leave types
 INSERT INTO leave_type (`leave_type_id`, `name`, description, calendar_color, special, hidden, roll_over, `max`, default_value, year_type_id) 
