@@ -166,6 +166,9 @@ class Email
             $cc = $loggedUser->GetUserEmail();
 
 
+            $appYear = new Years($sqlDataBase, $appointment_year_id);
+            $fiscYear = new Years($sqlDataBase, $fiscal_year_id);
+    
                    $years = new Years($sqlDataBase);
                    $appYearInfo = $years->GetYearDates($appointment_year_id);
                    $fiscYearInfo = $years->GetYearDates($fiscal_year_id);
@@ -219,83 +222,113 @@ class Email
                     
             $message = "Please find attached your Vacation & Sick leave usage for the period of $start_date to $end_date.\n
 
-            If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
-            If you have any questions, just let me know.\n
+If you & your supervisor can forward me your confirmation no later than, ".$due_date.", that would be great.
+If you have any questions, just let me know.\n
 
-            Thanks for your assistance in this process,\n"
+Thanks for your assistance in this process,\n"
                     
             . $loggedUser->getFirstName() . " " . $loggedUser->getLastName();
 
             $emailText = $message . "\n\n";
             $emailText .= "---------------\n";
             $titles = "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
-            $emailText .= "Vacation Time\n\n";
-            $emailText .= $titles;
-            $total_vac = 0;
-                $vacation_results = $user->GetVacationLeaves($appointment_year_id, $pay_period, $status_id);
-                foreach($vacation_results as $leave) {
-                    $leaveType = new LeaveType($this->sqlDataBase);
-                    $leaveType->LoadLeaveType($leave->getLeaveTypeId());
-                    $emailText .=
-                            $leave->GetDate(). "\t" .
-                            $leaveType->getName(). "\t" .
-                            $leaveType->getSpecial(). "\t" .
-                            $leave->GetHours(). "\t" .
-                            gmdate('g\h i\m',$leave->GetTime()). "\t" .
-                            $leave->getDescription(). "\t" .
-                            $leave->GetStatusString(). "\n\n" ;
-                    
-                    $total_vac += $leave->GetHours();
-                }
             
-            // Sick Leave
-                $emailText .= "Sick Leave\n\n";
 
-                $emailText .=  "Date\tType\tSpecial\tCharge Time\tActual Time\tDescription\tStatus\n\n";
-                $total_sick = 0;
-                
-                $sick_results = $user->GetSickLeaves($appointment_year_id, $pay_period, $status_id);
-                foreach($sick_results as $leave) {
-                    $leaveType = new LeaveType($this->sqlDataBase);
-                    $leaveType->LoadLeaveType($leave->getLeaveTypeId());
-                    $emailText .=
-                            $leave->GetDate(). "\t" .
-                            $leaveType->getName(). "\t" .
-                            $leaveType->getSpecial(). "\t" .
-                            $leave->GetHours(). "\t" .
-                            gmdate('g\h i\m',$leave->GetTime()). "\t" .
-                            $leave->getDescription(). "\t" .
-                            $leave->GetStatusString(). "\n\n" ;
-                    
-                    $total_sick += $leave->GetHours();
+            $user_fullname = $user->getFirstName() . " ". $user->getLastName();
+            $username = $user->getNetid();
+
+            $emailText .= "Vacation Leave for $user_fullname ($username)\n";
+            $emailText .= $start_date . " - " . $end_date;
+            $emailText .= "\n\n";
+
+
+            $app_leave_types = LeaveType::GetLeaveTypes($sqlDataBase, $appYear->GetYearType());
+
+            $fisc_leave_types = LeaveType::GetLeaveTypes($sqlDataBase, $fiscYear->GetYearType());
+
+            $totals = array();
+
+            foreach($app_leave_types as $leaveType) {
+                $total_leave = 0;
+                $tmp= array();
+
+                $type_name = $leaveType->GetName();
+
+                $leaves = $user->GetLeaves($type_name, $appointment_year_id, $pay_period, $status_id);
+                foreach($leaves as $leave) {
+
+
+                   $tmp[] = 
+                           $leave->GetDate(). "\t" .
+                                    $leaveType->getName(). "\t" .
+                                    $leaveType->getSpecial(). "\t" .
+                                    $leave->GetHours(). "\t" .
+                                    gmdate('g\h i\m',$leave->GetTime()). "\t" .
+                                    $leave->getDescription(). "\t" .
+                                    $leave->GetStatusString(). "\n\n" ;
+
+
+                   $total_leave += $leave->GetHours();
                 }
-                
-                $emailText .= "Floating Holidays\n\n";
 
-                $emailText .= $titles;
-                $total_float = 0;
-
-                $floating_results = $user->GetFloatingHolidays($fiscal_year_id, $pay_period, $status_id);
-                foreach($floating_results as $leave) {
-                    $leaveType = new LeaveType($this->sqlDataBase);
-                    $leaveType->LoadLeaveType($leave->getLeaveTypeId());
-                    $emailText .=
-                            $leave->GetDate(). "\t" .
-                            $leaveType->getName(). "\t" .
-                            $leaveType->getSpecial(). "\t" .
-                            $leave->GetHours(). "\t" .
-                            gmdate('g\h i\m',$leave->GetTime()). "\t" .
-                            $leave->getDescription(). "\t" .
-                            $leave->GetStatusString(). "\n\n" ;
-                    
-                    $total_float += $leave->GetHours();
+                if($type_name == "Vacation") {
+                    $total_vac = $total_leave;
+                } else if($type_name == "Sick") {
+                    $total_sick = $total_leave;
                 }
-                
-                $emailText .= "\n\n".
-                    "Total Vacation Hours: ".$total_vac."\n".
-                    "Total Sick Hours: ".$total_sick."\n".
-                    "Total Floating Holiday Hours: ".$total_float."\n\n";
-                
+
+
+                if($total_leave > 0 || $type_name == "Sick" || $type_name == "Vacation") {
+
+                       $emailText .= "\n\n";
+                       $emailText .= $type_name. " Leave\n\n";
+                       $emailText .= $titles;
+                       foreach($tmp as $t) {
+                           $emailText .= $t;
+                       }
+                       $totals[] = "Total ".$type_name. " Hours:". $total_leave;
+                       $emailText .= "\n\n";
+                   }
+            }
+
+
+            foreach($fisc_leave_types as $leaveType) {
+                $total_leave = 0;
+                $tmp = array();
+                $type_name = $leaveType->GetName();
+
+                $leaves = $user->GetLeaves($type_name, $fiscal_year_id, $pay_period, $status_id);
+                foreach($leaves as $leave) {
+
+                   $tmp[] = 
+                           $leave->GetDate(). "\t" .
+                                    $leaveType->getName(). "\t" .
+                                    $leaveType->getSpecial(). "\t" .
+                                    $leave->GetHours(). "\t" .
+                                    gmdate('g\h i\m',$leave->GetTime()). "\t" .
+                                    $leave->getDescription(). "\t" .
+                                    $leave->GetStatusString(). "\n\n" ;
+
+
+                   $total_leave += $leave->GetHours();
+                }
+
+                       $emailText .= "\n\n";
+                       $emailText .= $type_name. " Leave\n\n";
+                       $emailText .= $titles;
+                       foreach($tmp as $t) {
+                           $emailText .= $t;
+                       }
+                       $totals[] = "Total ".$type_name. " Hours:". $total_leave;
+                   }
+
+               $emailText .= "\n\n";
+            // Add totals
+            foreach($totals as $total) {
+                $emailText .=  $total . "\n";
+            }
+
+            
                 if($pay_period == 2) {
                     //write yearly totals
                     $userLeavesHoursAvailable = new Rules($sqlDataBase);

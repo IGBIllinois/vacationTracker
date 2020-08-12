@@ -72,7 +72,7 @@ class Years
 	 */
 	public function GetYearId($day,$month,$year, $yearTypeId)
 	{
-		//$queryDateYearId = "SELECT year_info_id FROM year_info WHERE start_date <= \"".$year."-".$month."-".$day."\" AND end_date >= \"".$year."-".$month."-".$day."\" AND year_type_id=".$yearTypeId;
+
 		$queryDateYearId = "SELECT year_info_id FROM year_info "
                         . "WHERE start_date <= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
                         . "AND end_date >= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
@@ -82,7 +82,7 @@ class Years
                                 "month"=>$month,
                                 "day"=>$day,
                                 "yearTypeId"=>$yearTypeId);
-   
+
                 $yearId = $this->sqlDataBase->singleQuery($queryDateYearId, $params);
 
 		if($yearId)
@@ -121,7 +121,44 @@ class Years
                 $params = array("year"=>$year,
                                 "month"=>$month,
                                 "day"=>$day,
-                                "yearId"=>$yearId);
+                                "yearId"=>$yearId
+                                );
+
+                $payPeriodId = $this->sqlDataBase->singleQuery($queryPayPeriodId, $params);
+
+		if($payPeriodId)
+		{
+			return $payPeriodId;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+        
+        /** 
+         * Gets the current pay period for the current date
+         * 
+         * @param int $yearType ID of year type 
+         * @return int
+         */
+        public function GetCurrentPayPeriodId($yearTypeId)
+	{
+            $day = date("d");
+            $month = date("m");
+            $year = date("Y");
+            $yearId = $this->GetYearId($day,$month,$year, $yearTypeId);
+
+		$queryPayPeriodId = "SELECT pay_period_id FROM pay_period "
+                        . "WHERE start_date <= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
+                        . "AND end_date >= (SELECT CONCAT(:year, '-', :month, '-', :day)) "
+                        . "AND year_info_id=:yearId";
+                $params = array("year"=>$year,
+                                "month"=>$month,
+                                "day"=>$day,
+                                "yearId"=>$yearId
+                                );
+
                 $payPeriodId = $this->sqlDataBase->singleQuery($queryPayPeriodId, $params);
 
 		if($payPeriodId)
@@ -473,6 +510,43 @@ class Years
 
 	}
         
+        /** Gets the maximum rollover hours for this year for a specific leave type
+         *  Checks the max_rollover table, and if no entry exists, uses the default for
+         * the leave type
+         * 
+         * @param int $leaveTypeId ID of the year type
+         * 
+         * @return hours The maximum rollover hours for this year and type
+         */
+        public function GetMaxRollover($leaveTypeId) {
+            
+            try {
+            $query = "SELECT max_rollover_hours from max_rollover where year_id=:year_id and leave_type_id=:leave_type_id";
+            $params = array("year_id"=>$this->year_info_id,
+                            "leave_type_id"=>$leaveTypeId);
+            
+
+            $result = $this->sqlDataBase->get_query_result($query, $params);
+
+            $hours = 0;
+
+            if(count($result) > 0) {
+                $hours = $result[0]['max_rollover_hours'];
+            } else {
+                $leave_type = new LeaveType($this->sqlDataBase);
+                $leave_type->LoadLeaveType($leaveTypeId);
+                $hours = $leave_type->getMax();
+            }
+            
+            return $hours;
+            } catch(Exception $e) {
+
+                return 0;
+            }
+        }
+        
+        
+        
         // Static functions
         
         /**Returns an array of year type data in the database
@@ -683,7 +757,7 @@ class Years
 
 	}
         
-        
+
         private function LoadData($id) {
             $query = "SELECT * from year_info where year_info_id = :id";
             $params = array("id"=>$id);

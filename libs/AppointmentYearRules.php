@@ -67,16 +67,24 @@ class AppointmentYearRules extends Rules
 
 			if($hasRollOver)
 			{
-				
 				foreach($nextYearUsage as $id=>$nextYearUsageLeaveType)
 				{
+
 					if($nextYearUsageLeaveType['roll_over'])
 					{
+
+                                            $nextYear = new Years($this->sqlDataBase, $nextYearId);
+                                            // Get Max rollover from previous year and apply it to this year
+                                            $currYear = new Years($this->sqlDataBase, $yearId);
+                                            $currTypeId = $currYear->getYearType();
+                                            $max_rollover = $currYear->GetMaxRollover($nextYearUsageLeaveType['leave_type_id']);
 						$nextYearUsage[$id]['initial_hours'] = $userYearUsage[$id]['initial_hours']+$userYearUsage[$id]['added_hours']-$userYearUsage[$id]['used_hours'];
-						if( $nextYearUsage[$id]['initial_hours'] > ( ($this->userInfo->getPercent()/100) * $nextYearUsageLeaveType['max'] ) )
+						if( $nextYearUsage[$id]['initial_hours'] > ( ($this->userInfo->getPercent()/100) * $max_rollover ) )
 						{
-							$nextYearUsage[$id]['initial_hours'] = ($this->userInfo->getPercent()/100) *$nextYearUsageLeaveType['max'];
+							$nextYearUsage[$id]['initial_hours'] = ($this->userInfo->getPercent()/100) * $max_rollover;
 						}
+                                                // update database
+                                                $this->UpdateLeaveUserInfo($userId, $nextYearId, $nextYearUsage[$id]['used_hours'], $nextYearUsage[$id]['initial_hours'], $nextYearUsage[$id]['leave_type_id'], $nextYearUsage[$id]['leave_user_info_id']);
 					}
 				}
 			}

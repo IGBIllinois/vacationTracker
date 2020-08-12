@@ -486,7 +486,7 @@ class User
                    JOIN status s ON li.status_id = s.status_id
                    LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
                    WHERE li.user_id =:user_id AND li.status_id=:status_id AND li.year_info_id=:year_id 
-                   AND lt.name != 'Sick'
+                   AND lt.name = 'Vacation'
                    and date between :start_date and :end_date
                    ORDER BY li.date DESC";
             } else if($type == "Sick") {
@@ -520,6 +520,23 @@ class User
                         WHERE li.user_id =:user_id AND li.status_id=:status_id AND li.year_info_id=:year_id ".
                         " AND li.date between :start_date and :end_date ". 
                         " ORDER BY li.date DESC";
+            } else {
+                $query ="SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
+                    li.leave_hours, TIME_FORMAT(SEC_TO_TIME(li.time), '%kh %im') as time, 
+                    li.description, 
+                    lt.name, 
+                    s.name as statusName, 
+                    li.leave_type_id_special, 
+                    lts.name as special_name
+                        FROM (leave_info li)
+                        JOIN leave_type lt ON li.leave_type_id=lt.leave_type_id
+                        JOIN status s ON li.status_id = s.status_id
+                        LEFT JOIN leave_type lts ON lts.leave_type_id = li.leave_type_id_special
+                        WHERE li.user_id =:user_id AND li.status_id=:status_id AND li.year_info_id=:year_id
+                        AND lt.name = :type
+                        and date between :start_date and :end_date
+                        ORDER BY li.date DESC";
+                $newtype=true;
             }
 
             $params = array("user_id"=>$user_id,
@@ -527,6 +544,9 @@ class User
                             "year_id"=>$year_id,
                             "start_date"=>$start_date,
                             "end_date"=>$end_date);
+            if($newtype) {
+                $params['type'] = $type;
+            }
             
             $results_array = $this->sqlDataBase->get_query_result($query, $params);
 

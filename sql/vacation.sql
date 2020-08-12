@@ -80,6 +80,14 @@ CREATE TABLE `leave_user_info` (
   PRIMARY KEY (`leave_user_info_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
+CREATE TABLE `max_rollover` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `year_id` int(10) unsigned DEFAULT NULL,
+  `leave_type_id` int(10) unsigned DEFAULT NULL,
+  `max_rollover_hours` int(10) unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
+
 CREATE TABLE `pay_period` (
   `pay_period_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `start_date` date NOT NULL,

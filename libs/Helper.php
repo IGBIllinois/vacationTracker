@@ -259,6 +259,14 @@ class Helper
                 
             if($pay_period == 2) {
             //write yearly totals
+                $total_vac_rollover = 0;
+                try {
+                    $app_year = new Years($this->sqlDataBase, $appointment_year_id);
+                    $total_vac_rollover = $app_year->GetMaxRollover(1);
+
+                } catch(Exception $e) {
+                    $tableString .= ($e->getTraceAsString());
+                }
             $userLeavesHoursAvailable = new Rules($this->sqlDataBase);
             $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userId,$appointment_year_id);
             
@@ -275,7 +283,7 @@ class Helper
             $tableString.=("<BR>Yearly Total Vacation Hours Taken:". round($leavesAvailable[1]['calc_used_hours'],2));
             $tableString.=(("<BR>Yearly Total Sick Hours Taken:". round($leavesAvailable[2]['calc_used_hours'],2)));
             
-            $tableString.=(("<BR>Vacation Hours Available:". $estimatedVacHours));
+            $tableString.=(("<BR>Vacation Hours Available:". $estimatedVacHours).("(Total rollover available:$total_vac_rollover)"));
             $tableString.=(("<BR>Sick Hours Available:". $estimatedSickHours));
             $tableString .="<BR><BR>";
         }
@@ -301,7 +309,12 @@ class Helper
 
 
 		$years = new Years($this->sqlDataBase);
-		$thisPayPeriodId = $years->GetPayPeriodId(Date("d"),Date("m"),Date("Y"),$yearId);
+
+                // Get today's pay period
+                $currYear = new Years($this->sqlDataBase, $yearId);
+                $yearTypeId = $currYear->getYearType();
+                $thisPayPeriodId = $years->GetCurrentPayPeriodId($yearTypeId);
+
 		$userLeavesHoursAvailable = new Rules($this->sqlDataBase);
 
 		$leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($userId,$yearId,$thisPayPeriodId);
@@ -316,11 +329,16 @@ class Helper
 
 		if(isset($leavesAvailable))
 		{
-			foreach($leavesAvailable as $id=>$leaveAvailable)
+                    foreach($leavesAvailable as $id=>$leaveAvailable)
 			{
+
                          // Leave Type 10 = Non-cumulative sick leave, and shouldn't be shown until after the current pay period has passed
                         if($thisPayPeriodId != 0 && $leaveAvailable['leave_type_id'] == 10) {
                         } else {
+                            $leaveType = new LeaveType($this->sqlDataBase);
+                            
+                            $leaveType->LoadLeaveType( $leaveAvailable['leave_type_id']);
+
 				$totalHours = round(($leaveAvailable['initial_hours']+$leaveAvailable['added_hours']-$leaveAvailable['calc_used_hours']),2);
 				$estimatedHours = round(($leaveAvailable['initial_hours']+$leaveAvailable['est_added_hours']-$leaveAvailable['calc_used_hours']),2);
 
@@ -344,6 +362,7 @@ class Helper
 				}
 			}
                         }
+                        
                         
 		}
 
