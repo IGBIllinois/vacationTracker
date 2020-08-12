@@ -6,7 +6,7 @@ require_once '../../libs/' . $class_name . '.php';
 }
 spl_autoload_register('my_autoloader');
 
-
+error_reporting(0);
 require_once '../../vendor/autoload.php';
 
 //Load configuration file
@@ -42,6 +42,9 @@ if (isset($_GET['vacation_report'])) {
     $years = new Years($sqlDataBase);
     $appYearInfo = $years->GetYearDates($app_year_id);
     $fiscYearInfo = $years->GetYearDates($fisc_year_id);
+    
+    $appYear = new Years($sqlDataBase, $app_year_id);
+    $fiscYear = new Years($sqlDataBase, $fisc_year_id);
                    
     $appYearInfo = $years->GetYearDates($app_year_id);
     $fiscYearInfo = $years->GetYearDates($fisc_year_id);
@@ -63,12 +66,99 @@ if (isset($_GET['vacation_report'])) {
     $data[] = (array("Vacation Leave for $user_fullname\n($username)"));
     $data[] = (array($start_date . " - " . $end_date));
     $data[] = (array());
+    
+
+    $app_leave_types = LeaveType::GetLeaveTypes($sqlDataBase, $appYear->GetYearType());
+
+    $fisc_leave_types = LeaveType::GetLeaveTypes($sqlDataBase, $fiscYear->GetYearType());
+
+    $totals = array();
+
+    foreach($app_leave_types as $leaveType) {
+        $total_leave = 0;
+        $tmp = array();
         
+        $type_name = $leaveType->GetName();
+ 
+        $leaves = $user->GetLeaves($type_name, $app_year_id, $pay_period, $status_id);
+        foreach($leaves as $leave) {
+
+
+           $tmp[] = array(
+                   $leave->GetDate(),
+                   $leaveType->getName(),
+                   $leaveType->getSpecial(),
+                   $leave->GetHours(),
+                   gmdate('g\h i\m',$leave->GetTime()),
+                   $leave->getDescription(),
+                   $leave->GetStatusString());
+
+           
+           $total_leave += $leave->GetHours();
+        }
+        
+        if($type_name == "Vacation") {
+            $total_vac = $total_leave;
+        } else if($type_name == "Sick") {
+            $total_sick = $total_leave;
+        }
+        
+        
+        if($total_leave > 0 || $type_name == "Sick" || $type_name == "Vacation") {
+
+               $data[] = array();
+               $data[] = (array("<B>",$type_name. " Leave"));
+               $data[] = array("<B>", "Date","Type","Special","Charge Time","Actual Time","Description","Status");
+               foreach($tmp as $t) {
+                   $data[] = $t;
+               }
+               $totals[] = (array("<B>","Total ".$type_name. " Hours:", $total_leave));
+           }
+    }
+           
+
+    foreach($fisc_leave_types as $leaveType) {
+        $total_leave = 0;
+        $tmp = array();
+        $type_name = $leaveType->GetName();
+           
+        $leaves = $user->GetLeaves($type_name, $fisc_year_id, $pay_period, $status_id);
+        foreach($leaves as $leave) {
+           
+           $tmp[] = array(
+                   $leave->GetDate(),
+                   $leaveType->getName(),
+                   $leaveType->getSpecial(),
+                   $leave->GetHours(),
+                   gmdate('g\h i\m',$leave->GetTime()),
+                   $leave->getDescription(),
+                   $leave->GetStatusString());
+
+           
+           $total_leave += $leave->GetHours();
+        }
+
+               $data[] = array();
+               $data[] = (array("<B>",$type_name. " Leave"));
+               $data[] = array("<B>", "Date","Type","Special","Charge Time","Actual Time","Description","Status");
+               foreach($tmp as $t) {
+                   $data[] = $t;
+               }
+               $totals[] = (array("<B>","Total ".$type_name. " Hours:", $total_leave));
+           }
+           
+       $data[] = array();
+    // Add totals
+    foreach($totals as $total) {
+        $data[] = $total;
+    }
+    /*
     $data[] = array("<B>", "Date","Type","Special","Charge Time","Actual Time","Description","Status");
     
     foreach($vacation_leaves as $leave) {
         $leaveType = new LeaveType($sqlDataBase);
         $leaveType->LoadLeaveType($leave->getLeaveTypeId());
+        
         $data[] = array(
                 $leave->GetDate(),
                 $leaveType->getName(),
@@ -124,14 +214,15 @@ if (isset($_GET['vacation_report'])) {
         
         $total_float += $leave->GetHours();
     }
+    */
     
     // Totals:
         $data[] = (array());
-        $data[] = (array("<B>","Total Vacation Hours:", $total_vac));
+        //$data[] = (array("<B>","Total Vacation Hours:", $total_vac));
  
-        $data[] = (array("<B>","Total Sick Hours:", $total_sick));
+        //$data[] = (array("<B>","Total Sick Hours:", $total_sick));
 
-        $data[] = (array("<B>","Total Floating Holiday Hours:", $total_float));
+        //$data[] = (array("<B>","Total Floating Holiday Hours:", $total_float));
     
         if($pay_period == 2) {
             //write yearly totals

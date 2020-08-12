@@ -51,11 +51,11 @@ class Rules
 		foreach($userLeaveTypesUsage as $id=>$userLeaveTypeUsage)
 		{
 			$leaveUserInfo = $this->LoadLeaveUserInfo($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
-			
 			$userLeaveTypesUsage[$id]['added_hours'] = $this->LoadAddedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId,$payPeriod);
 			$userLeaveTypesUsage[$id]['used_hours'] = $this->LoadRawUsedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['initial_hours'] = $leaveUserInfo[0]['initial_hours'];
 			$userLeaveTypesUsage[$id]['leave_user_info_id'] = $leaveUserInfo[0]['leave_user_info_id'];
+                        $userLeaveTypesUsage[$id]['leave_type_id'] = $userLeaveTypeUsage['leave_type_id'];
 
 		}
 		return $userLeaveTypesUsage;
@@ -79,13 +79,14 @@ class Rules
                     
 		foreach($userLeaveTypesUsage as $id=>$userLeaveTypeUsage)
 		{
-
                     
+
 			$leaveUserInfo =$this->LoadLeaveUserInfo($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['added_hours'] = $this->LoadAddedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId,$payPeriod);
 			$userLeaveTypesUsage[$id]['initial_hours'] = $leaveUserInfo[0]['initial_hours'];
 			$userLeaveTypesUsage[$id]['est_added_hours'] = $this->LoadAddedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['calc_used_hours'] = $this->LoadCalcUsedHours($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
+                        $userLeaveTypesUsage[$id]['leave_type_id'] = $userLeaveTypeUsage['leave_type_id'];
 
 		} 
 		return $userLeaveTypesUsage;
@@ -110,6 +111,7 @@ class Rules
 			//$userLeaveTypesUsage[$id]['initial_hours'] = $leaveUserInfo[0]['initial_hours'];
 			//$userLeaveTypesUsage[$id]['est_added_hours'] = $this->LoadAddedHoursPayPeriod($yearId,$userLeaveTypeUsage['leave_type_id'],$userId);
 			$userLeaveTypesUsage[$id]['calc_used_hours'] = $this->LoadCalcUsedHoursPayPeriod($yearId,$userLeaveTypeUsage['leave_type_id'],$userId, $startDate, $endDate);
+                        $userLeaveTypesUsage[$id]['leave_type_id'] = $userLeaveTypeUsage['leave_type_id'];
 
 		} 
 		return $userLeaveTypesUsage;
@@ -369,7 +371,7 @@ class Rules
                 $params = array("used_hours"=>$usedHours,
                                 "initial_hours"=>$initialHours,
                                 "leave_user_info_id"=>$leaveUserInfoId);
-                
+
                 $this->sqlDataBase->get_update_result($queryUpdateLeaveUserInfo, $params);
 	}
 }
