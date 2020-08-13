@@ -472,6 +472,7 @@ class User
             }
             
             $query = "";
+            $newtype = false;
             if($type == "Vacation") {
              $query = "SELECT li.leave_id, DATE_FORMAT(li.date,'%c-%e-%Y') as date, 
                  li.leave_hours, 
