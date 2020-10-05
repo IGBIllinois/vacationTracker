@@ -1,6 +1,8 @@
 # VacationTracker 
 Written by Nevo Band
 
+[![Build Status](https://www.travis-ci.com/IGBIllinois/vacationTracker.svg?branch=master)](https://www.travis-ci.com/IGBIllinois/vacationTracker)
+
 ## URL 
 https://www-app.igb.illinois.edu/vacation/
 
