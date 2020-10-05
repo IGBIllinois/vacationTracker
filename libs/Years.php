@@ -545,6 +545,55 @@ class Years
             }
         }
         
+        /** Sets a new maximum rollover for a year and leave type, just for this year
+         * 
+         * @param type $leaveTypeId ID of the leave type to change maximum rollover for
+         * @param type $max_hours The new maximum rollover hours
+         */
+        public function SetMaxRollover($leaveTypeId, $max_hours) {
+            $check_query = "SELECT id from max_rollover where year_id=:year_id and leave_type_id=:leave_type_id";
+            $check_params = array("year_id"=>$this->getId(),
+                                    "leave_type_id"=>$leaveTypeId);
+            $result = $this->sqlDataBase->get_query_result($check_query, $check_params);
+
+            if(count($result) > 0) {
+                // update
+                $query = "UPDATE max_rollover set max_rollover_hours = :max_hours where year_id=:year_id and leave_type_id=:leave_type_id";
+                $params = array("year_id"=>$this->getId(),
+                                "leave_type_id"=>$leaveTypeId,
+                                "max_hours"=>$max_hours);
+
+                $this->sqlDataBase->get_update_result($query, $params);
+            } else {
+                if($max_hours != $this->GetMaxRollover($leaveTypeId)) {
+                    // insert
+                    $query = "INSERT INTO max_rollover (year_id, leave_type_id, max_rollover_hours) VALUES (:year_id, :leave_type_id, :max_hours)";
+                    $params = array("year_id"=>$this->getId(),
+                                    "leave_type_id"=>$leaveTypeId,
+                                    "max_hours"=>$max_hours);
+
+                    $this->sqlDataBase->get_insert_result($query, $params);
+                }
+            }
+            $curr_user = new User($this->sqlDataBase);
+            $users = $curr_user->getAllUsers();
+            $helper = new Helper($this->sqlDataBase);
+            foreach($users as $user) {
+                $helper->RunRulesYearType($user['user_id'], $leaveTypeId);
+            }
+        }
+        
+        /** Updates this Year's locked status
+         * 
+         * @param type $lock New lock status
+         */
+        public function UpdateLock($lock) {
+            $queryUpdateLockStatus = "UPDATE year_info SET locked= :locked WHERE year_info_id= :year_info_id";
+            $params = array("locked"=>$lock,
+                            "year_info_id"=>$this->getId());
+            $this->sqlDataBase->get_update_result($queryUpdateLockStatus, $params);
+        }
+        
         
         
         // Static functions

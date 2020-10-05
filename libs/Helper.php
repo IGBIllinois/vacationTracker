@@ -56,13 +56,14 @@ class Helper
                 
                 $params = array("userId"=>$userId, "statusId"=>$statusId, "yearId"=>$yearId);
                     
+                //echo("queryLeaves = $queryLeaves<BR>");
+                //print_r($params);
 		if($limit>0)
 		{
 			$queryLeaves = $queryLeaves." LIMIT :limit";
                         $params["limit"] = $limit;
 		}
 
-                
                 
                 $leaves = $this->sqlDataBase->get_query_result($queryLeaves, $params);
                 
@@ -352,13 +353,13 @@ class Helper
 				}
 				if($leaveAvailable['initial_hours'] || $leaveAvailable['added_hours'] || $leaveAvailable['calc_used_hours'])
 				{
-					$tableString .= "<tr>
+				$tableString .= "<tr>
                           	<td class=\"form_field\"><b>".$leaveAvailable['name']." Hours </b><img title=\"<b>".$leaveAvailable['name']." Leave</b> <br>".$leaveAvailable['description']."\" src=\"css/images/question.png\"></td>
                            	<td class=\"".$formFieldClass."\">".round($leaveAvailable['initial_hours'],2)."</td>
                        		<td class=\"".$formFieldClass."\">".round($leaveAvailable['added_hours'],2)."</td>
-             				<td class=\"".$formFieldClass."\">".round($leaveAvailable['calc_used_hours'],2)."</td>
+             			<td class=\"".$formFieldClass."\">".round($leaveAvailable['calc_used_hours'],2)."</td>
                           	<td class=\"".$formFieldClass."\" style=\"font-weight:bolder;\">".round($totalHours,2)."</td>
-							<td class=\"".$formFieldClass."\" style=\"font-weight:bolder;\">".round($estimatedHours,2)."</td></tr>";
+				<td class=\"".$formFieldClass."\" style=\"font-weight:bolder;\">".round($estimatedHours,2)."</td></tr>";
 				}
 			}
                         }
@@ -388,7 +389,6 @@ class Helper
 	 */
 	public function CreateLeave($userId, $days,$month,$year, $hours, $minutes, $leaveTypeId, $specialLeaveId, $description, User $loggedUser)
 	{
-
 		$errors = 0;
 		$success= 0;
 
@@ -419,7 +419,6 @@ class Helper
 				//Check to make sure logged user has permission to create leave for the selected user
 				if($loggedUser->getUserId()==$userId || $loggedUser->isEmployee($userId) || ($loggedUser->getUserPermId()==ADMIN))
 				{
-
 					$timeSec = ($hours * 60 * 60) + ($minutes * 60);
 					//if leave hours are less than 97.5% of a leave block then 0 hours charged
 					//if leave hours are less than 98.75% of 2 leave blocks then 4 hours are charged
@@ -447,17 +446,20 @@ class Helper
 						$yearId = $years->GetYearId($day,$month,$year,$leaveType->getYearTypeId());
 						if($newLeave->CreateLeave($date,$timeSec,$leaveTypeId,$description,$userId,$specialLeaveId,$yearId, $leaveDayHours))
 						{
-
 							if($loggedUser->getAutoApprove() || $loggedUser->getSupervisorId()==0)
 							{
 								$newLeave->setStatusId(APPROVED);
 								$newLeave->UpdateDb();
 							}
 							$this->RunRules($userId,$yearId);
-						}
+						} else {
+                                                    echo("ERROR");
+                                                }
 					}
 
-				}
+				} else {
+                                    echo "ERROR";
+                                }
 			}
 		}
 
@@ -712,10 +714,8 @@ class Helper
                                             "year_info_id"=>$yearId,
                                             "hoursAddBegin"=>$hoursAddBegin,
                                             "user_type_id"=>$user->getUserTypeId());
-                                        //echo("add query = ".$queryAddUserHours);
-                                        //print_r($params);
+
                                         $result = $this->sqlDataBase->get_insert_result($queryAddUserHours, $params);
-                                        //echo("<BR>result = $result<BR>");
                                         if($result > 0) {
                                             $success = 1;
                                         }

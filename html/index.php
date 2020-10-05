@@ -148,6 +148,9 @@ elseif($loggedUser->getUserId() > 0)
 				{
 					require_once "includes/years.php";
 				}
+                                elseif($_GET['view']=='rollover_info') {
+                                        require_once "includes/rollover_info.php";
+                                }
 				elseif($_GET['view']=='adminAddLeaves')
 				{
 					require_once "includes/add_leaves_admin.php";

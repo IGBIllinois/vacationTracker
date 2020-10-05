@@ -8,15 +8,16 @@
  */
 if(isset($_GET['lock']) && isset($_GET['id']))
 {
-	
-	$queryUpdateLockStatus = "UPDATE year_info SET locked= :locked WHERE year_info_id= :year_info_id";
-	$params = array("locked"=>$_GET['lock'],
-                        "year_info_id"=>$_GET['id']);
-        $sqlDataBase->get_update_result($queryUpdateLockStatus, $params);
+    
+	$lock = $_GET['lock'];
+        $year = new Years($sqlDataBase, $_GET['id']);
+        
+        $year->UpdateLock($lock);
+
 }
 
-$queryYearTypes = "SELECT name,description,year_type_id FROM year_type";
-$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
+
+$yearTypes = Years::GetYearTypes($sqlDataBase);
 
 foreach($yearTypes as $yearTypeInfoId=>$yearTypeInfo)
 {
@@ -37,28 +38,29 @@ foreach($yearTypes as $yearTypeInfoId=>$yearTypeInfo)
                 <td>
                 Options
                 </td>
+                <td style=\"width:20%\">
+                Rollover Hours
+                </td>
         </tr>
         </thead>
         <tbody>";
-	$queryYearInfo = "SELECT year_info_id,"
-                . "start_date,"
-                . "end_date,"
-                . "locked "
-                . "FROM year_info "
-                . "WHERE year_type_id=:year_type_id"
-                . " ORDER BY start_date";
-        $params = array("year_type_id"=>$yearTypeInfo['year_type_id']);
-        
-	$yearInfo = $sqlDataBase->get_query_result($queryYearInfo, $params);
-	foreach($yearInfo as $yearInfoId=>$yearInfo)
+
+        $yearInfo = Years::GetYears($sqlDataBase, $yearTypeInfo['year_type_id']);
+
+	foreach($yearInfo as $year)
 	{
+            $startDate = Date("n/d/Y",strtotime($year->getStartDate()));
+            $endDate = Date("n/d/Y",strtotime($year->getEndDate()));
+            $locked = $year->getLocked();
+            
 		echo "<tr>
-                        <td>".Date("n/d/Y",strtotime($yearInfo['start_date']))."</td>
-                        <td>".Date("n/d/Y",strtotime($yearInfo['end_date']))."</td>
-                        <td>".(($yearInfo['locked'])?"locked":"open")."</td>
-                        <td><a href=\"index.php?view=adminYears&id=".$yearInfo['year_info_id'].
-                        "&lock=".(($yearInfo['locked'])?"0":"1")."\">".
-                                (($yearInfo['locked'])?"Unlock":"Lock")."</a></td>
+                        <td>".$startDate."</td>
+                        <td>".$endDate."</td>
+                        <td>".(($locked)?"locked":"open")."</td>
+                        <td><a href=\"index.php?view=adminYears&id=".$year->getId().
+                        "&lock=".(($locked)?"0":"1")."\">".
+                                (($locked)?"Unlock":"Lock")."</a></td>
+                        <td>"."<a href=\"index.php?view=adminYears&max_rollover=1&id=".$year->getId()."\">View rollover hours</a></td>           
 		      </tr>";
 	}
 	echo "</tbody></table>";

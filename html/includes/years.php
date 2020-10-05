@@ -16,6 +16,14 @@ $years = new Years($sqlDataBase);
         </td>
 </tr>
 <tr>
+    <?php
+    if(isset($_GET['max_rollover'])) {
+        echo('<td valign="top">');
+        require_once "includes/rollover_info.php";
+        echo("</td>");
+    } else {
+        ?>
+    
         <td valign="top">
         <?php
 	require_once "includes/create_year.php";
@@ -26,5 +34,8 @@ $years = new Years($sqlDataBase);
 	require_once "includes/list_years.php";
         ?>
         </td>
+    <?php
+    }
+    ?>
 </tr>
 </table>
