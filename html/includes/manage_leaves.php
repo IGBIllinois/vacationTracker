@@ -264,8 +264,20 @@ if($loggedUser->GetUserPermId()==ADMIN)
 						{
 							$helperClass->RunRulesYearType($leavesShowUser, $yearType['year_type_id'],true);
 						}
+                                                if(isset($_POST["refresh-".$yearType['year_type_id']."-all"]))
+						{
+                                                        $users = $loggedUser->getAllUsers();
+                                                        foreach($users as $user) {
+                                                            $userid = $user['user_id'];
+                                                            $helperClass->RunRulesYearType($userid, $yearType['year_type_id'],true);
+                                                        }
+						}
 						echo "<input class=\"refresh_button\" type=submit value=\"\" id=\"refresh\" name=\"refresh-".$yearType['year_type_id']."\" title=\"<b>Run Rules</b><br>All rules should run automatically when adding and removing leaves.<br>Should only need to run this if something weird happened.\">Run Rules";
-						?>
+						if($loggedUser->getUserPermId()==ADMIN ) {
+                                                    echo "<BR><input class=\"refresh_button\" type=submit value=\"\" id=\"refresh\" name=\"refresh-".$yearType['year_type_id']."-all\" title=\"<b>Run Rules for all users</b><br>All rules should run automatically when adding and removing leaves.<br>Should only need to run this if something weird happened.\">Run Rules for all users";
+                                                    
+                                                }
+                                                ?>
 						</td>
 					</tr>
 				</table>
