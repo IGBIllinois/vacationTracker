@@ -23,10 +23,12 @@ class AppointmentYearRules extends Rules
 	 */
 	public function RunRules($userId,$yearId, $userYearUsage=null)
 	{
+            $this->force = true;
 		$hasRollOver=0;
 		//Check if we just changed the previous year's leaves
 		if($userYearUsage==null)
 		{
+                    
 			//Since we didn't change we just load the year usage
 			$userYearUsage = $this->LoadUserYearUsage($userId,$yearId);
 		}
@@ -37,7 +39,6 @@ class AppointmentYearRules extends Rules
 			$this->userInfo = new User($this->sqlDataBase);
 			$this->userInfo->LoadUser($userId);
 		}
-
 		//Apply rules to leave
 		$userYearUsage = $this->ApplyRules($userYearUsage);
 
@@ -52,7 +53,7 @@ class AppointmentYearRules extends Rules
 			if($this->LoadCalcUsedHoursPayPeriod($yearId, $userYearUsageLeaveType['leave_type_id'], $userId, $startdate, $enddate)!=$userYearUsageLeaveType['used_hours'] || $this->force)
 			{
 				//Update database with new used hours
-				//$this->UpdateLeaveUserInfo($userId,$yearId,$userYearUsageLeaveType['used_hours'],$userYearUsageLeaveType['initial_hours'],$userYearUsageLeaveType['leave_type_id'],$userYearUsageLeaveType['leave_user_info_id']);
+				$this->UpdateLeaveUserInfo($userId,$yearId,$userYearUsageLeaveType['used_hours'],$userYearUsageLeaveType['initial_hours'],$userYearUsageLeaveType['leave_type_id'],$userYearUsageLeaveType['leave_user_info_id']);
 				//Check if we need to roll over to next year
 				if($userYearUsageLeaveType['roll_over'])
 				{
@@ -62,7 +63,6 @@ class AppointmentYearRules extends Rules
 		}
 		//Attempt to load next year incase we need to update initial values due to roll over
 		$nextYearId = $this->year->NextYearId($yearId);
-
 		//Check if we need to apply roll over hours for next year
 		if($nextYearId && ($hasRollOver || $this->force))
 		{
@@ -72,10 +72,8 @@ class AppointmentYearRules extends Rules
 			{
 				foreach($nextYearUsage as $id=>$nextYearUsageLeaveType)
 				{
-
 					if($nextYearUsageLeaveType['roll_over'])
 					{
-
                                             $nextYear = new Years($this->sqlDataBase, $nextYearId);
                                             // Get Max rollover from previous year and apply it to this year
                                             $currYear = new Years($this->sqlDataBase, $yearId);
@@ -95,7 +93,7 @@ class AppointmentYearRules extends Rules
 				}
 			}
 			//Since we applied roll over leaves to next year, we now need to rerun rules for next year.
-			$this->RunRules($userId,$nextYearId,$nextYearUsage);
+			$this->RunRules($userId,$nextYearId,$nextYearUsage, true);
 		}
 
 	}
