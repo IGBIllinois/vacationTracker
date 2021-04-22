@@ -352,11 +352,19 @@ class User
 
 	/**
 	 * Return a list of all users in the system
+         * 
+         * @param string $sort how to sort the users. Accepts netid or first_name. 
+         * 
+         * @return Array An array of User objects
 	 * 
 	 */
-	public function GetAllUsers()
+	public function GetAllUsers($sort = "first_name")
 	{
-		$queryAllUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users ORDER BY first_name";
+            if($sort = "netid") {
+		$queryAllUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users ORDER BY netid";
+            } else {
+                $queryAllUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users ORDER BY first_name";
+            }
 		$allUsers = $this->sqlDataBase->get_query_result($queryAllUsers);
 		return $allUsers;
 	}
@@ -666,14 +674,12 @@ class User
             echo("uin = $uin");
             $helperClass = new Helper($this->sqlDataBase);
                 $userXML= $helperClass->apiGetUserInfo($uin);
-//print_r($userXML);
+
                  $xml = "";
                  try {
                  $xml = new SimpleXMLElement($userXML);
-//print_r($xml);
+
                  } catch(Exception $e) {
-                     //echo("Error:");
-                     //echo($e->getTraceAsString());
                      $errorMessages .= "<tr class=\"failed_row\"><td>Error: User ".$this->getNetid(). " has no UIN assigned.</td></tr>";
                      echo("Error, user not found in Banner<BR>");
                      return;
