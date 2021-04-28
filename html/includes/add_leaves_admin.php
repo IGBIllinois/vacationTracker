@@ -55,14 +55,10 @@ if(isset($_POST['addNewLeavesToUser']))
                 
 		if($_POST['userToViewAddedLeaves'])
 		{
-			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users WHERE user_id=:user_id";
-                        $params = array("user_id"=>$_POST['userToViewAddedLeaves']);
                         $usersToAdd = User::GetUsers($db, $_POST['userToViewAddedLeaves']);
 		}
 		else
 		{
-			$queryUsersToAdd = "SELECT user_id,percent,start_date FROM users";
-                        $params = null;
                         $usersToAdd = $loggedUser->GetAllUsers($db, 0);
 		}
 

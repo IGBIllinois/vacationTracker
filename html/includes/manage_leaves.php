@@ -167,7 +167,7 @@ if($loggedUser->GetUserPermId()==ADMIN)
 						<td>User:</td>
 						<td><SELECT name="displayUserLeaves" onchange="this.form.submit()">
 						<?php
-
+                                                // Drop down list of users to show, if the user is an admin, else just show this user
 						echo "<option value=".$loggedUser->getUserId().">".$loggedUser->getFirstName()." ".$loggedUser->getLastName()."</option>";
 						if($loggedUser->GetUserPermId() == ADMIN || count($employees)>0)
 						{
@@ -189,12 +189,13 @@ if($loggedUser->GetUserPermId()==ADMIN)
 			</form>
 		</td>
 		<td class="content_bg" valign="top"><?php echo $messageBox; 
-		$queryYearTypes = "SELECT year_type_id,name,description FROM year_type";
-		$yearTypes = $sqlDataBase->get_query_result($queryYearTypes)
+
+                $yearTypes = Years::GetYearTypes($sqlDataBase);
 		?>
 			<div id="yeartabs">
 				<ul>
 				<?php
+                                // Show the year types
 				foreach($yearTypes as $id=>$yearType)
 				{
 					echo "<li><a onclick=\"uncheckAll(document.year_type_".$yearType['year_type_id'].".elements['leavesCheckBox[]'],0)\" href=\"#yeartabs-".$yearType['year_type_id']."\" style=\"font-size:12px\">".$yearType['name']."</a></li>";
@@ -208,17 +209,19 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				</ul>
                             
 				<?php
+                                // Show year types
 				foreach($yearTypes as $id=>$yearType)
 				{
                                    
 					echo "<form name=\"year_type_".$yearType['year_type_id']."\" action=\"index.php?view=create#yeartabs-".$yearType['year_type_id']."\" method=\"post\">";
 					echo "<input type=\"hidden\" name=\"displayUserLeaves\" value=\"".$leavesShowUser."\">";
 					echo "<div id=\"yeartabs-".$yearType['year_type_id']."\">";
-					?>
+				?>
 				<table width="100%">
 					<tr>
-						<td align="left"><?php
-						
+						<td align="left">
+                                <?php
+                                    // Previous year / Next year buttons
 						echo "<input type=submit value=\"\" name=\"decYear-".$yearType['year_type_id']."\" class=\"left_button\"><input type=submit value=\"\" name=\"incYear-".$yearType['year_type_id']."\" class=\"right_button\">";
 						
 						
@@ -260,12 +263,16 @@ if($loggedUser->GetUserPermId()==ADMIN)
 						</td>
 						<td align="right">
 						<?php 
+                                                
+                                                
 						if(isset($_POST["refresh-".$yearType['year_type_id']]))
 						{
+                                                    // Run rules for this user
 							$helperClass->RunRulesYearType($leavesShowUser, $yearType['year_type_id'],true);
 						}
                                                 if(isset($_POST["refresh-".$yearType['year_type_id']."-all"]))
 						{
+                                                    // Run rules for all users (for admins only)
                                                         $users = $loggedUser->getAllUsers();
                                                         foreach($users as $user) {
                                                             $userid = $user['user_id'];
@@ -292,23 +299,9 @@ if($loggedUser->GetUserPermId()==ADMIN)
 				<br><br>
 				<b>Leaves Request Management:</b>
 				<?php
-				$queryStatus = "SELECT s.status_id,"
-                                        . "s.name, "
-                                        . "COUNT(li.status_id) as num_leaves "
-                                        . "FROM status s "
-                                        . "LEFT JOIN leave_info li ON "
-                                        . "(li.status_id = s.status_id "
-                                        . "AND user_id=:user_id "
-                                        . "AND  li.year_info_id = :year_id )"
-                                        . "WHERE s.status_id!=:status_id "
-                                        . "GROUP BY s.status_id";
                                 
-                                $params = array("user_id"=>$leavesShowUser,
-                                                "year_id"=>$yearSelected,
-                                                "status_id"=>DELETED);
-                                
-				$statusList = $sqlDataBase->get_query_result($queryStatus, $params);
-                                
+                                // Find user's deleted leaves
+                                $statusList = $helperClass->get_user_leaves_by_status($leavesShowUser, $yearSelected, DELETED);
 				?>
 				<div id="leavetabs-<?php echo $yearType['year_type_id']; ?>">
 					<ul>

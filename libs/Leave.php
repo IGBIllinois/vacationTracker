@@ -280,5 +280,63 @@ class Leave
                                 $params = array("added_hours_id"=>$leaveToAddId);
 				$addedLeaveInfo = $sqlDataBase->get_query_result($queryAddedLeaveInfo, $params);
         }
+        
+        
+        /**
+         * Get a user's hours, based on given criteria
+         * 
+         * @param int $selectedUserToView User Id
+         * @param int $selectedYearIdView Year Id
+         * @param int $selectedPayPeriodIdView Pay Period Id
+         * @param int $selectedLeaveTypeIdView LeaveType Id
+         * @param int $selectedYearTypeIdView Year Type id
+         */
+        public static function GetUserHours($sqlDataBase,
+                $selectedUserToView,
+                $selectedYearIdView,
+                $selectedPayPeriodIdView,
+                $selectedLeaveTypeIdView,
+                $selectedYearTypeIdView) {
+
+
+            $queryLeavesAdded = "SELECT ah.description, ah.hours, pp.start_date, pp.end_date, lt.name, u.netid, ah.added_hours_id, ah.begining_of_pay_period FROM added_hours ah, users u, pay_period pp, leave_type lt,year_info yi WHERE u.user_id=ah.user_id AND pp.pay_period_id=ah.pay_period_id AND lt.leave_type_id = ah.leave_type_id AND ah.year_info_id = yi.year_info_id";
+            $params = array();
+            
+            if($selectedUserToView)
+            {
+                    $queryLeavesAdded .=" AND ah.user_id=:selectedUserToView ";
+                    $params["selectedUserToView"] = $selectedUserToView;
+            }
+            if($selectedYearIdView)
+            {
+                    $queryLeavesAdded .=" AND pp.year_info_id = :selectedYearIdView ";
+                    $params["selectedYearIdView"] = $selectedYearIdView;
+            }
+            if($selectedPayPeriodIdView)
+            {
+                    $queryLeavesAdded .=" AND pp.pay_period_id = :selectedPayPeriodIdView ";
+                    $params["selectedPayPeriodIdView"] = $selectedPayPeriodIdView;
+            }
+            if($selectedLeaveTypeIdView)
+            {
+                    $queryLeavesAdded .=" AND ah.leave_type_id = :selectedLeaveTypeIdView ";
+                    $params["selectedLeaveTypeIdView"] = $selectedLeaveTypeIdView;
+            }
+            if($selectedYearTypeIdView)
+            {
+                    $queryLeavesAdded .=" AND yi.year_type_id = :selectedYearTypeIdView ";
+                    $params["selectedYearTypeIdView"] = $selectedYearTypeIdView;
+            }
+
+            
+            $queryLeavesAdded .= " ORDER BY pp.start_date DESC";
+
+            $leavesAdded = $sqlDataBase->get_query_result($queryLeavesAdded, $params);
+            
+            return $leavesAdded;
+
+        }
+        
+
 }
 ?>

@@ -1215,6 +1215,13 @@ class Helper
 		return 0;
 	}
 
+        /** Run Rules for a user, updating the leave data for current and future years
+         * 
+         * @param int $userId User ID
+         * @param int $yearTypeId Year Type ID 
+         * @param bool $force If true, run for all years, else only run for the current year
+         * @return 1 if successful, else 0
+         */
 	public function RunRulesYearType($userId,$yearTypeId,$force=false)
 	{
 		$year = new Years($this->sqlDataBase);
@@ -1321,63 +1328,166 @@ class Helper
 
 	    	return $workingDays;
 	}
-
-
-
-/*
- * Updates a users sick and vacation hours in Banner
- * 
- * $userUin: A user's UIN
- * $vacHours: Vacation Hours used
- * $sickHours: Sick hours used. 
- * $date: Date for this transaction (MM/DD/YYYY)
- * 
- */
-function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
-
-    if(DEBUG) {
-        $apiURL = BANNER_URL_TEST;
-    } else {
-        $apiURL = BANNER_URL;
-    }
-
-    if($userUin == 0) {
-        return "";
-    }
-
-       $fields = "senderAppId=".SENDER_APP_ID."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
-
-       $fieldsArray = array('senderAppId'=>SENDER_APP_ID,
-                       'institutionalId'=>$userUin,
-                       'vacTaken'=>$vacHours,
-                       'sickTaken'=>$sickHours,
-                       'dateAvailable'=>$date,
-                       'sbTaken'=>-1,
-                       'separationFlag'=>'N',
-                       'conversionFlag'=>'N',
-                       'validateOnlyFlag'=>'N' 
-               );
         
-       $fullURL = $apiURL ."?". $fields;
+        
+        /**
+         * Gets a list of user's leaves, based on their status
+         * 
+         * @param int $leavesShowUser User ID
+         * @param int $yearSelected Year ID
+         * @param int $status_id Status ("APPROVED", "DELETED", etc)
+         * 
+         * @return array List of a user's leaves, grouped by their status (Approved, Not Approved, etc.)
+         */
+        public function get_user_leaves_by_status($leavesShowUser, $yearSelected, $status_id) {
+            $queryStatus = "SELECT s.status_id,"
+                    . "s.name, "
+                    . "COUNT(li.status_id) as num_leaves "
+                    . "FROM status s "
+                    . "LEFT JOIN leave_info li ON "
+                    . "(li.status_id = s.status_id "
+                    . "AND user_id=:user_id "
+                    . "AND  li.year_info_id = :year_id )"
+                    . "WHERE s.status_id!=:status_id "
+                    . "GROUP BY s.status_id";
 
-       $result = $this->get_curl_result($fullURL, $fields, $fieldsArray);
-       
-       $xml = new SimpleXMLElement($result);
-       
+            $params = array("user_id"=>$leavesShowUser,
+                            "year_id"=>$yearSelected,
+                            "status_id"=>$status_id);
 
-       foreach($xml->children() as $attr) {
+            $statusList = $this->sqlDataBase->get_query_result($queryStatus, $params);
 
-           $updateResult = $attr->attributes()->value;
+            return $statusList;
+        }
 
-           if($updateResult == "success") {
-                echo("<div class='alert alert-success'>User $userUin updated successfully.</div>");
-           } else {
-               $error = $attr->Error[0];
-               echo("<div class='alert alert-warning'>Error updating $userUin: $error.</div>");
+        
+        /**
+         * 
+         * @param type $selectedYearIdView
+         * @param type $selectedPayPeriodIdView
+         * @param type $selectedLeaveTypeIdView
+         * @param type $selectedYearTypeIdView
+         * @return type
+         */
+        public function get_leaves_added_global($selectedYearIdView, $selectedPayPeriodIdView, $selectedLeaveTypeIdView, $selectedYearTypeIdView) {
+            $queryLeavesAddedGlobal = "SELECT ah.description, "
+                    . "ah.hours, "
+                    . "pp.start_date, "
+                    . "pp.end_date, "
+                    . "lt.name, "
+                    . "ah.added_hours_id, "
+                    . "ah.begining_of_pay_period"
+                    . " FROM added_hours ah, "
+                    . "pay_period pp, "
+                    . "leave_type lt, "
+                    . "year_info yi "
+                    . "WHERE pp.pay_period_id=ah.pay_period_id "
+                    . "AND lt.leave_type_id = ah.leave_type_id "
+                    . "AND ah.year_info_id = yi.year_info_id "
+                    . "AND ah.user_id=0";
+            $params = array();
+            if($selectedYearIdView)
+            {
+                    $queryLeavesAddedGlobal .=" AND pp.year_info_id = :year_info_id ";
+                    $params["year_info_id"]=$selectedYearIdView;
+            }
+            if($selectedPayPeriodIdView)
+            {
+                    $queryLeavesAddedGlobal .=" AND pp.pay_period_id = :pay_period_id ";
+                    $params["pay_period_id"]=$selectedPayPeriodIdView;
+            }
+            if($selectedLeaveTypeIdView)
+            {
+                    $queryLeavesAddedGlobal .=" AND ah.leave_type_id = :leave_type_id ";
+                    $params["leave_type_id"]=$selectedLeaveTypeIdView;
+
+            }
+            if($selectedYearTypeIdView)
+            {
+                    $queryLeavesAddedGlobal .=" AND yi.year_type_id = :year_type_id ";
+                    $params["year_type_id"]=$selectedYearTypeIdView;
+            }
+
+            $queryLeavesAddedGlobal .= " ORDER BY pp.start_date DESC";
+            $leavesAddedGlobal = $this->sqlDataBase->get_query_result($queryLeavesAddedGlobal, $params);
+            
+            return $leavesAddedGlobal;
+        }
+
+        
+    
+        
+        /**
+         * Get Pay period data in array form
+         * 
+         * @param int $year_info_id Year info id
+         * 
+         * @return type Result od Pay Period query
+         */
+        public function GetPayPeriods($year_info_id) {
+
+            $queryPayPeriod = "SELECT pay_period_id,start_date,end_date FROM pay_period WHERE year_info_id=:year_info_id";
+            $params = array("year_info_id"=>$year_info_id);
+            echo("query = $queryPayPeriod<BR>");
+            print_r($params);
+            $payPeriod = $this->sqlDataBase->get_query_result($queryPayPeriod, $params);
+            return $payPeriod;
+
+        }
+    /*
+     * Updates a users sick and vacation hours in Banner
+     * 
+     * $userUin: A user's UIN
+     * $vacHours: Vacation Hours used
+     * $sickHours: Sick hours used. 
+     * $date: Date for this transaction (MM/DD/YYYY)
+     * 
+     */
+    public function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnly="N") {
+
+        if(DEBUG) {
+            $apiURL = BANNER_URL_TEST;
+        } else {
+            $apiURL = BANNER_URL;
+        }
+
+        if($userUin == 0) {
+            return "";
+        }
+
+           $fields = "senderAppId=".SENDER_APP_ID."&institutionalId=$userUin&vacTaken=".$vacHours."&sicTaken=".$sickHours."&dateAvailable=".$date."&sbTaken=-1&separationFlag=N&conversionFlag=N&validateOnlyFlag=".$validateOnly."";
+
+           $fieldsArray = array('senderAppId'=>SENDER_APP_ID,
+                           'institutionalId'=>$userUin,
+                           'vacTaken'=>$vacHours,
+                           'sickTaken'=>$sickHours,
+                           'dateAvailable'=>$date,
+                           'sbTaken'=>-1,
+                           'separationFlag'=>'N',
+                           'conversionFlag'=>'N',
+                           'validateOnlyFlag'=>'N' 
+                   );
+
+           $fullURL = $apiURL ."?". $fields;
+
+           $result = $this->get_curl_result($fullURL, $fields, $fieldsArray);
+
+           $xml = new SimpleXMLElement($result);
+
+
+           foreach($xml->children() as $attr) {
+
+               $updateResult = $attr->attributes()->value;
+
+               if($updateResult == "success") {
+                    echo("<div class='alert alert-success'>User $userUin updated successfully.</div>");
+               } else {
+                   $error = $attr->Error[0];
+                   echo("<div class='alert alert-warning'>Error updating $userUin: $error.</div>");
+               }
            }
-       }
-       return $result;    
-}
+           return $result;    
+    }
     
     /* Get user info from Banner
      * 
@@ -1385,7 +1495,7 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
      * 
      * @return Array of Vacation Leave data from Banner
      */
-    function apiGetUserInfo($userUin) {
+    public function apiGetUserInfo($userUin) {
 
         if(DEBUG) {
             $bannerUrl = BANNER_URL_TEST;
@@ -1413,7 +1523,7 @@ function apiUpdateUserHours($userUin, $vacHours, $sickHours, $date, $validateOnl
      * @param array $fields_array Array of field=>value data
      * @return array Result from the curl_exec() command
      */
-    function get_curl_result($url, $fields, $fields_array=null) {
+    public function get_curl_result($url, $fields, $fields_array=null) {
         
        $curl = curl_init();
 
