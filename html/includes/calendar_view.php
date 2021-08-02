@@ -132,12 +132,8 @@ if(isset($_POST['selectShareUser']))
 	$userToShareWith = @$_POST['shareUser'];
 	if($userToShareWith)
 	{
-		//$queryInsertShare = "INSERT INTO shared_calendars (owner_id, viewer_id)VALUES(".$loggedUser->getUserId().",".$userToShareWith.")";
-            	$queryInsertShare = "INSERT INTO shared_calendars (owner_id, viewer_id)VALUES(:owner_id, :viewer_id)";
-                $params = array("owner_id"=>$loggedUser->getUserId(),
-                                "viewer_id"=>$userToShareWith);
                 
-                $sqlDataBase->get_insert_result($queryInsertShare, $params);
+                $loggedUser->addSharedCalendar($userToShareWith);
 
 	}
 }
@@ -147,10 +143,8 @@ if(isset($_POST['sharedUsers']))
 	$unshareUsers = $_POST['sharedUsers'];
 	foreach($unshareUsers as $unshareUser)
 	{
-		$queryUnshare = "DELETE FROM shared_calendars WHERE owner_id=:owner_id AND viewer_id=:viewerId";
-                $params = array("owner_id"=>$loggedUser->getUserId(),
-                                "viewer_id"=>$unshareUser);
-		$sqlDataBase->get_update_result($queryUnshare, $params);
+
+                $loggedUser->removeSharedCalendar($unshareUser);
 
 	}
 }
@@ -191,13 +185,13 @@ if(isset($_POST['sharedUsers']))
 						<td colspan="2" class="col_title">Color Index</td>
 					</tr>
 					<?php
-					$queryLeaveTypes = "SELECT name, calendar_color FROM leave_type";
-                                        $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, null);
+
+                                        $leaveTypes = LeaveType::GetLeaveTypes($sqlDataBase);
                                         
-					foreach($leaveTypes as $id=>$leaveType)
+					foreach($leaveTypes as $leaveType)
 					{
-                                            echo "<tr><td><div id=\"leave_color_box\" style=\"background-color:#".$leaveType['calendar_color']."\"></div>
-                                            </td><td>".$leaveType['name']."</td></tr>";
+                                            echo "<tr><td><div id=\"leave_color_box\" style=\"background-color:#".$leaveType->GetColor()."\"></div>
+                                            </td><td>".$leaveType->getName()."</td></tr>";
 					}
 
 					?>

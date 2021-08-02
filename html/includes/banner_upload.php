@@ -132,9 +132,7 @@ if(isset($_GET['pay_period']) ) {
 }
 
 $years = new Years($sqlDataBase);
-$queryYearTypes = "SELECT year_type_id,name,description FROM year_type";
-$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
-$appointment_year_id = $years->GetYearId($day,$month,$year,$yearTypes[0]['year_type_id']);
+$appointment_year_id = $years->GetYearId($day,$month,$year,APPOINTMENT_YEAR);
 
 $yearId = $appointment_year_id;
 
@@ -216,24 +214,7 @@ echo("<input type=hidden name=year value=$year>");
             <tbody>
 <?php
 
-/*
-$queryUsers = "SELECT u.user_id, "
-        . "u.first_name, "
-        . "u.last_name, "
-        . "u.netid, "
-        . "ut.name as type, "
-        . "up.name as perm, "
-        . "u.enabled FROM users u, "
-        . "user_type ut, "
-        . "user_perm up "
-        . "WHERE up.user_perm_id = u.user_perm_id "
-        . "AND ut.user_type_id = u.user_type_id "
-        . "AND enabled=1 "
-        . "and banner_include=1 ORDER BY u.last_name ASC";
 
-    $users = $sqlDataBase->get_query_result($queryUsers, null);
- * 
- */
     $tmp_user = new User($sqlDataBase);
     $users = $tmp_user->GetAllBannerUsers();
      if($users)
@@ -459,34 +440,14 @@ echo("<form action=#>"
 <?php
 
 
-$queryUser = "SELECT u.user_id, "
-        . "u.first_name, "
-        . "u.last_name, "
-        . "u.netid, "
-        . "ut.name as type, "
-        . "up.name as perm, "
-        . "u.enabled "
-        . "FROM users u, "
-        . "user_type ut,"
-        . " user_perm up "
-        . "WHERE "
-        . "up.user_perm_id = u.user_perm_id "
-        . "AND ut.user_type_id = u.user_type_id "
-        . "AND enabled=1 and u.user_id= :user_id "
-        . "ORDER BY u.netid ASC";
-
-            $params = array("user_id"=>$user_id);
-
             echo("<input type='hidden' name='numRecords' value=1>");
 
-            $userInfo = $sqlDataBase->get_query_result($queryUser, $params);
-            $userInfo = $userInfo[0];
-            $curr_user_id = $userInfo['user_id'];
             $curr_user = new User($sqlDataBase);
-            $curr_user->LoadUser($curr_user_id);
+            
+            $curr_user->LoadUser($user_id);
 
             $errorMessages = "";
-            if($userInfo)
+            if($curr_user)
             {
                     $i=0;
 
@@ -500,7 +461,7 @@ $queryUser = "SELECT u.user_id, "
                             $startDate = $year. "-05-16";
                             $endDate = $year. "-08-15";
                         }
-                        $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($curr_user_id,$yearId, $startDate, $endDate);
+                        $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalcPayPeriod($user_id,$yearId, $startDate, $endDate);
 
                         $uin = $curr_user->getUIN();
                         echo("<input type='hidden' name=uin".$i." value=".$uin.">");
@@ -510,8 +471,7 @@ $queryUser = "SELECT u.user_id, "
                         $xml = new SimpleXMLElement($userXML);
                         } catch(Exception $e) {
                             $errorMessages .= "<tr class=\"failed_row\"><td>Error: User ".$curr_user->getNetid(). " has no UIN assigned.</td></tr>";
-                            //echo("Error:");
-                            //echo($e->getTraceAsString());
+
                         }
                         $current_vacation_hours = 0;
                         $current_sick_hours = 0;

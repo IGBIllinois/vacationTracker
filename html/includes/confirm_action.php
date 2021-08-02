@@ -166,12 +166,12 @@ else
                                             <td colspan="2" class="col_title">Color Index</td>
                                     </tr>
                                     <?php
-                                    $queryLeaveTypes = "SELECT name, calendar_color FROM leave_type";
-                                    $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes);
-                                    foreach($leaveTypes as $id=>$leaveType)
+
+                                    $leaveTypes = LeaveType::GetLeaveTypes($sqlDataBase);
+                                    foreach($leaveTypes as $leaveType)
                                     {
-                                            echo "<tr><td><div id=\"leave_color_box\" style=\"background-color:#".$leaveType['calendar_color']."\"></div>
-                                    </td><td>".$leaveType['name']."</td></tr>";
+                                            echo "<tr><td><div id=\"leave_color_box\" style=\"background-color:#".$leaveType->GetColor()."\"></div>
+                                    </td><td>".$leaveType->GetName()."</td></tr>";
                                     }
 
                                     ?>
@@ -190,15 +190,8 @@ else
                                                             $sharedCalendars = $loggedUser->GetAllEnabledUsers();
                                                     }else
                                                     {
-                                                        $querySharedCalendars = "SELECT u.user_id, u.first_name, u.last_name
-                                                                FROM users u LEFT JOIN shared_calendars sc 
-                                                                ON u.user_id = sc.owner_id 
-                                                                WHERE sc.viewer_id = :viewer_id ".
-                                                                " OR (u.supervisor_id=:supervisor_id)";
-                                                        $params = array("viewer_id"=>$loggedUser->getUserId(), 
-                                                                    "supervisor_id"=>$loggedUser->getUserId() );
-                                                        
-                                                        $sharedCalendars = $sqlDataBase->get_query_result($querySharedCalendars, $params);
+ 
+                                                        $sharedCalendars = $loggedUser->GetAllViewableUsers();
                                                         
                                                         echo "<tr><td><input type=\"checkbox\" name=\"employeeids[]\" value=".$loggedUser->getUserId();
                                                         if(in_array($loggedUser->getUserId(),$employeeId))

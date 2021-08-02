@@ -28,15 +28,15 @@ Options
 </thead>
 <tbody>
 <?php
-$queryLeaveTypes = "SELECT leave_type_id, name, description, calendar_color FROM leave_type";
-$leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes);
 
-foreach($leaveTypes as $id=>$leaveType)
+$leaveTypes = LeaveType::GetLeaveTypes($sqlDataBase);
+
+foreach($leaveTypes as $leaveType)
 {
-        echo "<tr><td>".$leaveType['name']."</td>"
-                . "<td>".$leaveType['description']."</td>"
-                . "<td><center><div id=\"leave_color_box\" style=\"background-color:#".$leaveType['calendar_color']."\"></div></center> </td>"
-                . "<td><a href=\"index.php?view=adminLeaves&id=".$leaveType['leave_type_id']."\">Edit</a> </td></tr>";
+        echo "<tr><td>".$leaveType->GetName()."</td>"
+                . "<td>".$leaveType->getDescription()."</td>"
+                . "<td><center><div id=\"leave_color_box\" style=\"background-color:#".$leaveType->getColor()."\"></div></center> </td>"
+                . "<td><a href=\"index.php?view=adminLeaves&id=".$leaveType->getTypeId()."\">Edit</a> </td></tr>";
 }
 
 ?>

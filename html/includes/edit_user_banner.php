@@ -28,8 +28,7 @@ if(isset($_GET['pay_period']) ) {
 }
 
 $years = new Years($sqlDataBase);
-$queryYearTypes = "SELECT year_type_id,name,description FROM year_type";
-$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
+
 $appointment_year_id = $years->GetYearId($day,$month,$year,$yearTypes[0]['year_type_id']);
 $fiscal_year_id = $years->GetYearId($day,$month,$year,$yearTypes[1]['year_type_id']);
 
@@ -108,33 +107,12 @@ echo("<form action=#>"
 <?php
 
 
-$queryUser = "SELECT u.user_id, "
-        . "u.first_name, "
-        . "u.last_name, "
-        . "u.netid, "
-        . "ut.name as type, "
-        . "up.name as perm, "
-        . "u.enabled FROM users u,"
-        . " user_type ut, "
-        . "user_perm up "
-        . "WHERE up.user_perm_id = u.user_perm_id "
-        . "AND ut.user_type_id = u.user_type_id "
-        . "AND enabled=1 and u.user_id = :user_id "
-        . "ORDER BY u.netid ASC";
-                                    
-$params = array("user_id"=>$user_id);
-
-$userInfo = $sqlDataBase->get_query_result($query, $params);
-    $userInfo = $userInfo[0];
-    $curr_user_id = $userInfo['user_id'];
-    $curr_user = new User($sqlDataBase);
-    $curr_user->LoadUser(curr_user_id);
-
+    $curr_user->LoadUser($user_id);
+    
     if($userInfo)
     {
 
                 // See Helper->DrawLeaveHoursAvailable for hour calculation
-
                 $leavesAvailable = $userLeavesHoursAvailable->LoadUserYearUsageCalc($curr_user_id,$yearId,$thisPayPeriodId);
 
                 $uin = $curr_user->getUIN();
@@ -143,8 +121,7 @@ $userInfo = $sqlDataBase->get_query_result($query, $params);
                 try {
                 $xml = new SimpleXMLElement($userXML);
                 } catch(Exception $e) {
-                    //echo("Error:");
-                    //echo($e->getTraceAsString());
+
                 }
                 $current_vacation_hours = 0;
                 $current_sick_hours = 0;

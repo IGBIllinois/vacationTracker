@@ -15,10 +15,9 @@ $helper = new Helper($sqlDataBase);
 $messageBox = "";
 
 $confirmKey = $_GET['confirmtoken'];
-$queryConfirmKeyLeaves = "SELECT leave_id, supervisor_id FROM authen_key WHERE confirm_key=:confirm_key";
-$params = array("confirm_key"=>$confirmKey);
 
-$confirmKeyLeaves = $sqlDataBase->get_query_result($queryConfirmKeyLeaves,$params);
+$cofirmKeyLeaves = Auth::getConfirmKeyLeaves($sqlDataBase, $confirmKey);
+
 $leaveIds = array();
 if(isset($confirmKeyLeaves))
 {

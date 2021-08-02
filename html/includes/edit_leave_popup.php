@@ -66,15 +66,8 @@
                 <td >
                 <SELECT id="editLeaveType" name="editLeaveType">
                 <?php
-		$queryLeaveTypes = "SELECT distinct lt.leave_type_id, "
-                        . "lt.name FROM leave_type lt, "
-                        . "leave_user_info lui "
-                        . "WHERE lt.leave_type_id=lui.leave_type_id "
-                        . "AND lui.user_id=:user_id "
-                        . "AND lt.special=0 AND lui.hidden=0";
-                
-                $params = array("user_id"=>$loggedUser->getUserId());
-                $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
+
+                $leaveTypes = $loggedUser->GetUserLeaveTypes();
                 foreach($leaveTypes as $id => $assoc)
                 {
                         echo "<option value=".$assoc['leave_type_id'].">".$assoc['name']."</option>";
@@ -91,16 +84,9 @@
                 <SELECT id="editLeaveTypeSpecial" name="editLeaveTypeSpecial">
                 <option value=0></option>
                 <?php
-		$queryLeaveTypeSpecial = "SELECT distinct "
-                        . "lt.leave_type_id, "
-                        . "lt.name "
-                        . "FROM leave_type lt, leave_user_info lui "
-                        . "WHERE lt.leave_type_id=lui.leave_type_id "
-                        . "AND lui.user_id=:user_id "
-                        . "AND lt.special=1 AND lui.hidden=0";
-                $params = array("user_id"=>$loggedUser->getUserId());
+
+                $leaveTypeSpecial = $loggedUser->GetUserSpecialLeaves();
                 
-                $leaveTypeSpecial = $sqlDataBase->get_query_result($queryLeaveTypeSpecial, $params);
                 if($leaveTypeSpecial)
                 {
                         foreach($leaveTypeSpecial as $id => $assoc)

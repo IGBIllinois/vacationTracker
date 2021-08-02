@@ -221,23 +221,89 @@ class LeaveType
         /** Gets the Leave Types in the database
          * 
          * @param SQLDataBase $sqlDataBase The database object
-         * @param int $yearType ID of the year type to get leave types for
+         * @param int $yearType ID of the year type to get leave types for. If null, get all leave types
+         * @param boolean $hidden 1 to get hidden leaves, 0 to get shown leaves, null to get all leaves. Defaults to null
          * @return \LeaveType An array of LeaveType objects
          */
-        public static function GetLeaveTypes($sqlDataBase, $yearType) {
-            $queryLeaveTypes = "SELECT leave_type_id FROM leave_type WHERE year_type_id=:year_type_id";
-            $params = array("year_type_id"=>$yearType);
+        public static function GetLeaveTypes($sqlDataBase, $yearType=null, $hidden = null) {
+            if($yearType != null) {
+                $queryLeaveTypes = "SELECT leave_type_id FROM leave_type WHERE year_type_id=:year_type_id";
+                $params = array("year_type_id"=>$yearType);
+                if($hidden != null) {
+                    !$queryLeaveTypes .= " AND hidden = :hidden";
+                    $params['hidden'] = $hidden;
+                }
+            } else {
+                $queryLeaveTypes = "SELECT leave_type_id FROM leave_type";
+                $params = array();
+                if($hidden != null) {
+                    !$queryLeaveTypes .= " WHERE hidden = :hidden";
+                    $params['hidden'] = $hidden;
+                }
+            }
             $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
-            
             $types = array();
             foreach($leaveTypes as $leaveType) {
                 $new_type = new LeaveType($sqlDataBase);
                 $new_type->LoadLeaveType($leaveType['leave_type_id']);
                 $types[] = $new_type;
+                
                         
             }
             return $types;
         }
+        
+        /**
+         * Get Leave Types for a user
+         * used in create_leave_popup.php
+         * 
+         * @param SQLDataBase $sqlDataBase The Database object
+         * @param int $userId The user's ID
+         * 
+         */
+        public static function GetLeaveTypesForUser($sqlDataBase, $userId) {
+        
+            $queryLeaveTypes = "SELECT distinct "
+                    . "lt.leave_type_id, "
+                    . "lt.name "
+                    . "FROM leave_type lt, leave_user_info lui "
+                    . "WHERE lt.leave_type_id=lui.leave_type_id "
+                    . "AND lui.user_id=:user_id "
+                    ." AND lt.special=0 AND lui.hidden=0";
+
+            $params = array("user_id"=>$userId);
+
+            $leaveTypes = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
+            
+            return $leaveTypes;
+        }
+        
+        
+        /**
+         * Gets a list of Special leave types
+         * used in create_leave_popup.php
+         * 
+         * @param type $sqlDataBase
+         * @param type $userId
+         * @return type
+         */
+        public static function GetSpecialLeaveTypes($sqlDataBase, $userId) {
+            $queryLeaveTypeSpecial = "SELECT distinct "
+                    . "lt.leave_type_id, "
+                    . "lt.name "
+                    . "FROM leave_type lt, leave_user_info lui "
+                    . "WHERE lt.leave_type_id=lui.leave_type_id "
+                    . "AND lui.user_id=:user_id "
+                    . "AND lt.special=1 AND lui.hidden=0";
+
+            $params = array("user_id"=>$userId);
+
+            $leaveTypeSpecial = $sqlDataBase->get_query_result($queryLeaveTypeSpecial, $params);
+           
+            return $leaveTypeSpecial;
+        }
+        
+
 }
 
 ?>

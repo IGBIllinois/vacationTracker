@@ -115,9 +115,8 @@ if(isset($_POST['addYear']))
                 <td>
                 <SELECT name="yearTypeToAddTo">
 		<?php
-		$queryYearTypes = "SELECT name,year_type_id FROM year_type";
-		$yearTypes = $sqlDataBase->get_query_result($queryYearTypes);
-		
+
+		$yearTypes = Years::GetYearTypes($sqlDataBase);
 		foreach($yearTypes as $id=>$yearTypeInfo)
 		{
 			echo "<option value=".$yearTypeInfo['year_type_id'].">".$yearTypeInfo['name']."</option>";

@@ -56,8 +56,7 @@ class Helper
                 
                 $params = array("userId"=>$userId, "statusId"=>$statusId, "yearId"=>$yearId);
                     
-                //echo("queryLeaves = $queryLeaves<BR>");
-                //print_r($params);
+
 		if($limit>0)
 		{
 			$queryLeaves = $queryLeaves." LIMIT :limit";
@@ -1201,11 +1200,13 @@ class Helper
 		}
 	
 	
-                $rules->SetForceApplyRules($force);
+                
               
 		
 		if($rules!=null)
 		{
+                    $rules->SetForceApplyRules($force);
+                    
 			if($rules->RunRules($userId,$yearId))
 			{
 				return 1;
@@ -1237,16 +1238,18 @@ class Helper
 				$rules = null;
 		}
 
-		$rules->SetForceApplyRules($force);
+		
 
 		if($rules!=null)
 		{
-			$firstYearId = $year->GetFirstYearId($yearTypeId);
-			$rules->SetForceApplyRules(true);
-			if($rules->RunRules($userId,$firstYearId));
-			{
-				return 1;
-			}
+                    $rules->SetForceApplyRules($force);
+                    
+                    $firstYearId = $year->GetFirstYearId($yearTypeId);
+                    $rules->SetForceApplyRules(true);
+                    if($rules->RunRules($userId,$firstYearId));
+                    {
+                            return 1;
+                    }
 		}
 		return 0;
 	}

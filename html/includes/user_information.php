@@ -67,8 +67,9 @@ $viewUser->LoadUser($employeeId);
 	        <td class="form_field">
 		<SELECT disabled="supervisor">
 		<?php
-	        $queryAllUsers = "SELECT user_id, first_name, last_name FROM users";
-	        $allUsers = $sqlDataBase->get_query_result($queryAllUsers);
+
+                $u = new User($sqlDataBase);
+                $allUsers = $u->GetAllUsers();
 	        if(isset($allUsers))
 	        {
 	                echo "<option value=\"0\">No Supervisor</option>";
@@ -96,8 +97,8 @@ $viewUser->LoadUser($employeeId);
 		<td class="form_field">
 		<SELECT disabled="employeeType">
 		<?php
-		$queryEmployeeTypes = "SELECT user_type_id, name, description FROM user_type";
-		$employeeTypes = $sqlDataBase->get_query_result($queryEmployeeTypes);
+
+                $employeeTypes = User::GetUserTypes();
 		foreach($employeeTypes as $id=>$employeeType)
 		{
 			echo "<option value=".$employeeType['user_type_id'];
@@ -119,8 +120,9 @@ $viewUser->LoadUser($employeeId);
 		<td class="form_field">
 		<SELECT disabled="userPerm">
 		<?php
-		$queryUserPerms = "SELECT user_perm_id, name, description FROM user_perm";
-		$userPerms = $sqlDataBase->get_query_result($queryUserPerms);
+                
+                $userPerms = User::GetUserPermissions($sqlDataBase);
+                
 		foreach($userPerms as $id=>$userPerm)
 		{
 			echo "<option value=".$userPerm['user_perm_id'];

@@ -248,37 +248,27 @@ if(isset($_POST['createUser']))
 				{
 
                                         // Default, show enabled users
-                                        $additionalQuery = " and enabled=1 ";
+                                    
+                                        //$additionalQuery = " and enabled=1 ";
+                                        
                                         
                                         if(isset($_POST['allUsers'])) {
-                                            $additionalQuery = "";
+                                            //$additionalQuery = "";
+                                            $which_users = 'allUsers';
                                         }
-                                        if(isset($_POST['enabled_users'])) {
+                                        else if(isset($_POST['enabled_users'])) {
                                             $additionalQuery = " and enabled=1 ";
+                                            $which_users = "enabled_users";
                                         }
-                                        if(isset($_POST['disabled_users'])) {
+                                        else if(isset($_POST['disabled_users'])) {
                                             $additionalQuery = " and enabled=0 ";
+                                            $which_users = "disabled_users";
+                                        } else {
+                                            $which_users = 'enabled_users';
                                         }
-					$queryUsers = "SELECT u.user_id, "
-                                                . "u.first_name, "
-                                                . "u.last_name, "
-                                                . "u.netid, "
-                                                . "ut.name as type, "
-                                                . "up.name as perm, "
-                                                . "u.enabled, "
-                                                . "u.banner_include "
-                                                . "FROM users u, user_type ut, user_perm up "
-                                                . "WHERE up.user_perm_id = u.user_perm_id "
-                                                . "AND ut.user_type_id = u.user_type_id "
-                                                . "AND (u.first_name LIKE :searchString "
-                                                . "OR u.last_name LIKE :searchString "
-                                                . "OR u.netid LIKE :searchString ) "
-                                                . " $additionalQuery "
-                                                . " ORDER BY u.last_name ASC";
+ 
                                         
-                                        $params = array("searchString"=>"%".$searchString."%");
-
-                                        $users = $sqlDataBase->get_query_result($queryUsers, $params);
+                                        $users = User::GetUsersForAdmin($sqlDataBase, $which_users, $searchString);
 					if($users)
 					{
 						foreach($users as $id=>$userInfo)

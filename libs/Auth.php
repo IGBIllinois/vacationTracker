@@ -266,6 +266,23 @@ class Auth
 	{
 		return $this->error;
 	}
+        
+        // Static functions
+        
+        /**
+         * Gets a user's leaves and supervisor_id that have been confirmed
+         * @param type $sqlDataBase
+         * @param type $confirmKey
+         * @return type
+         */
+        public static function getConfirmKeyLeaves($sqlDataBase, $confirmKey) {
+            
+            $queryConfirmKeyLeaves = "SELECT leave_id, supervisor_id FROM authen_key WHERE confirm_key=:confirm_key";
+            $params = array("confirm_key"=>$confirmKey);
+
+            $confirmKeyLeaves = $sqlDataBase->get_query_result($queryConfirmKeyLeaves,$params);
+            return $confirmKeyLeaves;
+        }
 }
 
 

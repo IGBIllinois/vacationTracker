@@ -353,19 +353,30 @@ class User
 	/**
 	 * Return a list of all users in the system
          * 
-         * @param string $sort how to sort the users. Accepts netid or first_name. 
+         * @param string $sort how to sort the users. Accepts netid or last_name, or first_name. 
          * 
          * @return Array An array of User objects
 	 * 
 	 */
-	public function GetAllUsers($sort = "first_name")
+	public function GetAllUsers($sort = "first_name", $enabled=null)
 	{
-            if($sort = "netid") {
-		$queryAllUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users ORDER BY netid";
-            } else {
-                $queryAllUsers = "SELECT user_id, first_name, last_name, email, netid, enabled FROM users ORDER BY first_name";
+            $queryAllUsers = "SELECT * FROM users ";
+            $params = array();
+            
+            if($enabled != null) {
+                $queryAllUsers .= " WHERE enabled=:enabled ";
+                $params["enabled"] = $enabled;
             }
-		$allUsers = $this->sqlDataBase->get_query_result($queryAllUsers);
+            
+            if($sort == "netid") {
+		$queryAllUsers .= " ORDER BY netid";
+            }else if($sort == "last_name") {
+		$queryAllUsers .= " ORDER BY last_name";
+            } else {
+                $queryAllUsers .= " ORDER BY first_name";
+            }
+
+		$allUsers = $this->sqlDataBase->get_query_result($queryAllUsers, $params);
 		return $allUsers;
 	}
 
@@ -412,12 +423,29 @@ class User
                 ON u.user_id = sc.owner_id WHERE (sc.viewer_id = :viewer_id OR (u.supervisor_id=:viewer_id)) 
                 and u.enabled=:enabled GROUP BY user_id ORDER BY u.last_name";
 
+            
             $params = array("viewer_id"=>$this->getUserId(),
                             "enabled"=>ENABLED);
 
             $viewableUsers = $this->sqlDataBase->get_query_result($querySharedCalendars, $params);
             
             return $viewableUsers;
+        }
+        
+        /**
+         * Get shared calendars with supervisor
+         * Used in confirm_action.php
+         */
+        public function GetSharedCalendarsWithSupervisor() {
+            $querySharedCalendars = "SELECT u.user_id, u.first_name, u.last_name
+                    FROM users u LEFT JOIN shared_calendars sc 
+                    ON u.user_id = sc.owner_id 
+                    WHERE sc.viewer_id = :viewer_id ".
+                    " OR (u.supervisor_id=:supervisor_id)";
+            $params = array("viewer_id"=>$loggedUser->getUserId(), 
+                        "supervisor_id"=>$loggedUser->getUserId() );
+
+            $sharedCalendars = $sqlDataBase->get_query_result($querySharedCalendars, $params);
         }
         
         public function GetSharedUsers() {
@@ -669,6 +697,33 @@ class User
             
         }
         
+        /** Adds a user to this user's shared calendars
+         * 
+         * @param int $userToShareWith ID of the user to share calendar with
+         */
+        public function addSharedCalendar($userToShareWith) {
+            //$queryInsertShare = "INSERT INTO shared_calendars (owner_id, viewer_id)VALUES(".$loggedUser->getUserId().",".$userToShareWith.")";
+            	$queryInsertShare = "INSERT INTO shared_calendars (owner_id, viewer_id)VALUES(:owner_id, :viewer_id)";
+                $params = array("owner_id"=>$this->getUserId(),
+                                "viewer_id"=>$userToShareWith);
+                
+                $this->sqlDataBase->get_insert_result($queryInsertShare, $params);
+        }
+        
+        /** Remove a user to this user's shared calendars
+         * 
+         * @param int $userToShareWith ID of the user to remove shared calendar status
+         *          
+         */
+        public function removeSharedCalendar($unshareUser) {
+            $queryUnshare = "DELETE FROM shared_calendars WHERE owner_id=:owner_id AND viewer_id=:viewerId";
+            $params = array("owner_id"=>$this->getUserId(),
+                            "viewer_id"=>$unshareUser);
+            $this->sqlDataBase->get_update_result($queryUnshare, $params);
+        }
+        
+        
+        
         public function UpdateLocalBannerData() {
             $uin = $this->uin;
             echo("uin = $uin");
@@ -847,8 +902,7 @@ class User
                             //"total_float_hours = :total_float_hours, ".
 
                             "last_update = NOW() where user_id = :user_id";
-echo("query = $query<BR>params =<BR>");
-                     print_r($params);
+
                     $result = $this->sqlDataBase->get_update_result($query, $params);
 
                  }
@@ -872,6 +926,107 @@ echo("query = $query<BR>params =<BR>");
                     
         }
         
+        /**
+         * Gets all leaves for a user, based on a leave type
+         * 
+         * @param type $leaveTypeId The type of leave to get for this user
+         * 
+         * @return An array of Leave data from leave_user_info
+         */
+        public function GetUserLeaves($leaveTypeId) {
+             $queryLeaveTypeIds = "SELECT leave_user_info_id from leave_user_info where ".
+                    " user_id = :user_id AND ".
+                    " leave_type_id = :leave_type_id";
+            $params = array("user_id"=>$this->getUserId(),
+                            "leave_type_id"=>$leaveTypeId);
+
+            $results = $this->sqlDataBase->get_query_result($queryLeaveTypeIds, $params);
+            
+            return $results;
+        }
+        
+        /**
+         * Gets all shown leaves for a user of a specific leave type
+         * 
+         * @param type $leave_type_id ID of the leave_type to get
+         * @return Array Array of leave type data
+         */
+        public function GetAllShownUserLeaves($leave_type_id) {
+            $queryShowenLeaveTypes = "SELECT distinct "
+                . "lui.user_id, "
+                . "u.first_name, "
+                . "u.last_name "
+                . "FROM leave_user_info lui, users u "
+                . "WHERE u.user_id = lui.user_id "
+                . "AND lui.hidden=0 "
+                . "AND leave_type_id=:leave_type_id "
+                ." ORDER BY u.last_name";
+        
+            $params = array("leave_type_id"=>$leave_type_id);
+
+            $showenLeaveTypes = $this->sqlDataBase->get_query_result($queryShowenLeaveTypes, $params);
+            
+            return $showenLeaveTypes;
+        }
+        
+        /** Get Leave types available for this user
+         * 
+         * @return type An array of leave type data
+         */
+        public function GetUserLeaveTypes() {
+        $queryLeaveTypes = "SELECT distinct lt.leave_type_id, "
+                . "lt.name FROM leave_type lt, "
+                . "leave_user_info lui "
+                . "WHERE lt.leave_type_id=lui.leave_type_id "
+                . "AND lui.user_id=:user_id "
+                . "AND lt.special=0 AND lui.hidden=0";
+
+            $params = array("user_id"=>$this->getUserId());
+            $leaveTypes = $this->sqlDataBase->get_query_result($queryLeaveTypes, $params);
+
+            return $leaveTypes;
+        }
+        
+        
+        /**
+         * Gets the Special leaves for a user
+         * @return Array Array of Leave Type info
+         */
+        public function GetUserSpecialLeaves() {
+            $queryLeaveTypeSpecial = "SELECT distinct "
+                    . "lt.leave_type_id, "
+                    . "lt.name "
+                    . "FROM leave_type lt, leave_user_info lui "
+                    . "WHERE lt.leave_type_id=lui.leave_type_id "
+                    . "AND lui.user_id=:user_id "
+                    . "AND lt.special=1 AND lui.hidden=0";
+            $params = array("user_id"=>$this->getUserId());
+
+            $leaveTypeSpecial = $this->sqlDataBase->get_query_result($queryLeaveTypeSpecial, $params);
+            
+            return $leaveTypeSpecial;
+        }
+        
+        /** Hide or show a user leave
+         * 
+         * @param int $leave_id The ID of the leave to change status
+         * @param boolean $hidden 1 to hide, 0 to show
+         * 
+         */
+        public function UpdateLeaveVisibility($leave_id, $hidden) {
+            $querySetLeaveToShow = "UPDATE leave_user_info "
+                    . "SET hidden=:hidden "
+                    . "WHERE leave_user_info_id=:id";
+            $params = array("id"=>$leave_id, "hidden"=>$hidden);
+
+            $this->sqlDataBase->get_update_result($querySetLeaveToShow, $params);
+        }
+        
+        
+                
+        
+
+        
         // Static functions
         
         public static function GetUserTypes($sqlDataBase) {
@@ -879,6 +1034,31 @@ echo("query = $query<BR>params =<BR>");
             $employeeTypes = $sqlDataBase->get_query_result($queryEmployeeTypes);
             return $employeeTypes;
         }
+        
+        public static function GetUserByNetID($sqlDataBase, $netid) {
+            $queryCheckFirstTimeLogin="SELECT user_id FROM users WHERE enabled=1 AND netid=:netid";
+            $params = array("netid"=>$netid);
+            $result = $sqlDataBase->get_query_result($queryCheckFirstTimeLogin, $params);
+            $u = new User($sqlDataBase);
+                if($result) {
+                    $u->LoadUser($result[0]['user_id']);
+                    return $u;
+                } else {
+                    return null;
+                }
+            
+        }
+        
+        
+        
+        public static function GetCheckFirstTimeLogin($sqlDataBase, $netid) {
+            $queryCheckFirstTimeLogin="SELECT user_id FROM users WHERE enabled=1 AND netid=:netid";
+            $params = array("netid"=>$netid);
+            $result = $sqlDataBase->get_query_result($queryCheckFirstTimeLogin, $params);
+            
+            return $result;
+        }
+        
         
         public static function GetUsers($sqlDataBase, $user_id, $employeeType=null, $enabled=null) {
             $usersToAdd = array();
@@ -924,6 +1104,94 @@ echo("query = $query<BR>params =<BR>");
             return $usersToAdd;
         }
         
+        /** Get a list of all possible user permissions
+         * 
+         * @param SQLDataBase $sqlDataBase The database object
+         * @return Array An array of user permission data
+         */
+        public static function GetUserPermissions($sqlDataBase) {
+            $queryUserPerms = "SELECT user_perm_id, name, description FROM user_perm";
+            $userPerms = $sqlDataBase->get_query_result($queryUserPerms);
+                
+            return $userPerms;
+        }
+        
+        
+        /** Get a list of users from a given search string.
+         * Primarily used for a list of users for a given administrator
+         * 
+         * @param type $sqlDataBase The database object
+         * @param type $enabled 'enabled_users', 'disabled_users', or 'all_users' 
+         * @param type $searchString Additional search string
+         * @return Array Array of user data
+         */
+        public static function GetUsersForAdmin($sqlDataBase, $enabled, $searchString) {
+            
 
+            if($enabled == 'allUsers') {
+                $additionalQuery = "";
+            }
+            else if($enabled == 'enabled_users') {
+                $additionalQuery = " and enabled=1 ";
+            }
+            else if(enabled == 'disabled_users') {
+                $additionalQuery = " and enabled=0 ";
+            } else {
+                // Default, show enabled users
+            $additionalQuery = " and enabled=1 ";
+            }
+            $queryUsers = "SELECT u.user_id, "
+                    . "u.first_name, "
+                    . "u.last_name, "
+                    . "u.netid, "
+                    . "ut.name as type, "
+                    . "up.name as perm, "
+                    . "u.enabled, "
+                    . "u.banner_include "
+                    . "FROM users u, user_type ut, user_perm up "
+                    . "WHERE up.user_perm_id = u.user_perm_id "
+                    . "AND ut.user_type_id = u.user_type_id "
+                    . "AND (u.first_name LIKE :searchString "
+                    . "OR u.last_name LIKE :searchString "
+                    . "OR u.netid LIKE :searchString ) "
+                    . " $additionalQuery "
+                    . " ORDER BY u.last_name ASC";
+
+            $params = array("searchString"=>"%".$searchString."%");
+
+            $users = $sqlDataBase->get_query_result($queryUsers, $params);
+            return $users;
+        }
+        
+        /** Get Users who have a specified leave type that is either hidden or shown
+         * 
+         * @param type $sqlDatabase The database object
+         * @param type $leaveType ID of the leave type
+         * @param type $hidden 1 if this leave type is hidden, 0 for shown
+         * @return type
+         */
+        public static function GetUsersForLeaveTypes($sqlDataBase, $leaveType, $hidden) {
+            
+            $queryLeaveTypes = "SELECT distinct "
+                . "lui.user_id, "
+                . "u.first_name, "
+                . "u.last_name "
+                . "FROM leave_user_info lui, "
+                . "users u "
+                . "WHERE u.user_id = lui.user_id "
+                . "AND lui.hidden=:hidden "
+                . "AND leave_type_id=:leave_type_id "
+                ." ORDER BY u.last_name";
+        
+                $params = array("leave_type_id"=>$leaveType, "hidden"=>$hidden);
+        
+                $results = $sqlDataBase->get_query_result($queryLeaveTypes, $params);
+                
+                return $results;
+            
+        }
+        
+
+        
 }
 ?>

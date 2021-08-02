@@ -103,8 +103,9 @@
 	        <td class="form_field">
 		<SELECT name="supervisor">
 		<?php
-	        $queryAllUsers = "SELECT user_id, first_name, last_name FROM users order by last_name";
-	        $allUsers = $sqlDataBase->get_query_result($queryAllUsers);
+
+                $u = new User($sqlDataBase);
+                $allUsers = $u->getAllUsers("last_name", 1);
 	        if(isset($allUsers))
 	        {
 	                echo "<option value=\"0\">No Supervisor</option>";
@@ -132,8 +133,8 @@
 		<td class="form_field">
 		<SELECT name="employeeType">
 		<?php
-		$queryEmployeeTypes = "SELECT user_type_id, name, description FROM user_type";
-		$employeeTypes = $sqlDataBase->get_query_result($queryEmployeeTypes);
+
+                $employeeTypes = User::GetUserTypes($sqlDataBase);
 		foreach($employeeTypes as $id=>$employeeType)
 		{
 			echo "<option value=".$employeeType['user_type_id'];
@@ -155,8 +156,8 @@
 		<td class="form_field">
 		<SELECT name="userPerm">
 		<?php
-		$queryUserPerms = "SELECT user_perm_id, name, description FROM user_perm";
-		$userPerms = $sqlDataBase->get_query_result($queryUserPerms);
+
+                $userPerms = User::GetUserPermissions($sqlDataBase);
 		foreach($userPerms as $id=>$userPerm)
 		{
 			echo "<option value=".$userPerm['user_perm_id'];
