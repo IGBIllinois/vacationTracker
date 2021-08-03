@@ -13,6 +13,7 @@ header('Content-Disposition: inline; filename=calendar.ics');
 
 $usernames = array("mbach", "danield", "dslater", "rsturg", "choi198", "jleigh", "jkim145", "angolz");
 
+
 $users = array();
 
 $app_years = Years::GetYears($sqlDataBase, APPOINTMENT_YEAR);
@@ -57,18 +58,21 @@ foreach($usernames as $username)  {
               $leaveType->LoadLeaveType($leave->getLeaveTypeId());
               
               // Write the event.
-             
-                $str = "
-                BEGIN:VEVENT
-                UID:" .  $uid ."
-                DTSTAMP:" . gmdate('Ymd')."T000000Z
-                DTSTART;VALUE=DATE:".$startDateFormat. 
-                "
-                DTEND;VALUE=DATE:".$startDateFormat.
-                "
-                SUMMARY:". $user->getNetid() . " " . $leaveType->getName(). " " . $leave->getDescription() . 
-                "
-                END:VEVENT
+
+// Do not indent.
+// Extra whitespace messes up the Outlook calendar   
+          
+$str = "
+BEGIN:VEVENT
+UID:" .  $uid ."
+DTSTAMP:" . gmdate('Ymd')."T000000Z
+DTSTART;VALUE=DATE:".$startDateFormat. 
+"
+DTEND;VALUE=DATE:".$startDateFormat.
+"
+SUMMARY:". $user->getNetid() . " " . $leaveType->getName(). " " . $leave->getDescription() . 
+"
+END:VEVENT
 
                 ";
 
@@ -79,5 +83,6 @@ foreach($usernames as $username)  {
         }
     
     }
+
 
 echo("END:VCALENDAR");
