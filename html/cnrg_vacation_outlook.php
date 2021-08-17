@@ -70,13 +70,13 @@ DTSTART;VALUE=DATE:".$startDateFormat.
 "
 DTEND;VALUE=DATE:".$startDateFormat.
 "
-SUMMARY:". $user->getNetid() . " " . $leaveType->getName(). " " . $leave->getDescription() . 
+SUMMARY:". $user->getNetid() . " " . $leaveType->getName(). " "  . 
 "
 END:VEVENT
 
-                ";
+";
 
-                echo $str;
+echo $str;
                 
             }
             
