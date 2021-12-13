@@ -4,9 +4,9 @@
 
 ### Create User Account
 
-* Click on ```Admin View``` >> Click on ```Manage Users``` Tab
-* Under the '''Add new User''' menu enter the user's netid and click on '''Search IGB Users'''
-* From the results table click on '''Add''' next to the user you would like to add.
+* Click on **Admin View** >> Click on **Manage Users** Tab
+* Under the **Add new User** menu enter the user's netid and click on **Search IGB Users**
+* From the results table click on **Add** next to the user you would like to add.
 * Edit User Information
 ** '''First Name:''' Enter user's first name
 ** '''Last Name:''' Enter user's last name
