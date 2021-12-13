@@ -3,6 +3,8 @@ Written by Nevo Band
 
 [![Build Status](https://www.travis-ci.com/IGBIllinois/vacationTracker.svg?branch=master)](https://www.travis-ci.com/IGBIllinois/vacationTracker)
 
+* Manual located at [docs/manual.md](docs/manual.md)
+
 ## URL 
 https://www-app.igb.illinois.edu/vacation/
 
