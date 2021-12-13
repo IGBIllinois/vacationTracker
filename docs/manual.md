@@ -8,17 +8,17 @@
 * Under the **Add new User** menu enter the user's netid and click on **Search IGB Users**
 * From the results table click on **Add** next to the user you would like to add.
 * Edit User Information
-** '''First Name:''' Enter user's first name
-** '''Last Name:''' Enter user's last name
-** '''Netid:''' make sure the correct netid is entered
-** '''Email:''' set the user's igb email
-** '''Appointment:''' set appointment percentage
-** '''Start Date:''' set the user's start date
-** '''Auto Approve:''' If the user '''DOES NOT''' have a supervisor to approve their leaves then check this box
-** '''User Enabled:''' check this box if you would like to enable this user to use the vacation calendar
-** '''Supervisor:''' Select the user's supervisor so leave requests can be approved by them
-** '''Employee Type:''' AP
-** '''Permissions:''' Set to '''User'''
+* **First Name:** Enter user's first name
+* **Last Name:** Enter user's last name
+* **Netid:** make sure the correct netid is entered
+* **Email:** set the user's email
+* **Appointment:** set appointment percentage
+* **Start Date:** set the user's start date
+* **Auto Approve:** If the user **DOES NOT** have a supervisor to approve their leaves then check this box
+* **User Enabled:** check this box if you would like to enable this user to use the vacation calendar
+* **Supervisor:** Select the user's supervisor so leave requests can be approved by them
+* **Employee Type:** AP
+* **Permissions:** Set to **User**
 
 ## Add Earned Leaves
 
